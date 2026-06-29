@@ -1,0 +1,228 @@
+══════════════════════════════════════════════════════════════
+  LAGENCO — WEBSITE PITCH & UITGEBREIDE HANDLEIDING
+══════════════════════════════════════════════════════════════
+
+
+ ╔═══════════════════════════════════════════════════════════╗
+ ║  WAT IS LAGENCO?                                          ║
+ ╚═══════════════════════════════════════════════════════════╝
+
+Lagenco is een duurzame webshop die kwaliteitsproducten een
+tweede leven geeft. Restpartijen, retourproducten en tweedehands
+artikelen krijgen een nieuwe bestemming — betaalbaar voor de
+klant, beter voor de planeet.
+
+De missie in één zin:
+  "Een goed product hoeft niet nieuw te zijn om waardevol te zijn."
+
+
+ ╔═══════════════════════════════════════════════════════════╗
+ ║  WAAROM DEZE WEBSITE?                                     ║
+ ╚═══════════════════════════════════════════════════════════╝
+
+√  Professioneel, modern design met premium uitstraling
+√  Volledig responsive — werkt perfect op mobiel, tablet & desktop
+√  Snel & soepel — geoptimaliseerd voor maximale performance
+√  Eigen productbeheer via admin-paneel — geen technische kennis nodig
+√  Klantgericht — verlanglijst, productvergelijking, product delen
+√  Wettelijk volledig — alle juridische pagina's aanwezig
+√  Toegankelijk — voldoet aan moderne webstandaarden
+
+
+ ╔═══════════════════════════════════════════════════════════╗
+ ║  PAGINA OVERZICHT                                         ║
+ ╚═══════════════════════════════════════════════════════════╝
+
+  index.html              — Homepagina met hero, missie & productcarousel
+  assortiment.html        — Volledig assortiment met zoeken & filteren
+  contact.html            — Contactformulier + FAQ
+  onderhoud.html          — Standaard onderhoudspagina (indien nodig)
+  404.html                — Custom 'pagina niet gevonden' pagina
+
+  Juridische pagina's:
+  - privacybeleid.html    — Hoe Lagenco omgaat met persoonsgegevens
+  - cookiebeleid.html     — Cookie gebruik & beheer
+  - disclaimer.html       — Algemene disclaimer
+  - retourbeleid.html     — 14 dagen herroepingsrecht
+  - verzendinformatie.html — Levertijden & verzendkosten
+  - algemene-voorwaarden.html — Algemene voorwaarden
+
+  Technische bestanden:
+  - style.css             — Volledig design systeem (premium styling)
+  - script.js             — Alle functionaliteit & interacties
+
+
+ ╔═══════════════════════════════════════════════════════════╗
+ ║  BELANGRIJKSTE FEATURES                                   ║
+ ╚═══════════════════════════════════════════════════════════╝
+
+  [PRODUCTBEHEER]
+  •  Volledig admin-paneel om producten toe te voegen, bewerken
+     en verwijderen — geen code-kennis nodig
+  •  Upload tot 8 afbeeldingen per product (automatisch geschaald
+     en gecomprimeerd voor snelle laadtijden)
+  •  Sleep afbeeldingen om te herschikken, stel hoofdafbeelding in
+  •  Categorie/badge per product: Nieuw, Retourproduct, Tweedehands
+  •  Oude prijs + nieuwe prijs → automatische kortingsberekening
+
+  [KLANT-FUNCTIONALITEIT]
+  •  Verlanglijst — bewaar favorieten (hartje icoon)
+  •  Productvergelijking — vergelijk tot 3 producten naast elkaar
+  •  Product delen — deel via URL-kopie of social media
+  •  Recente producten — automatisch bijgehouden
+  •  Uitgebreid zoeken & filteren op de assortimentspagina
+  •  Product detail-modale met galerij, gerelateerde producten
+
+  [DESIGN & UX]
+  •  Premium lettertypes: Sora (koppen), Inter (body), Fraunces (hero)
+  •  Glassmorphism navigatie
+  •  Zacht geanimeerde gradient achtergrond
+  •  Smooth scroll-reveal animaties
+  •  Premium knoppen met shimmer effect
+  •  Magnetic buttons die de cursor volgen (subtiel)
+  •  3D card tilt op productkaarten (desktop)
+  •  Animated counters voor statistieken
+  •  Mooie leesvoortgang-balk bovenaan
+  •  "Terug naar boven" knop
+  •  Toast-notificaties voor alle acties
+
+  [PERFORMANCE]
+  •  Afbeeldingen worden automatisch geschaald naar max 1200px
+  •  Automatische WEBP/JPEG compressie (~200KB ipv 5MB)
+  •  Lazy loading op alle afbeeldingen
+  •  Throttled scroll/resize handlers (60fps)
+  •  GPU-versnelde animaties
+  •  Prefers-reduced-motion ondersteuning
+  •  Alle productafbeeldingen in 4:3 verhouding (consistent)
+
+
+ ╔═══════════════════════════════════════════════════════════╗
+ ║  HOE TE GEBRUIIKEN — SNELSTART                            ║
+ ╚═══════════════════════════════════════════════════════════╝
+
+  1.  Pak het ZIP-bestand uit op je computer
+  2.  Open index.html in je browser (Chrome, Firefox, Safari, Edge)
+  3.  Je ziet de website! (start met lege productlijst)
+
+  VOOR PRODUCTEN TOE TE VOEGEN:
+
+  1.  Klik rechtsonder op "Admin login"
+  2.  Login met:
+        E-mail:    admin@lagenco.nl
+        Wachtwoord: lagenco123
+  3.  Je ziet nu het admin-paneel onderaan de pagina
+  4.  Vul productinformatie in:
+        - Naam (verplicht)
+        - Beschrijving (verplicht)
+        - Prijs (verplicht)
+        - Oude prijs (optioneel, voor kortingweergave)
+        - Badge/categorie (optioneel, standaard "Uitgelicht")
+  5.  Upload afbeeldingen:
+        - Sleep bestanden in het upload-vak, OF
+        - Klik op het upload-vak om bestanden te kiezen, OF
+        - Plak een directe afbeeldings-URL
+        - Maximaal 8 afbeeldingen per product
+        - Bestanden worden AUTOMATISCH geschaald en gecomprimeerd
+  6.  Herschik afbeeldingen door ze te slepen
+  7.  Klik "Product toevoegen"
+  8.  Het product verschijnt direct in de carousel/assortiment!
+
+  PRODUCT BEWERKEN:
+  •  Klik op het potlood-icoon op een productkaart (admin modus)
+  •  Pas aan en klik "Opslaan"
+
+  PRODUCT VERWIJDEREN:
+  •  Klik op het prullenbak-icoon op een productkaart (admin modus)
+
+  PRODUCTEN VERGELIJKEN:
+  •  Klik op het weegschaal-icoon op productkaarten (max 3)
+  •  Onderaan verschijnt een vergelijk-balk
+  •  Klik "Vergelijk" om een gedetailleerde vergelijking te zien
+
+  VERLANGLIJST:
+  •  Klik op het hartje-icoon op productkaarten
+  •  Vermeld in header hoeveel producten op je verlanglijst staan
+
+
+ ╔═══════════════════════════════════════════════════════════╗
+ ║  TECHNISCHE SPECIFICATIES                                  ║
+ ╚═══════════════════════════════════════════════════════════╝
+
+  •  Pure HTML5, CSS3 & JavaScript (geen framework dependency)
+  •  Tailwind CSS via CDN (alleen voor utility classes)
+  •  Font Awesome 6 voor iconen
+  •  Google Fonts: Sora, Inter, Fraunces
+  •  LocalStorage voor producten/wishlist/vergelijking
+  •  Geen backend nodig — alles draait client-side
+  •  Werkt op alle moderne browsers (Chrome 90+, Firefox 88+,
+     Safari 14+, Edge 90+)
+  •  Bestandsgrootte: ~210KB totaal (exclusief afbeeldingen)
+
+
+ ╔═══════════════════════════════════════════════════════════╗
+ ║  LANCERING — CHECKLIST                                     ║
+ ╚═══════════════════════════════════════════════════════════╝
+
+  [ ] Verander admin-wachtwoord in script.js (regel ~17: AUTH)
+  [ ] Vul KvK-nummer & BTW-nummer in (footer van alle pagina's)
+  [ ] Vul echte contactgegevens in (telefoon, e-mail, adres)
+  [ ] Vul echte social media links in (LinkedIn, Instagram, WhatsApp)
+  [ ] Voeg minstens 6-8 echte producten toe via admin-paneel
+  [ ] Test alle formulieren (contact, login, product toevoegen)
+  [ ] Test op mobiel, tablet en desktop
+  [ ] Test in Chrome, Firefox en Safari
+  [ ] Plaats bestanden op je webhost (via FTP of file manager)
+  [ ] Configureer SSL/HTTPS bij je hosting provider
+  [ ] (Optioneel) Vervang Tailwind CDN door lokale versie
+      voor volledige offline werking
+
+
+ ╔═══════════════════════════════════════════════════════════╗
+ ║  HOSTING SUGGESTIES                                        ║
+ ╚═══════════════════════════════════════════════════════════╝
+
+  •  Netlify (gratis, perfect voor statische sites)
+  •  Vercel (gratis, super snel)
+  •  GitHub Pages (gratis, als je GitHub gebruikt)
+  •  Cloudflare Pages (gratis, met wereldwijd CDN)
+  •  Je bestaande webhost (upload via FTP)
+
+
+ ╔═══════════════════════════════════════════════════════════╗
+ ║  VEELGESTELDE VRAGEN                                      ║
+ ╚═══════════════════════════════════════════════════════════╝
+
+  V: Waar worden mijn producten opgeslagen?
+  A: In de browser van de bezoeker via LocalStorage. Voor een
+     productie-site met database-integratie is backend-ontwikkeling
+     nodig. Neem contact op met een developer voor maatwerk.
+
+  V: Kan ik de groene kleur veranderen?
+  A: Ja! In style.css bovenaan staan alle kleuren onder :root.
+     Verander --green (hoofdkleur) en evt. --green-light, --green-mid.
+
+  V: Hoe voeg ik een nieuwe pagina toe?
+  A: Kopieer een bestaande pagina (bv. contact.html), pas de inhoud
+     aan, en voeg de link toe in de navigatie van alle pagina's.
+
+  V: Werkt dit op mijn telefoon?
+  A: Ja! De website is volledig responsive en geoptimaliseerd voor
+     mobiel. Alle features werken ook op touch devices.
+
+  V: Mijn afbeeldingen zijn traag?
+  A: Zorg dat je niet-te-grote bronbestanden uploadt. Het systeem
+     schaalt automatisch naar max 1200px breed en comprimeert naar
+     ~200KB. Voor nog snellere laadtijden, gebruik afbeeldingen
+     die van nature al rond de 1200×900 pixels zijn.
+
+
+ ╔═══════════════════════════════════════════════════════════╗
+ ║  CONTACT & ONDERSTEUNING                                  ║
+ ╚═══════════════════════════════════════════════════════════╝
+
+  Voor vragen over de website, aanpassingen of uitbreidingen,
+  neem contact op met je webdeveloper.
+
+  Veel succes met de lancering van Lagenco!
+
+══════════════════════════════════════════════════════════════
