@@ -1,16 +1,85 @@
 /* ═══════════════════════════════════════════════════════
    LAGENCO — Admin Modus Floating Button
-   Lightweight (~3KB) · Zero dependencies · Lazy-injected
-   Always visible — opens the Business Panel directly.
-   No login required.
+   Lightweight · Zero dependencies · Lazy-injected
+
+   Visibility logic (multi-layer, robust):
+   1. PRIMARY: Check the actual DOM state of the main website.
+      - #logoutBtn visible (no "hidden" class) = logged in → show button
+      - #loginBtn visible = logged out → hide button
+   2. FALLBACK: Check localStorage "lagencoLoggedIn".
+   3. MutationObserver: react instantly when login/logout changes the DOM.
+   4. Polling fallback every 1s for extra reliability.
+
+   Click → opens Business Panel directly (no extra auth gate).
    ═══════════════════════════════════════════════════════ */
 (function () {
   'use strict';
+
+  var LOGIN_KEY = 'lagencoLoggedIn';
 
   // Avoid duplicate injection
   if (window.__lagencoAdminButtonMounted) return;
   window.__lagencoAdminButtonMounted = true;
 
+  // ────────────────────────────────────────────────────────
+  // Login detection — multi-layer
+  // ────────────────────────────────────────────────────────
+  function isHidden(el) {
+    if (!el) return true;
+    // Check "hidden" class (used by main website)
+    if (el.classList && el.classList.contains('hidden')) return true;
+    // Check inline display:none
+    if (el.style && el.style.display === 'none') return true;
+    // Check computed visibility
+    try {
+      var cs = window.getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0') return true;
+    } catch (e) {}
+    return false;
+  }
+
+  function checkDOMLogin() {
+    // The main website toggles these buttons in updateAuthUI():
+    //   logged in  → #logoutBtn visible, #loginBtn has "hidden" class
+    //   logged out → #loginBtn visible,  #logoutBtn has "hidden" class
+    var logoutBtn = document.getElementById('logoutBtn');
+    var loginBtn = document.getElementById('loginBtn');
+
+    // If logout button exists and is visible → logged in
+    if (logoutBtn && !isHidden(logoutBtn)) return true;
+    // If login button exists and is visible → logged out
+    if (loginBtn && !isHidden(loginBtn)) return false;
+    // If neither exists on this page, fall through to localStorage
+    return null;
+  }
+
+  function checkLocalStorage() {
+    try {
+      var raw = localStorage.getItem(LOGIN_KEY);
+      if (raw === null || raw === undefined) return false;
+      try {
+        var parsed = JSON.parse(raw);
+        if (parsed === true || parsed === 1) return true;
+        if (parsed === false || parsed === 0 || parsed === null) return false;
+      } catch (e) {}
+      var s = String(raw).trim().toLowerCase();
+      return s === 'true' || s === '1' || s === 'yes' || s === 'ingelogd';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function isLoggedIn() {
+    // PRIMARY: DOM check (most reliable — reflects actual UI state)
+    var domResult = checkDOMLogin();
+    if (domResult !== null && domResult !== undefined) return domResult;
+    // FALLBACK: localStorage check
+    return checkLocalStorage();
+  }
+
+  // ────────────────────────────────────────────────────────
+  // Button management
+  // ────────────────────────────────────────────────────────
   var btnEl = null;
 
   function buildButton() {
@@ -20,7 +89,6 @@
     a.id = 'lagencoAdminFAB';
     a.setAttribute('aria-label', 'Open Admin Modus / Business Panel');
     a.setAttribute('title', 'Admin Modus — Open Business Panel');
-    // Inline styles — scoped, does not leak to website
     a.style.cssText = [
       'position:fixed',
       'bottom:24px',
@@ -57,7 +125,6 @@
       '</svg>' +
       '<span>Admin Modus</span>';
 
-    // Hover effect
     a.addEventListener('mouseenter', function () {
       a.style.transform = 'translateY(-3px) scale(1.03)';
       a.style.boxShadow = '0 16px 40px rgba(79,70,229,0.45),0 6px 16px rgba(0,0,0,0.12)';
@@ -81,7 +148,70 @@
     });
   }
 
-  // Always show — no auth check
-  if (document.body) show();
-  else document.addEventListener('DOMContentLoaded', show);
+  function hide() {
+    if (!btnEl) return;
+    btnEl.style.opacity = '0';
+    btnEl.style.transform = 'translateY(20px) scale(0.9)';
+    btnEl.style.pointerEvents = 'none';
+  }
+
+  function update() {
+    if (isLoggedIn()) show();
+    else hide();
+  }
+
+  // ────────────────────────────────────────────────────────
+  // Event listeners — multiple layers of detection
+  // ────────────────────────────────────────────────────────
+
+  // 1. Custom event from main website (instant)
+  window.addEventListener('lagenco:auth-change', update);
+
+  // 2. Cross-tab storage events
+  window.addEventListener('storage', function (e) {
+    if (e.key === LOGIN_KEY) update();
+  });
+
+  // 3. MutationObserver — detects DOM changes (login/logout button toggles)
+  function setupObserver() {
+    if (typeof MutationObserver === 'undefined') return;
+    var observer = new MutationObserver(function (mutations) {
+      // Check if login/logout buttons changed
+      for (var i = 0; i < mutations.length; i++) {
+        var m = mutations[i];
+        if (m.type === 'attributes' && (m.attributeName === 'class' || m.attributeName === 'style')) {
+          var el = m.target;
+          if (el && (el.id === 'loginBtn' || el.id === 'logoutBtn' || el.id === 'loginStatus')) {
+            update();
+            return;
+          }
+        }
+      }
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class', 'style'],
+      subtree: true,
+      childList: false
+    });
+  }
+
+  // 4. Polling fallback — every 1 second (covers all edge cases)
+  setInterval(update, 1000);
+
+  // 5. Visibility change (covers back/forward cache)
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) update();
+  });
+
+  // ────────────────────────────────────────────────────────
+  // Initial mount
+  // ────────────────────────────────────────────────────────
+  function init() {
+    update();
+    setupObserver();
+  }
+
+  if (document.body) init();
+  else document.addEventListener('DOMContentLoaded', init);
 })();
