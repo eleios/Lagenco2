@@ -12,7 +12,17 @@
 
   function isLoggedIn() {
     try {
-      return JSON.parse(localStorage.getItem(LOGIN_KEY)) === true;
+      var raw = localStorage.getItem(LOGIN_KEY);
+      if (raw === null || raw === undefined) return false;
+      // Try JSON parse first (handles true / false / 1 / 0)
+      try {
+        var parsed = JSON.parse(raw);
+        if (parsed === true || parsed === 1) return true;
+        if (parsed === false || parsed === 0 || parsed === null) return false;
+      } catch (e) { /* not JSON — fall through */ }
+      // String fallback
+      var s = String(raw).trim().toLowerCase();
+      return s === 'true' || s === '1' || s === 'yes' || s === 'ingelogd';
     } catch (e) {
       return false;
     }

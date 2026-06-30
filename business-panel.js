@@ -11,13 +11,44 @@
   'use strict';
 
   // ────────────────────────────────────────────────────────
-  // Auth gate — same key as main website
+  // Auth gate — same key as main website.
+  // Robust parser: accepts true, "true", 1, "1", "yes" (case-insensitive).
+  // This guards against any value variant the main site (or an older
+  // session) may have written to localStorage.
   // ────────────────────────────────────────────────────────
   const LOGIN_KEY = 'lagencoLoggedIn';
   function isLoggedIn() {
-    try { return JSON.parse(localStorage.getItem(LOGIN_KEY)) === true; }
-    catch (e) { return false; }
+    try {
+      const raw = localStorage.getItem(LOGIN_KEY);
+      if (raw === null || raw === undefined) return false;
+      // Try JSON parse first (handles true / false / 1 / 0)
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed === true || parsed === 1) return true;
+        if (parsed === false || parsed === 0 || parsed === null) return false;
+      } catch (e) { /* not JSON — fall through to string check */ }
+      // String fallback
+      const s = String(raw).trim().toLowerCase();
+      return s === 'true' || s === '1' || s === 'yes' || s === 'ingelogd';
+    } catch (e) {
+      return false;
+    }
   }
+  // Live re-check: if the login state changes while the panel is open
+  // (e.g. user logs out in another tab), react immediately.
+  window.addEventListener('storage', function (e) {
+    if (e.key === LOGIN_KEY) {
+      if (!isLoggedIn()) {
+        // Logged out elsewhere — redirect to homepage
+        window.location.href = 'index.html';
+      }
+    }
+  });
+  window.addEventListener('lagenco:auth-change', function (e) {
+    if (e.detail && e.detail.logged === false) {
+      window.location.href = 'index.html';
+    }
+  });
 
   // ────────────────────────────────────────────────────────
   // Utility: escape HTML
@@ -1503,11 +1534,38 @@
   // ═══════════════════════════════════════════════════════
   // BOOT
   // ═══════════════════════════════════════════════════════
+  // Same credentials as the main website (kept in sync)
+  const AUTH = { email: 'admin@lagenco.nl', password: 'lagenco123' };
+
+  function showGate() {
+    $('#bpSplash').style.display = 'none';
+    $('#bpLoginGate').hidden = false;
+    $('#bpApp').hidden = true;
+    // Wire the inline gate login form
+    const form = $('#bpGateForm');
+    if (form && !form.__wired) {
+      form.__wired = true;
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const email = $('#bpGateEmail').value.trim();
+        const pass = $('#bpGatePass').value;
+        const msg = $('#bpGateMsg');
+        if (email === AUTH.email && pass === AUTH.password) {
+          try { localStorage.setItem(LOGIN_KEY, JSON.stringify(true)); } catch (err) {}
+          try { window.dispatchEvent(new CustomEvent('lagenco:auth-change', { detail: { logged: true } })); } catch (err) {}
+          if (msg) { msg.textContent = '✓ Inloggen gelukt! Panel wordt geladen…'; msg.style.color = '#10b981'; }
+          setTimeout(() => { window.location.reload(); }, 500);
+        } else {
+          if (msg) { msg.textContent = 'Ongeldig e-mailadres of wachtwoord.'; msg.style.color = '#ef4444'; }
+        }
+      });
+    }
+  }
+
   function boot() {
     // Auth check
     if (!isLoggedIn()) {
-      $('#bpSplash').style.display = 'none';
-      $('#bpLoginGate').hidden = false;
+      showGate();
       return;
     }
     // Initialize data
@@ -1540,7 +1598,7 @@
       $('#bpSidebarOverlay').classList.remove('show');
     });
     $('#bpLogoutBtn')?.addEventListener('click', () => {
-      try { localStorage.setItem('lagencoLoggedIn', 'false'); } catch (e) {}
+      try { localStorage.setItem(LOGIN_KEY, JSON.stringify(false)); } catch (e) {}
       try { window.dispatchEvent(new CustomEvent('lagenco:auth-change', { detail: { logged: false } })); } catch (e) {}
       toast('Uitgelogd', 'Je wordt doorgestuurd…', 'info');
       setTimeout(() => { window.location.href = 'index.html'; }, 800);
