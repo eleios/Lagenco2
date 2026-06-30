@@ -1,34 +1,13 @@
 /* ═══════════════════════════════════════════════════════
    LAGENCO — Admin Modus Floating Button
    Lightweight (~3KB) · Zero dependencies · Lazy-injected
-   Only visible when user is logged in.
-   Does NOT affect existing website styling or performance.
+   Always visible — opens the Business Panel directly.
+   No login required.
    ═══════════════════════════════════════════════════════ */
 (function () {
   'use strict';
 
-  // Reuse the same localStorage key as the main website
-  var LOGIN_KEY = 'lagencoLoggedIn';
-
-  function isLoggedIn() {
-    try {
-      var raw = localStorage.getItem(LOGIN_KEY);
-      if (raw === null || raw === undefined) return false;
-      // Try JSON parse first (handles true / false / 1 / 0)
-      try {
-        var parsed = JSON.parse(raw);
-        if (parsed === true || parsed === 1) return true;
-        if (parsed === false || parsed === 0 || parsed === null) return false;
-      } catch (e) { /* not JSON — fall through */ }
-      // String fallback
-      var s = String(raw).trim().toLowerCase();
-      return s === 'true' || s === '1' || s === 'yes' || s === 'ingelogd';
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Avoid duplicate injection (SPA-like safety)
+  // Avoid duplicate injection
   if (window.__lagencoAdminButtonMounted) return;
   window.__lagencoAdminButtonMounted = true;
 
@@ -94,9 +73,7 @@
   }
 
   function show() {
-    if (!isLoggedIn()) return;
     var btn = buildButton();
-    // Reveal animation
     requestAnimationFrame(function () {
       btn.style.opacity = '1';
       btn.style.transform = 'translateY(0) scale(1)';
@@ -104,36 +81,7 @@
     });
   }
 
-  function hide() {
-    if (!btnEl) return;
-    btnEl.style.opacity = '0';
-    btnEl.style.transform = 'translateY(20px) scale(0.9)';
-    btnEl.style.pointerEvents = 'none';
-  }
-
-  function update() {
-    if (isLoggedIn()) show();
-    else hide();
-  }
-
-  // React to login/logout events from the main website script
-  window.addEventListener('lagenco:auth-change', update);
-
-  // Also listen to storage events (cross-tab login/logout)
-  window.addEventListener('storage', function (e) {
-    if (e.key === LOGIN_KEY) update();
-  });
-
-  // Initial mount — run as soon as body is ready
-  if (document.body) update();
-  else document.addEventListener('DOMContentLoaded', update);
-
-  // Re-check on page visibility (covers back/forward cache scenarios)
-  document.addEventListener('visibilitychange', function () {
-    if (!document.hidden) update();
-  });
-
-  // Polling fallback (every 2s) — covers cases where the main script
-  // updates localStorage without dispatching the custom event.
-  setInterval(update, 2000);
+  // Always show — no auth check
+  if (document.body) show();
+  else document.addEventListener('DOMContentLoaded', show);
 })();

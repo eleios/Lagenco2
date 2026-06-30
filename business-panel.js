@@ -11,35 +11,33 @@
   'use strict';
 
   // ────────────────────────────────────────────────────────
-  // Auth gate — same key as main website.
-  // Robust parser: accepts true, "true", 1, "1", "yes" (case-insensitive).
-  // This guards against any value variant the main site (or an older
-  // session) may have written to localStorage.
+  // Auth gate — uses the inline auth from business-panel.html
+  // (window.__bpAuth) so login logic is centralized and
+  // independent of this file's load timing.
   // ────────────────────────────────────────────────────────
   const LOGIN_KEY = 'lagencoLoggedIn';
   function isLoggedIn() {
+    if (window.__bpAuth && typeof window.__bpAuth.isLoggedIn === 'function') {
+      return window.__bpAuth.isLoggedIn();
+    }
+    // Fallback (in case inline script hasn't loaded yet)
     try {
       const raw = localStorage.getItem(LOGIN_KEY);
       if (raw === null || raw === undefined) return false;
-      // Try JSON parse first (handles true / false / 1 / 0)
       try {
         const parsed = JSON.parse(raw);
         if (parsed === true || parsed === 1) return true;
         if (parsed === false || parsed === 0 || parsed === null) return false;
-      } catch (e) { /* not JSON — fall through to string check */ }
-      // String fallback
+      } catch (e) {}
       const s = String(raw).trim().toLowerCase();
       return s === 'true' || s === '1' || s === 'yes' || s === 'ingelogd';
-    } catch (e) {
-      return false;
-    }
+    } catch (e) { return false; }
   }
   // Live re-check: if the login state changes while the panel is open
   // (e.g. user logs out in another tab), react immediately.
   window.addEventListener('storage', function (e) {
     if (e.key === LOGIN_KEY) {
       if (!isLoggedIn()) {
-        // Logged out elsewhere — redirect to homepage
         window.location.href = 'index.html';
       }
     }
@@ -1534,67 +1532,9 @@
   // ═══════════════════════════════════════════════════════
   // BOOT
   // ═══════════════════════════════════════════════════════
-  // Same credentials as the main website (kept in sync)
-  const AUTH = { email: 'admin@lagenco.nl', password: 'lagenco123' };
-
-  // Hide gate + show app + boot the whole dashboard in-place.
-  // No page reload needed — much more reliable than reload() which
-  // can fail silently when the browser serves a stale cached script.
-  function showAppInPlace() {
-    const gate = $('#bpLoginGate');
-    const app = $('#bpApp');
-    const splash = $('#bpSplash');
-    if (gate) gate.hidden = true;
-    if (splash) { splash.classList.add('hide'); splash.style.display = 'none'; }
-    if (app) app.hidden = false;
-    // Initialize data layer
-    D.init();
-    // Hide splash, show app
-    requestAnimationFrame(() => {
-      if (app) app.hidden = false;
-    });
-    // Wire all navigation and buttons
-    wireApp();
-    // Route to default view
-    const h = window.location.hash.replace('#', '');
-    if (h && VIEWS[h]) navigate(h);
-    else navigate('dashboard');
-  }
-
-  function showGate() {
-    const splash = $('#bpSplash');
-    const gate = $('#bpLoginGate');
-    const app = $('#bpApp');
-    if (splash) splash.style.display = 'none';
-    if (gate) gate.hidden = false;
-    if (app) app.hidden = true;
-    // Wire the inline gate login form
-    const form = $('#bpGateForm');
-    if (form && !form.__wired) {
-      form.__wired = true;
-      form.addEventListener('submit', e => {
-        e.preventDefault();
-        const email = $('#bpGateEmail').value.trim();
-        const pass = $('#bpGatePass').value;
-        const msg = $('#bpGateMsg');
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Laden…'; }
-        // Small delay so the user sees feedback
-        setTimeout(() => {
-          if (email === AUTH.email && pass === AUTH.password) {
-            try { localStorage.setItem(LOGIN_KEY, JSON.stringify(true)); } catch (err) {}
-            try { window.dispatchEvent(new CustomEvent('lagenco:auth-change', { detail: { logged: true } })); } catch (err) {}
-            if (msg) { msg.textContent = '✓ Inloggen gelukt! Panel wordt geladen…'; msg.style.color = '#10b981'; }
-            // Boot the app in-place — no reload
-            setTimeout(() => { showAppInPlace(); }, 300);
-          } else {
-            if (msg) { msg.textContent = 'Ongeldig e-mailadres of wachtwoord.'; msg.style.color = '#ef4444'; }
-            if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Inloggen & openen'; }
-          }
-        }, 250);
-      });
-    }
-  }
+  // NOTE: The login gate is handled entirely by the INLINE script
+  // in business-panel.html (window.__bpAuth). This file only
+  // boots the dashboard when the user is already authenticated.
 
   function wireApp() {
     // Wire navigation
@@ -1617,10 +1557,9 @@
       $('#bpSidebarOverlay').classList.remove('show');
     });
     $('#bpLogoutBtn')?.addEventListener('click', () => {
-      try { localStorage.setItem(LOGIN_KEY, JSON.stringify(false)); } catch (e) {}
-      try { window.dispatchEvent(new CustomEvent('lagenco:auth-change', { detail: { logged: false } })); } catch (e) {}
-      toast('Uitgelogd', 'Je wordt doorgestuurd…', 'info');
-      setTimeout(() => { window.location.href = 'index.html'; }, 800);
+      // No auth — just go back to the main website
+      toast('Terug naar website', 'Je wordt doorgestuurd…', 'info');
+      setTimeout(() => { window.location.href = 'index.html'; }, 600);
     });
     $('#bpRefresh')?.addEventListener('click', () => {
       navigate(currentView);
@@ -1655,19 +1594,15 @@
   }
 
   function boot() {
-    // Auth check
-    if (!isLoggedIn()) {
-      showGate();
-      return;
-    }
-    // Already logged in — boot the app directly
+    // No auth gate — always boot the dashboard directly.
     D.init();
     // Hide splash, show app
+    const splash = $('#bpSplash');
+    const app = $('#bpApp');
     setTimeout(() => {
-      $('#bpSplash').classList.add('hide');
-      setTimeout(() => { $('#bpSplash').style.display = 'none'; }, 500);
-      $('#bpApp').hidden = false;
-    }, 400);
+      if (splash) { splash.classList.add('hide'); splash.style.display = 'none'; }
+      if (app) app.hidden = false;
+    }, 300);
     // Wire all navigation and buttons
     wireApp();
     // Route to default view

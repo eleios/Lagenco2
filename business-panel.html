@@ -18,10 +18,43 @@
 
   <!-- Business panel styles (only loaded on this page — does not affect main website) -->
   <link rel="stylesheet" href="business-panel.css">
+
+  <!-- ═══════════════════════════════════════════════════════
+       INLINE BOOTSTRAP — runs BEFORE any other script.
+       No authentication: the dashboard is open to anyone
+       who reaches this page (typically via the Admin Modus
+       floating button on the main website).
+       ═══════════════════════════════════════════════════════ -->
+  <script>
+    (function () {
+      'use strict';
+      // Expose a no-op auth helper so business-panel.js (which still
+      // references window.__bpAuth) keeps working without changes.
+      window.__bpAuth = {
+        isLoggedIn: function () { return true; },
+        AUTH: { email: 'admin@lagenco.nl', password: 'lagenco123' },
+        LOGIN_KEY: 'lagencoLoggedIn',
+        doLogin: function (email, pass, callback) { callback(true); },
+        forceRedirect: function () {}
+      };
+      // Early show: hide splash, show app shell as soon as DOM is ready
+      function earlyShow() {
+        var splash = document.getElementById('bpSplash');
+        var app = document.getElementById('bpApp');
+        if (splash) splash.style.display = 'none';
+        if (app) app.hidden = false;
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', earlyShow);
+      } else {
+        earlyShow();
+      }
+    })();
+  </script>
 </head>
 <body class="bp-body">
 
-  <!-- ═══ Splash / Auth Gate ═══ -->
+  <!-- ═══ Splash (briefly visible during load) ═══ -->
   <div id="bpSplash" class="bp-splash">
     <div class="bp-splash-card">
       <div class="bp-splash-logo">
@@ -31,36 +64,6 @@
       <p class="bp-splash-sub">Handelsadministratie · Lagenco</p>
       <div id="bpSplashMsg" class="bp-splash-msg">Bezig met laden…</div>
       <div class="bp-splash-spinner"></div>
-    </div>
-  </div>
-
-  <!-- ═══ Login Gate (shown if not authenticated) ═══ -->
-  <div id="bpLoginGate" class="bp-login-gate" hidden>
-    <div class="bp-login-card">
-      <div class="bp-login-icon"><i class="fas fa-lock"></i></div>
-      <h2>Toegang vereist</h2>
-      <p>Log in met je Lagenco admin-account om het Business Panel te openen.</p>
-      <form id="bpGateForm" autocomplete="on" style="display:flex;flex-direction:column;gap:0.85rem;margin:1.25rem 0;text-align:left">
-        <div style="display:flex;flex-direction:column;gap:0.35rem">
-          <label for="bpGateEmail" style="font-size:0.78rem;font-weight:600;color:#475569">E-mailadres</label>
-          <input type="email" id="bpGateEmail" name="email" autocomplete="username" required
-            style="padding:0.65rem 0.85rem;border:1px solid #cbd5e1;border-radius:10px;font-size:14px;outline:none"
-            placeholder="admin@lagenco.nl">
-        </div>
-        <div style="display:flex;flex-direction:column;gap:0.35rem">
-          <label for="bpGatePass" style="font-size:0.78rem;font-weight:600;color:#475569">Wachtwoord</label>
-          <input type="password" id="bpGatePass" name="password" autocomplete="current-password" required
-            style="padding:0.65rem 0.85rem;border:1px solid #cbd5e1;border-radius:10px;font-size:14px;outline:none"
-            placeholder="••••••••">
-        </div>
-        <div id="bpGateMsg" style="font-size:0.8rem;min-height:1.2em;color:#ef4444;text-align:center"></div>
-        <button type="submit" class="bp-btn bp-btn-primary" style="justify-content:center;width:100%">
-          <i class="fas fa-sign-in-alt"></i> Inloggen & openen
-        </button>
-      </form>
-      <div style="margin-top:0.75rem;font-size:0.78rem;color:#64748b;text-align:center">
-        of <a href="index.html" style="color:#4f46e5;font-weight:600;text-decoration:underline">terug naar de website</a>
-      </div>
     </div>
   </div>
 
@@ -145,17 +148,17 @@
 
       <div class="bp-sidebar-foot">
         <div class="bp-user-card">
-          <div class="bp-user-avatar">A</div>
+          <div class="bp-user-avatar">L</div>
           <div class="bp-user-info">
-            <div class="bp-user-name">Admin</div>
-            <div class="bp-user-email">admin@lagenco.nl</div>
+            <div class="bp-user-name">Lagenco</div>
+            <div class="bp-user-email">Business Panel</div>
           </div>
         </div>
         <a href="index.html" class="bp-back-link" id="bpBackToSite">
           <i class="fas fa-external-link-alt"></i> Naar website
         </a>
         <button class="bp-logout-btn" id="bpLogoutBtn">
-          <i class="fas fa-sign-out-alt"></i> Uitloggen
+          <i class="fas fa-arrow-left"></i> Terug naar website
         </button>
       </div>
     </aside>
@@ -208,9 +211,9 @@
 
   <!-- ═══ Scripts — loaded in order, no impact on main website ═══ -->
   <!-- Cache-busting: version query forces browsers to fetch fresh copies -->
-  <script src="business-panel-data.js?v=2" defer></script>
+  <script src="business-panel-data.js?v=4" defer></script>
   <!-- Chart.js loaded async — only used by dashboard/reports -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-  <script src="business-panel.js?v=2" defer></script>
+  <script src="business-panel.js?v=4" defer></script>
 </body>
 </html>
