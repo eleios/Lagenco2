@@ -1537,10 +1537,37 @@
   // Same credentials as the main website (kept in sync)
   const AUTH = { email: 'admin@lagenco.nl', password: 'lagenco123' };
 
+  // Hide gate + show app + boot the whole dashboard in-place.
+  // No page reload needed — much more reliable than reload() which
+  // can fail silently when the browser serves a stale cached script.
+  function showAppInPlace() {
+    const gate = $('#bpLoginGate');
+    const app = $('#bpApp');
+    const splash = $('#bpSplash');
+    if (gate) gate.hidden = true;
+    if (splash) { splash.classList.add('hide'); splash.style.display = 'none'; }
+    if (app) app.hidden = false;
+    // Initialize data layer
+    D.init();
+    // Hide splash, show app
+    requestAnimationFrame(() => {
+      if (app) app.hidden = false;
+    });
+    // Wire all navigation and buttons
+    wireApp();
+    // Route to default view
+    const h = window.location.hash.replace('#', '');
+    if (h && VIEWS[h]) navigate(h);
+    else navigate('dashboard');
+  }
+
   function showGate() {
-    $('#bpSplash').style.display = 'none';
-    $('#bpLoginGate').hidden = false;
-    $('#bpApp').hidden = true;
+    const splash = $('#bpSplash');
+    const gate = $('#bpLoginGate');
+    const app = $('#bpApp');
+    if (splash) splash.style.display = 'none';
+    if (gate) gate.hidden = false;
+    if (app) app.hidden = true;
     // Wire the inline gate login form
     const form = $('#bpGateForm');
     if (form && !form.__wired) {
@@ -1550,34 +1577,26 @@
         const email = $('#bpGateEmail').value.trim();
         const pass = $('#bpGatePass').value;
         const msg = $('#bpGateMsg');
-        if (email === AUTH.email && pass === AUTH.password) {
-          try { localStorage.setItem(LOGIN_KEY, JSON.stringify(true)); } catch (err) {}
-          try { window.dispatchEvent(new CustomEvent('lagenco:auth-change', { detail: { logged: true } })); } catch (err) {}
-          if (msg) { msg.textContent = '✓ Inloggen gelukt! Panel wordt geladen…'; msg.style.color = '#10b981'; }
-          setTimeout(() => { window.location.reload(); }, 500);
-        } else {
-          if (msg) { msg.textContent = 'Ongeldig e-mailadres of wachtwoord.'; msg.style.color = '#ef4444'; }
-        }
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Laden…'; }
+        // Small delay so the user sees feedback
+        setTimeout(() => {
+          if (email === AUTH.email && pass === AUTH.password) {
+            try { localStorage.setItem(LOGIN_KEY, JSON.stringify(true)); } catch (err) {}
+            try { window.dispatchEvent(new CustomEvent('lagenco:auth-change', { detail: { logged: true } })); } catch (err) {}
+            if (msg) { msg.textContent = '✓ Inloggen gelukt! Panel wordt geladen…'; msg.style.color = '#10b981'; }
+            // Boot the app in-place — no reload
+            setTimeout(() => { showAppInPlace(); }, 300);
+          } else {
+            if (msg) { msg.textContent = 'Ongeldig e-mailadres of wachtwoord.'; msg.style.color = '#ef4444'; }
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Inloggen & openen'; }
+          }
+        }, 250);
       });
     }
   }
 
-  function boot() {
-    // Auth check
-    if (!isLoggedIn()) {
-      showGate();
-      return;
-    }
-    // Initialize data
-    D.init();
-
-    // Hide splash, show app
-    setTimeout(() => {
-      $('#bpSplash').classList.add('hide');
-      setTimeout(() => { $('#bpSplash').style.display = 'none'; }, 500);
-      $('#bpApp').hidden = false;
-    }, 600);
-
+  function wireApp() {
     // Wire navigation
     $$('.bp-nav-item').forEach(a => a.addEventListener('click', e => {
       e.preventDefault();
@@ -1602,9 +1621,6 @@
       try { window.dispatchEvent(new CustomEvent('lagenco:auth-change', { detail: { logged: false } })); } catch (e) {}
       toast('Uitgelogd', 'Je wordt doorgestuurd…', 'info');
       setTimeout(() => { window.location.href = 'index.html'; }, 800);
-    });
-    $('#bpBackToSite')?.addEventListener('click', e => {
-      // It's an anchor, just let it navigate
     });
     $('#bpRefresh')?.addEventListener('click', () => {
       navigate(currentView);
@@ -1632,12 +1648,34 @@
     });
 
     // Handle hash routing
+    window.addEventListener('hashchange', () => {
+      const h = window.location.hash.replace('#', '');
+      if (h && VIEWS[h]) navigate(h);
+    });
+  }
+
+  function boot() {
+    // Auth check
+    if (!isLoggedIn()) {
+      showGate();
+      return;
+    }
+    // Already logged in — boot the app directly
+    D.init();
+    // Hide splash, show app
+    setTimeout(() => {
+      $('#bpSplash').classList.add('hide');
+      setTimeout(() => { $('#bpSplash').style.display = 'none'; }, 500);
+      $('#bpApp').hidden = false;
+    }, 400);
+    // Wire all navigation and buttons
+    wireApp();
+    // Route to default view
     function routeFromHash() {
       const h = window.location.hash.replace('#', '');
       if (h && VIEWS[h]) navigate(h);
       else navigate('dashboard');
     }
-    window.addEventListener('hashchange', routeFromHash);
     routeFromHash();
   }
 

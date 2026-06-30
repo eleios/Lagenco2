@@ -207,9 +207,10 @@
   <div id="bpToastContainer" class="bp-toast-container"></div>
 
   <!-- ═══ Scripts — loaded in order, no impact on main website ═══ -->
-  <script src="business-panel-data.js" defer></script>
+  <!-- Cache-busting: version query forces browsers to fetch fresh copies -->
+  <script src="business-panel-data.js?v=2" defer></script>
   <!-- Chart.js loaded async — only used by dashboard/reports -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-  <script src="business-panel.js" defer></script>
+  <script src="business-panel.js?v=2" defer></script>
 </body>
 </html>
