@@ -41,7 +41,7 @@ const storage = {
 const getProducts    = ()        => storage.get('lagencoProducts', []);
 const saveProducts   = products  => storage.set('lagencoProducts', products);
 const isLoggedIn     = ()        => storage.get('lagencoLoggedIn', false);
-const setLoggedIn    = v         => storage.set('lagencoLoggedIn', v);
+const setLoggedIn    = v         => { storage.set('lagencoLoggedIn', v); try { window.dispatchEvent(new CustomEvent('lagenco:auth-change', { detail: { logged: v } })); } catch(e){} };
 const getWishlist    = ()        => storage.get('lagencoWishlist', []);
 const saveWishlist   = list      => storage.set('lagencoWishlist', list);
 const getCompare     = ()        => storage.get('lagencoCompare', []);

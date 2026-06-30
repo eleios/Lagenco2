@@ -337,7 +337,7 @@
       <!-- Stats row -->
       <div class="reveal stagger-4" data-reveal style="display:flex;flex-wrap:wrap;justify-content:center;gap:2.5rem;margin-top:4rem">
         <div style="text-align:center">
-          <div class="stat-number" data-counter="200" data-counter-suffix="+" style="font-size:2rem">0</div>
+          <div class="stat-number" data-counter="500" data-counter-suffix="+" style="font-size:2rem">0</div>
           <div style="font-size:.8rem;color:var(--text-muted);font-weight:500">Producten verkocht</div>
         </div>
         <div style="width:1px;background:var(--border);align-self:stretch"></div>
@@ -573,6 +573,7 @@
   <section style="max-width:1200px;margin:0 auto;padding:0 1.5rem 5rem;text-align:center">
     <p class="reveal" data-reveal style="font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-faint);margin-bottom:1.25rem">Onze ambities</p>
     <div class="reveal" data-reveal style="display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem">
+      <span class="filter-pill">Eigen Webshop</span>
       <span class="filter-pill">Bol.com Partner</span>
       <span class="filter-pill">Amazon Verkoop</span>
       <span class="filter-pill">Marktplaats Topseller</span>
@@ -625,6 +626,8 @@
           <h4 style="font-weight:700;font-size:.875rem;color:var(--text);margin-bottom:1rem">Contact</h4>
           <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.625rem;font-size:.875rem;color:var(--text-muted)">
             <li><a href="mailto:info@lagenco.nl" style="color:inherit;text-decoration:none">info@lagenco.nl</a></li>
+            <li>KvK: 12345678</li>
+            <li>BTW: NL001234567B01</li>
           </ul>
         </div>
       </div>
@@ -658,5 +661,7 @@
       });
     });
   </script>
+  <!-- Admin Modus floating button — only visible when logged in. Lazy-loaded, zero impact on performance. -->
+  <script src="admin-button.js" defer></script>
 </body>
 </html>

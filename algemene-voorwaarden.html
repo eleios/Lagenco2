@@ -4,37 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Algemene voorwaarden — Lagenco</title>
-  <meta name="description" content="Algemene voorwaarden van Lagenco — hobbymatige verkoop van restpartijen, retourproducten en tweedehands artikelen.">
+  <meta name="description" content="Algemene voorwaarden van Lagenco.">
   <meta name="theme-color" content="#2E5E4E">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232E5E4E'/><text y='72' x='50' font-size='62' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>L</text></svg>">
-
-  <!-- ═══ PERFORMANCE: preconnects & DNS prefetch (early handshakes) ═══ -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <link rel="dns-prefetch" href="https://images.unsplash.com">
-
-  <!-- ═══ Tailwind CDN (sync — utility classes affect layout, no FOUC) ═══ -->
-  <!-- Kept synchronous because making it async causes significant layout shift. -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- ═══ CRITICAL CSS (render-blocking, needed for first paint) ═══ -->
-  <!-- Loaded AFTER Tailwind so style.css can override utility classes (cascade preserved). -->
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
-
-  <!-- ═══ Non-critical CSS (async via print-media trick — non-render-blocking) ═══ -->
-  <!-- Google Fonts: text renders in fallback fonts first, then swaps to web fonts. -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&display=swap" media="print" onload="this.media='all'">
-  <!-- Font Awesome: icons briefly invisible (~150-300ms), then render. -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
-  <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  </noscript>
-
-  <!-- ═══ Main script (defer — fetches in parallel, runs after DOM parse) ═══ -->
-  <script src="script.js" defer></script>
-
 </head>
 <body data-page="legal" class="page-enter">
   <a href="#main" class="skip-link">Direct naar inhoud</a>
@@ -71,99 +49,73 @@
     </nav>
 
     <h1>Algemene voorwaarden</h1>
-    <p class="legal-meta">Laatst bijgewerkt: 1 januari 2024 · Lagenco · Hobbymatige verkoop</p>
+    <p class="legal-meta">Laatst bijgewerkt: 1 januari 2024 · Lagenco · KvK: 12345678</p>
 
-    <!-- Belangrijk kader over de status van de verkoper -->
-    <div class="legal-callout" style="background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:2rem">
-      <p style="margin:0;color:var(--text);font-size:.95rem;line-height:1.65">
-        <strong>Belangrijk om te weten:</strong> Lagenco is geen geregistreerde onderneming.
-        De verkoper handelt als particulier en verkoopt producten op hobbymatige basis.
-        De verkoopactiviteiten vormen geen onderneming in de zin van de Belastingdienst en
-        vinden plaats vanuit een persoonlijke hobby. Er wordt geen bedrijf geëxploiteerd en
-        de producten worden in beperkte oplage aangeboden. Hierdoor zijn niet alle regels
-        die voor professionele webwinkels gelden van toepassing — lees onderstaande
-        voorwaarden goed door.
-      </p>
-    </div>
-
+    
     <div class="legal-toc">
       <h2>Inhoud</h2>
       <ul>
         <li><a href="#art1">Artikel 1 — Definities</a></li>
-        <li><a href="#art2">Status van de verkoper</a></li>
-        <li><a href="#art3">Doel van de verkoop</a></li>
-        <li><a href="#art4">Producten</a></li>
-        <li><a href="#art5">Aanbod en totstandkoming</a></li>
-        <li><a href="#art6">Prijzen</a></li>
-        <li><a href="#art7">Betaling</a></li>
-        <li><a href="#art8">Levering en verzending</a></li>
-        <li><a href="#art9">Retouren</a></li>
-        <li><a href="#art10">Conformiteit en staat van producten</a></li>
-        <li><a href="#art11">Aansprakelijkheid</a></li>
-        <li><a href="#art12">Klachten</a></li>
-        <li><a href="#art13">Toepasselijk recht</a></li>
+        <li><a href="#art2">Toepasselijkheid</a></li>
+        <li><a href="#art3">Aanbod en offertes</a></li>
+        <li><a href="#art4">Totstandkoming overeenkomst</a></li>
+        <li><a href="#art5">Prijzen en betaling</a></li>
+        <li><a href="#art6">Levering</a></li>
+        <li><a href="#art7">Conformiteit en garantie</a></li>
+        <li><a href="#art8">Herroepingsrecht</a></li>
+        <li><a href="#art9">Aansprakelijkheid</a></li>
+        <li><a href="#art10">Klachten</a></li>
+        <li><a href="#art11">Toepasselijk recht</a></li>
       </ul>
     </div>
 
     <h2 id="art1">Artikel 1 — Definities</h2>
     <p>In deze algemene voorwaarden wordt verstaan onder:</p>
     <ul>
-      <li><strong>Verkoper</strong>: de particulier die deze voorwaarden hanteert en handelt vanuit een persoonlijke hobby. De verkoper is geen onderneming in de zin van de wet en is niet ingeschreven bij de Kamer van Koophandel.</li>
-      <li><strong>Koper</strong>: de natuurlijke persoon die een product van de verkoper koopt of wenst te kopen, en daarmee handelt buiten een bedrijfs- of beroepsactiviteit.</li>
-      <li><strong>Producten</strong>: de door de verkoper aangeboden goederen, waaronder tweedehands artikelen, restpartijen, retourproducten en zelfgemaakte (handwerk) items in kleine oplage.</li>
-      <li><strong>Overeenkomst</strong>: de afspraak tussen verkoper en koper over de aankoop van één of meer producten.</li>
-      <li><strong>Hobbyverkoop</strong>: verkoopactiviteiten die voortvloeien uit een persoonlijke hobby, zonder winstoogmerk of ondernemingsstructuur, en die door de Belastingdienst als zodanig worden aangemerkt.</li>
+      <li><strong>Lagenco</strong>: de gebruiker van deze voorwaarden, gevestigd aan [adres], ingeschreven bij de KvK onder nummer 12345678.</li>
+      <li><strong>Klant</strong>: de natuurlijke of rechtspersoon die met Lagenco een overeenkomst sluit of wenst te sluiten.</li>
+      <li><strong>Producten</strong>: de door Lagenco aangeboden goederen, waaronder restpartijen, retourproducten, tweedehands artikelen en overstock.</li>
+      <li><strong>Overeenkomst</strong>: iedere afspraak tussen Lagenco en de klant waaruit rechten en verplichtingen voortvloeien.</li>
     </ul>
 
-    <h2 id="art2">Artikel 2 — Status van de verkoper</h2>
-    <p>De verkoper handelt als particulier en verkoopt producten op hobbymatige basis. De verkoper is niet ingeschreven bij de Kamer van Koophandel en voert geen administratie als ondernemer. De verkoopactiviteiten vinden plaats vanuit een persoonlijke passie voor het geven van kwaliteitsproducten een tweede leven — niet om een bedrijf te exploiteren.</p>
-    <p>Omdat de verkoper niet als onderneming handelt, zijn een aantal wettelijke regels die gelden voor professionele webwinkels (zoals de wettelijke aansprakelijkheid voor ondernemers, de verplichting om BTW in rekening te brengen en een aantal informatieplichten uit de Wet bescherming consumenten bij overeenkomsten op afstand) niet of slechts beperkt van toepassing. Dit wordt in de navolgende artikelen zo nodig toegelicht.</p>
+    <h2 id="art2">Toepasselijkheid</h2>
+    <p>Deze algemene voorwaarden zijn van toepassing op alle aanbiedingen, offertes en overeenkomsten van Lagenco. Afwijkingen zijn alleen geldig indien deze schriftelijk zijn overeengekomen. Eventuele inkoop- of andere voorwaarden van de klant worden door Lagenco uitdrukkelijk van de hand gewezen.</p>
+    <p>Indien enige bepaling in deze voorwaarden nietig of vernietigbaar is, blijven de overige bepalingen volledig van kracht. Lagenco zal in dat geval een vervangende bepaling formuleren die zoveel mogelijk aansluit bij het oorspronkelijke doel.</p>
 
-    <h2 id="art3">Artikel 3 — Doel van de verkoop</h2>
-    <p>De verkoop voortkomt uit een persoonlijke hobby. De activiteiten zijn niet gericht op het exploiteren van een bedrijf, het maken van winst of het structureel genereren van inkomsten. Producten worden aangeboden in beperkte oplage en slechts zolang de voorraad strekt. Het hoofddoel is het duurzaam hergebruik van producten en het geven van goederen een tweede kans, in plaats van het drijven van een handel.</p>
-    <p>De verkoper bepaalt zelf welke producten worden aangeboden, in welke hoeveelheid en tegen welke prijs. Er is geen sprake van een reguliere handelsvoorraad of een continue aanvoer van nieuwe producten. Het aanbod is daardoor wisselend en kan op elk moment worden gestaakt of gewijzigd zonder dat dit als een ondernemingsbeslissing hoeft te worden gemeld.</p>
+    <h2 id="art3">Aanbod en offertes</h2>
+    <p>Alle aanbiedingen op de website van Lagenco zijn vrijblijvend, tenzij uitdrukkelijk anders vermeld. Een aanbod geldt gedurende de op de website vermelde geldigheidsduur, of — bij ontbreken daarvan — gedurende 30 dagen na publicatie.</p>
+    <p>Aan offertes die Lagenco op verzoek opmaakt, kan de klant gedurende 30 dagen na datum van de offerte gebonden worden. Daarna vervalt de geldigheid van de offerte.</p>
 
-    <h2 id="art4">Artikel 4 — Producten</h2>
-    <p>De aangeboden producten zijn tweedehands, afkomstig uit restpartijen of retourproducten, of — indien expliciet vermeld — zelfgemaakt in kleine oplage. De staat van elk product wordt naar waarheid omschreven op de productpagina, inclusief eventuele zichtbare gebruikssporen of bijzonderheden.</p>
-    <p>Bij handgemaakte producten kunnen kleine verschillen voorkomen tussen exemplaren, bijvoorbeeld in kleur, afmeting of afwerking. Dit is inherent aan handwerk en vormt geen tekortkoming. Productfotografie is indicatief; werkelijke kleuren kunnen enigszins afwijken door scherminstellingen en belichting.</p>
-    <p>Specifieke wensen of vragen over een product kunnen voor aankoop worden gesteld via <a href="mailto:info@lagenco.nl">info@lagenco.nl</a>. De verkoper streeft naar eerlijke en transparante communicatie over de staat van elk aangeboden artikel.</p>
+    <h2 id="art4">Totstandkoming overeenkomst</h2>
+    <p>De overeenkomst tussen Lagenco en de klant komt tot stand op het moment dat de klant een aanbod van Lagenco accepteert, dan wel op het moment dat Lagenco een opdracht of bestelling van de klant schriftelijk of per e-mail bevestigt.</p>
+    <p>Lagenco behoudt zich het recht voor een bestelling te weigeren zonder opgaaf van redenen, bijvoorbeeld bij vermoeden van fraude of onjuiste contactgegevens.</p>
 
-    <h2 id="art5">Artikel 5 — Aanbod en totstandkoming</h2>
-    <p>Alle aanbiedingen op deze website zijn vrijblijvend. Een product kan pas als definitief besteld worden beschouwd nadat de verkoper de bestelling per e-mail of bericht heeft bevestigd. Tot dat moment kan een product onverwacht niet meer beschikbaar zijn (bijvoorbeeld doordat het elders al is verkocht of door een fout in de voorraadopgave).</p>
-    <p>De overeenkomst tussen verkoper en koper komt tot stand op het moment dat de verkoper de bestelling van de koper schriftelijk (per e-mail of bericht) bevestigt. De verkoper behoudt zich het recht voor een bestelling zonder opgaaf van redenen te weigeren, bijvoorbeeld bij twijfel over de juistheid van de opgegeven contact- of aflevergegevens.</p>
+    <h2 id="art5">Prijzen en betaling</h2>
+    <p>Alle prijzen op de website zijn in euro's en inclusief BTW, tenzij anders vermeld. Verzendkosten worden apart berekend en vóór het afrekenen getoond. Lagenco kan prijzen wijzigen; de bij de bestelling getoonde prijs is bindend.</p>
+    <p>Betaling dient vooraf of bij aflevering te geschieden, op de door Lagenco aangegeven wijze. Bij niet-tijdige betaling kan Lagenco wettelijke rente in rekening brengen en incassokosten vergoeding vragen.</p>
 
-    <h2 id="art6">Artikel 6 — Prijzen</h2>
-    <p>Alle prijzen op de website worden vermeld in euro's. Omdat de verkoper geen BTW-plichtige ondernemer is, bevatten de vermelde prijzen geen BTW. De prijs die bij het product staat vermeld is de prijs die door de koper verschuldigd is — er worden geen extra belastingen of heffingen bovenop het vermelde bedrag in rekening gebracht.</p>
-    <p>Verzendkosten worden apart berekend en vóór of bij het afrekenen aan de koper getoond. De verkoper kan prijzen wijzigen; de prijs die op het moment van de bestelling wordt getoond, is bindend voor beide partijen. Eventuele kortingscodes of acties gelden uitsluitend voor de termijn en onder de voorwaarden die daarbij worden vermeld.</p>
+    <h2 id="art6">Levering</h2>
+    <p>Lagenco levert de producten binnen de overeengekomen termijn. Indien geen termijn is overeengekomen, levert Lagenco uiterlijk 30 dagen na de bestelling. Bij overschrijding hiervan deelt Lagenco de klant zo snel mogelijk een nieuwe levertermijn mee.</p>
+    <p>Het risico over de producten gaat op de klant over op het moment van feitelijke levering. Bij verzending gaat het risico over op het moment van overhandiging aan de vervoerder.</p>
 
-    <h2 id="art7">Artikel 7 — Betaling</h2>
-    <p>De koper kan betalen via de bij bestelling opgegeven betaalmethoden. Indien geen specifieke methode is aangegeven, geldt bij voorkeur een bankoverschrijving of een betaalverzoek (zoals Tikkie). Andere betaalmethoden kunnen in overleg worden afgesproken.</p>
-    <p>Betaling dient te geschieden vóór verzending van het product, tenzij schriftelijk anders is overeengekomen. Bij niet-tijdige betaling neemt de verkoper contact op met de koper om een nieuwe betaaltermijn af te spreken. Indien betaling uitblijft, kan de verkoper de overeenkomst ontbinden en het product opnieuw aanbieden.</p>
+    <h2 id="art7">Conformiteit en garantie</h2>
+    <p>Lagenco staat in voor de conformiteit van de geleverde producten met de overeenkomst. Aangezien Lagenco handelt in restpartijen, retourproducten en tweedehands goederen, kan de staat van de producten variëren. De staat van ieder product wordt naar waarheid op de website omschreven.</p>
+    <p>Op tweedehands en retourproducten geldt een beperkte garantie van 14 dagen na levering. De klant dient de producten bij ontvangst te inspecteren en eventuele zichtbare gebreken binnen 48 uur bij Lagenco te melden.</p>
 
-    <h2 id="art8">Artikel 8 — Levering en verzending</h2>
-    <p>De verkoper stuurt het product op nadat de betaling is ontvangen. Verzending vindt in de regel plaats binnen 3 werkdagen na ontvangst van de betaling. Indien er sprake is van vertraging — bijvoorbeeld door feestdagen, ziekte of andere omstandigheden die bij een hobby-activiteit passen — wordt de koper hiervan zo spoedig mogelijk op de hoogte gesteld, inclusief een nieuwe verwachte verzenddatum.</p>
-    <p>De verwachte levertijd is een indicatie en geen fatale termijn. Verzendkosten zijn afhankelijk van het formaat en gewicht van het product en worden vóór verzending met de koper afgestemd, tenzij ze al op de productpagina zijn vermeld. Het risico over het product gaat op de koper over op het moment van overhandiging aan de vervoerder. De verkoper is niet aansprakelijk voor verlies of beschadiging tijdens transport, maar zal bij twijfel altijd meedenken over een passende oplossing.</p>
+    <h2 id="art8">Herroepingsrecht</h2>
+    <p>De klant heeft het recht een overeenkomst zonder opgaaf van redenen te herroepen binnen 14 dagen na ontvangst van het product. Dit recht geldt niet voor producten die op verzoek van de klant zijn gepersonaliseerd of die om hygiënische redenen niet kunnen worden geretourneerd.</p>
+    <p>Voor de uitoefening van het herroepingsrecht kan de klant contact opnemen via <a href="mailto:info@lagenco.nl">info@lagenco.nl</a>. Zie ook ons <a href="retourbeleid.html">retourbeleid</a>.</p>
 
-    <h2 id="art9">Artikel 9 — Retouren</h2>
-    <p>Omdat de verkoper handelt als particulier en niet als onderneming, is het wettelijk herroepingsrecht (zoals dat geldt voor professionele webwinkels) niet van toepassing op deze verkopen. Dit betekent dat de koper niet automatisch het recht heeft om een product zonder opgaaf van redenen binnen 14 dagen te retourneren.</p>
-    <p>Toch streeft de verkoper naar eerlijkheid en goedmakersschap. Indien een product aantoonbaar niet overeenkomt met de omschrijving op de website, of bij beschadiging die al voor de verzending aanwezig was, kan de koper binnen 7 dagen na ontvangst contact opnemen via <a href="mailto:info@lagenco.nl">info@lagenco.nl</a> om een passende oplossing te bespreken — zoals terugbetaling, gedeeltelijke terugbetaling of vervanging indien beschikbaar. Zie ook ons <a href="retourbeleid.html">retourbeleid</a> voor de praktische afhandeling.</p>
-    <p>Returns om andere redenen (bijvoorbeeld omdat het product niet bevalt, of omdat de koper zich heeft bedacht) worden in overweging genomen, maar zijn niet gegarandeerd. Eventuele retourkosten komen in dat geval voor rekening van de koper, tenzij schriftelijk anders overeengekomen.</p>
+    <h2 id="art9">Aansprakelijkheid</h2>
+    <p>Lagenco is niet aansprakelijk voor indirecte schade, waaronder gevolgschade, gederfde winst of verlies van data. De aansprakelijkheid van Lagenco is in alle gevallen beperkt tot het bedrag van de factuurwaarde van de betreffende bestelling.</p>
+    <p>Lagenco spant zich in om de informatie op de website juist en actueel te houden, maar kan niet instaan voor de volledigheid of juistheid ervan.</p>
 
-    <h2 id="art10">Artikel 10 — Conformiteit en staat van producten</h2>
-    <p>De verkoper spant zich in om elk product zo eerlijk en compleet mogelijk te omschrijven, inclusief eventuele gebreken of gebruikssporen. Aangezien het veelal tweedehands producten of restpartijen betreft, kan de staat variëren en is niet elk product in nieuwstaat. De koper aanvaardt dat deze aard van de verkopen inherent onzekerheden met zich meebrengt omtrent de exacte staat, levensduur of herkomst van een product.</p>
-    <p>Bij handgemaakte producten geldt dat kleine afwijkingen in afmeting, kleur of afwerking geen tekortkoming vormen, maar veeleer het gevolg zijn van het ambachtelijke karakter. Indien een product bij ontvangst aantoonbaar afwijkt van de omschrijving op de website, geldt hetgeen is bepaald in artikel 9 over retourzendingen.</p>
+    <h2 id="art10">Klachten</h2>
+    <p>Klachten over producten of diensten kunnen binnen 14 dagen na ontdekking worden gemeld bij Lagenco via <a href="mailto:info@lagenco.nl">info@lagenco.nl</a>. Lagenco streeft ernaar klachten binnen 14 dagen te behandelen.</p>
+    <p>Indien een klacht niet in onderling overleg kan worden opgelost, kan de klacht worden voorgelegd aan de Geschillencommissie of de bevoegde rechter.</p>
 
-    <h2 id="art11">Artikel 11 — Aansprakelijkheid</h2>
-    <p>De verkoper is niet aansprakelijk voor schade — van welke aard ook — die ontstaat door onjuist, onvoorzichtig of anderzins niet-overeenkomstig de instructies gebruik van een geleverd product, voor zover de wet dit toestaat. De verkoper is evenmin aansprakelijk voor indirecte schade, waaronder gevolgschade, gederfde winst, verlies van data of kosten van bedrijfsstilstand.</p>
-    <p>De aansprakelijkheid van de verkoper is in alle gevallen beperkt tot het bedrag dat de koper voor het betreffende product heeft betaald. De verkoper spant zich in om de informatie op de website juist en actueel te houden, maar kan niet instaan voor de volledigheid, juistheid of actualiteit daarvan. Aanbevelingen of adviezen die mondeling of schriftelijk worden gegeven, zijn vrijblijvend en vormen geen grondslag voor aansprakelijkheid.</p>
-
-    <h2 id="art12">Artikel 12 — Klachten</h2>
-    <p>Klachten over een product of de afhandeling van een bestelling kunnen binnen 7 dagen na ontdekking — en uiterlijk binnen 14 dagen na levering — worden gemeld via <a href="mailto:info@lagenco.nl">info@lagenco.nl</a>. De verkoper streeft ernaar elke klacht binnen 7 werkdagen te beantwoorden en in onderling overleg tot een passende oplossing te komen.</p>
-    <p>Indien een klacht niet in onderling overleg kan worden opgelost, staat het de koper vrij om de klacht voor te leggen aan een onafhankelijke geschillencommissie of, indien van toepassing, aan de bevoegde rechter. Omdat de verkoper als particulier handelt, gelden daarbij de regels van het consumentenrecht voor particulier-particuliere transacties.</p>
-
-    <h2 id="art13">Artikel 13 — Toepasselijk recht</h2>
-    <p>Op alle afspraken tussen verkoper en koper is Nederlands recht van toepassing. Geschillen die niet in onderling overleg kunnen worden opgelost, worden — indien de rechter bevoegd is — voorgelegd aan de bevoegde Nederlandse rechter, tenzij de wettelijke bepalingen anders voorschrijven.</p>
-    <p>Deze voorwaarden kunnen door de verkoper van tijd tot tijd worden gewijzigd. De meest actuele versie is altijd op deze pagina te vinden. Voor lopende bestellingen geldt de versie die op het moment van de bestelling van kracht was.</p>
+    <h2 id="art11">Toepasselijk recht</h2>
+    <p>Op alle overeenkomsten tussen Lagenco en de klant is Nederlands recht van toepassing. Geschillen worden voorgelegd aan de bevoegde rechter in de woon- of vestigingsplaats van Lagenco, tenzij de wettelijke bepalingen anders voorschrijven.</p>
 
 
   </main>
@@ -175,7 +127,7 @@
           <div style="width:2.25rem;height:2.25rem;background:var(--green);border-radius:.75rem;display:flex;align-items:center;justify-content:center"><i class="fas fa-leaf text-white text-sm"></i></div>
           <span style="font-size:1.1rem;font-weight:800;color:var(--text)">Lagenco</span>
         </div>
-        <p style="font-size:.8rem;color:var(--text-muted);line-height:1.6;max-width:18rem">Slim inkopen. Duurzaam doorverkopen — als hobby, niet als bedrijf.</p>
+        <p style="font-size:.8rem;color:var(--text-muted);line-height:1.6;max-width:18rem">Slim inkopen. Duurzaam doorverkopen.</p>
       </div>
       <div>
         <h4 style="font-weight:700;font-size:.8rem;color:var(--text);margin-bottom:1rem;text-transform:uppercase;letter-spacing:.06em">Navigatie</h4>
@@ -200,8 +152,8 @@
         <h4 style="font-weight:700;font-size:.8rem;color:var(--text);margin-bottom:1rem;text-transform:uppercase;letter-spacing:.06em">Contact</h4>
         <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.625rem;font-size:.85rem;color:var(--text-muted)">
           <li><a href="mailto:info@lagenco.nl" style="color:inherit;text-decoration:none">info@lagenco.nl</a></li>
-          <li>Particuliere verkoper</li>
-          <li>Hobbymatige verkoop</li>
+          <li>KvK: 12345678</li>
+          <li>BTW: NL001234567B01</li>
         </ul>
       </div>
     </div>
@@ -222,5 +174,8 @@
     </div>
   </a>
 
+  <script src="script.js"></script>
+  <!-- Admin Modus floating button — only visible when logged in. Lazy-loaded, zero impact on performance. -->
+  <script src="admin-button.js" defer></script>
 </body>
 </html>
