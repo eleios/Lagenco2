@@ -23,12 +23,12 @@
   // ═══════════════════════════════════════════════════════
   // CONFIG — Vul hier je Supabase gegevens in
   // ═══════════════════════════════════════════════════════
-  const SUPABASE_URL = 'VUL_HIER_JE_SUPABASE_URL_IN';
-  const SUPABASE_KEY = 'VUL_HIER_JE_SUPABASE_ANON_KEY_IN';
+  const SUPABASE_URL = 'https://cjamegkxiuazyaqadgqn.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqYW1lZ2t4aXVhenlhcWFkZ3FuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxOTczODcsImV4cCI6MjA5ODc3MzM4N30.fQvSkCg94sxYYYRNtXHF2vWgGaMC3BKGNTpAnbJholk';
 
   // Check if Supabase is configured
-  const isConfigured = SUPABASE_URL !== 'VUL_HIER_JE_SUPABASE_URL_IN' &&
-                       SUPABASE_KEY !== 'VUL_HIER_JE_SUPABASE_ANON_KEY_IN' &&
+  const isConfigured = SUPABASE_URL !== 'https://cjamegkxiuazyaqadgqn.supabase.co' &&
+                       SUPABASE_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqYW1lZ2t4aXVhenlhcWFkZ3FuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxOTczODcsImV4cCI6MjA5ODc3MzM4N30.fQvSkCg94sxYYYRNtXHF2vWgGaMC3BKGNTpAnbJholk' &&
                        typeof window.supabase !== 'undefined';
 
   let sb = null;
