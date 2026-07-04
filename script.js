@@ -39,7 +39,7 @@ const storage = {
 };
 
 const getProducts    = ()        => storage.get('lagencoProducts', []);
-const saveProducts   = products  => storage.set('lagencoProducts', products);
+const saveProducts   = products  => { storage.set('lagencoProducts', products); };
 const isLoggedIn     = ()        => storage.get('lagencoLoggedIn', false);
 const setLoggedIn    = v         => { storage.set('lagencoLoggedIn', v); try { window.dispatchEvent(new CustomEvent('lagenco:auth-change', { detail: { logged: v } })); } catch(e){} };
 const getWishlist    = ()        => storage.get('lagencoWishlist', []);
@@ -829,9 +829,13 @@ const addBid = (bid) => {
   const bids = getBids();
   bid.id = 'bid_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   bid.createdAt = new Date().toISOString();
-  bid.status = bid.status || 'in_afwachting'; // in_afwachting | geaccepteerd | afgewezen
+  bid.status = bid.status || 'in_afwachting';
   bids.push(bid);
   saveBids(bids);
+  // Sync naar Supabase
+  if (window.LagencoDB && window.LagencoDB.isConfigured) {
+    window.LagencoDB.saveBid(bid);
+  }
   return bid;
 };
 
@@ -2659,8 +2663,12 @@ const addCommunityPost = (post) => {
   post.id = 'post_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   post.createdAt = new Date().toISOString();
   post.comments = post.comments || [];
-  posts.unshift(post); // newest first
+  posts.unshift(post);
   saveCommunityPosts(posts);
+  // Sync naar Supabase
+  if (window.LagencoDB && window.LagencoDB.isConfigured) {
+    window.LagencoDB.savePost(post);
+  }
   return post;
 };
 
@@ -2673,6 +2681,10 @@ const addCommunityComment = (postId, comment) => {
     post.comments = post.comments || [];
     post.comments.push(comment);
     saveCommunityPosts(posts);
+    // Sync naar Supabase
+    if (window.LagencoDB && window.LagencoDB.isConfigured) {
+      window.LagencoDB.saveComment(postId, comment);
+    }
     return comment;
   }
   return null;
@@ -3652,6 +3664,44 @@ const init = () => {
   initMagneticButtons();
   initCardTilt();
   initCounters();
+
+  // ═══ SUPABASE SYNC ═══
+  // Haal alle data op van Supabase en update de pagina
+  if (window.LagencoDB && window.LagencoDB.isConfigured) {
+    window.LagencoDB.syncAll().then(() => {
+      // Re-render alle secties met de nieuwe data
+      if (PAGE === 'index') {
+        renderFeatured();
+        renderLiveBids();
+        renderCommunityPosts();
+      }
+      if (PAGE === 'assortiment') {
+        renderAssortment();
+      }
+      updateWishlistCounter();
+      updateCompareCounter();
+    });
+
+    // Realtime: update pagina wanneer data verandert
+    window.LagencoDB.subscribeRealtime({
+      onProductsChange: () => {
+        if (PAGE === 'index') { renderFeatured(); renderLiveBids(); }
+        if (PAGE === 'assortiment') renderAssortment();
+      },
+      onBidsChange: () => {
+        if (PAGE === 'index') renderLiveBids();
+        updateWishlistCounter();
+      },
+      onPostsChange: () => {
+        if (PAGE === 'index') renderCommunityPosts();
+      },
+      onCouponsChange: () => {},
+      onSettingsChange: () => {},
+      onTokenChange: () => {
+        checkSpinReset();
+      }
+    });
+  }
 
   if (PAGE === 'index') {
     renderFeatured();
