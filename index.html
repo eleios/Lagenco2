@@ -9,8 +9,8 @@
   <meta property="og:title" content="Lagenco — Kwaliteit verdient een tweede kans">
   <meta property="og:description" content="Betaalbaar én duurzaam winkelen bij Lagenco.">
   <meta property="og:type" content="website">
-  <meta name="theme-color" content="#2E5E4E">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232E5E4E'/><text y='72' x='50' font-size='62' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>L</text></svg>">
+  <meta name="theme-color" content="#0F3D2E">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230F3D2E'/><text y='72' x='50' font-size='62' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>L</text></svg>">
 
   <!-- ═══ PERFORMANCE: preconnects & DNS prefetch (early handshakes) ═══ -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,11 +28,11 @@
 
   <!-- ═══ Non-critical CSS (async via print-media trick — non-render-blocking) ═══ -->
   <!-- Google Fonts: text renders in fallback fonts first, then swaps to web fonts. -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Caveat:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
   <!-- Font Awesome: icons briefly invisible (~150-300ms), then render. -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Caveat:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   </noscript>
 
@@ -68,10 +68,10 @@
     <div class="max-w-7xl mx-auto px-6 h-full flex items-center justify-between gap-4">
       <!-- Logo -->
       <a href="index.html" class="flex items-center gap-2.5 flex-shrink-0" style="text-decoration:none" aria-label="Lagenco home">
-        <div style="width:2.25rem;height:2.25rem;background:var(--green);border-radius:.75rem;display:flex;align-items:center;justify-content:center">
+        <div style="width:2.25rem;height:2.25rem;background:linear-gradient(135deg,var(--green),var(--green-mid));border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(15,61,46,.20)">
           <i class="fas fa-leaf text-white text-sm"></i>
         </div>
-        <span style="font-size:1.2rem;font-weight:800;letter-spacing:-.03em;color:var(--text)">Lagenco</span>
+        <span style="font-family:'Fraunces',serif;font-size:1.35rem;font-weight:600;letter-spacing:-.020em;color:var(--text)">Lagenco</span>
       </a>
 
       <!-- Nav links -->
@@ -111,20 +111,20 @@
       <!-- Left panel -->
       <div class="login-left" style="border-radius:0">
         <div>
-          <span style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.12);border-radius:100px;padding:.35rem 1rem;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.5rem">
+          <span style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.12);border-radius:100px;padding:.4rem 1.05rem;font-size:.7rem;font-weight:700;letter-spacing:.10em;text-transform:uppercase;margin-bottom:1.5rem;font-family:'Sora',sans-serif">
             <i class="fas fa-shield-alt"></i> Admin login
           </span>
-          <h2 id="loginTitle" class="display-serif" style="font-size:2rem;font-weight:500;line-height:1.15;margin-bottom:.75rem;font-family:'Fraunces',serif;letter-spacing:-.02em">Welkom terug bij Lagenco</h2>
-          <p style="font-size:.875rem;opacity:.8;line-height:1.6">Log in om nieuwe producten toe te voegen, voorraad te beheren en admin-tools te gebruiken.</p>
+          <h2 id="loginTitle" class="display-serif" style="font-size:2.25rem;font-weight:500;line-height:1.1;margin-bottom:.875rem;font-family:'Fraunces',serif;letter-spacing:-.025em">Welkom terug bij Lagenco</h2>
+          <p style="font-size:.875rem;opacity:.8;line-height:1.65">Log in om nieuwe producten toe te voegen, voorraad te beheren en admin-tools te gebruiken.</p>
         </div>
-        <div style="display:flex;flex-direction:column;gap:1rem;font-size:.875rem;opacity:.85">
-          <div style="display:flex;gap:.75rem;align-items:flex-start">
+        <div style="display:flex;flex-direction:column;gap:1.125rem;font-size:.875rem;opacity:.85">
+          <div style="display:flex;gap:.875rem;align-items:flex-start">
             <div style="width:2.25rem;height:2.25rem;background:rgba(255,255,255,.12);border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-lock"></i></div>
-            <div><p style="font-weight:600;margin-bottom:.15rem">Veilige toegang</p><p style="opacity:.7;font-size:.8rem">Alle functies zijn afgeschermd na login.</p></div>
+            <div><p style="font-weight:600;margin-bottom:.2rem;font-family:'Sora',sans-serif">Veilige toegang</p><p style="opacity:.7;font-size:.8rem;line-height:1.5">Alle functies zijn afgeschermd na login.</p></div>
           </div>
-          <div style="display:flex;gap:.75rem;align-items:flex-start">
+          <div style="display:flex;gap:.875rem;align-items:flex-start">
             <div style="width:2.25rem;height:2.25rem;background:rgba(255,255,255,.12);border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-upload"></i></div>
-            <div><p style="font-weight:600;margin-bottom:.15rem">Productbeheer</p><p style="opacity:.7;font-size:.8rem">Upload foto's en beheer de collectie direct.</p></div>
+            <div><p style="font-weight:600;margin-bottom:.2rem;font-family:'Sora',sans-serif">Productbeheer</p><p style="opacity:.7;font-size:.8rem;line-height:1.5">Upload foto's en beheer de collectie direct.</p></div>
           </div>
         </div>
       </div>
@@ -132,21 +132,21 @@
       <div class="login-right" style="position:relative">
         <button class="modal-close-btn" style="position:absolute;top:1.25rem;right:1.25rem" aria-label="Sluiten">&times;</button>
         <div style="margin-bottom:2rem">
-          <h3 style="font-size:1.5rem;font-weight:700;color:var(--text);margin-bottom:.25rem">Inloggen als administrator</h3>
+          <h3 style="font-family:'Fraunces',serif;font-size:1.625rem;font-weight:600;color:var(--text);margin-bottom:.3rem;letter-spacing:-.020em">Inloggen als administrator</h3>
           <p style="font-size:.875rem;color:var(--text-muted)">Gebruik uw Lagenco admin-account.</p>
         </div>
         <form id="loginForm" style="display:flex;flex-direction:column;gap:1.25rem" autocomplete="on">
           <label style="display:flex;flex-direction:column;gap:.5rem">
-            <span style="font-size:.875rem;font-weight:600;color:var(--text)">E-mailadres</span>
+            <span style="font-size:.78rem;font-weight:600;color:var(--text);font-family:'Sora',sans-serif">E-mailadres</span>
             <input id="loginEmail" type="email" class="login-input" placeholder="admin@lagenco.nl" required autocomplete="email">
           </label>
           <label style="display:flex;flex-direction:column;gap:.5rem">
-            <span style="font-size:.875rem;font-weight:600;color:var(--text)">Wachtwoord</span>
+            <span style="font-size:.78rem;font-weight:600;color:var(--text);font-family:'Sora',sans-serif">Wachtwoord</span>
             <input id="loginPassword" type="password" class="login-input" placeholder="••••••••" required autocomplete="current-password">
           </label>
-          <button id="loginSubmitBtn" type="submit" class="btn btn-primary" style="justify-content:center;padding:1rem;font-size:1rem;border-radius:var(--radius)">Inloggen</button>
+          <button id="loginSubmitBtn" type="submit" class="btn btn-primary" style="justify-content:center;padding:1rem;font-size:.95rem;border-radius:var(--radius)">Inloggen</button>
           <p id="loginMessage" style="font-size:.875rem;min-height:1.2rem" role="alert"></p>
-          <p style="font-size:.75rem;color:var(--text-faint);text-align:center;margin-top:.5rem">Demo: admin@lagenco.nl / lagenco123</p>
+          <p style="font-size:.75rem;color:var(--text-faint);text-align:center;margin-top:.5rem;font-family:'Sora',sans-serif">Demo: admin@lagenco.nl / lagenco123</p>
         </form>
       </div>
     </div>
@@ -154,9 +154,9 @@
 
   <!-- ═══ EDIT PRODUCT MODAL ═══ -->
   <div id="editModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="editTitle">
-    <div class="modal-panel" style="max-width:560px;padding:2rem">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
-        <h2 id="editTitle" style="font-size:1.5rem;font-weight:700;color:var(--text)">Product bewerken</h2>
+    <div class="modal-panel" style="max-width:560px;padding:2.25rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.75rem">
+        <h2 id="editTitle" style="font-family:'Fraunces',serif;font-size:1.625rem;font-weight:600;color:var(--text);letter-spacing:-.020em">Product bewerken</h2>
         <button class="modal-close-btn" aria-label="Sluiten">&times;</button>
       </div>
       <form id="editProductForm" style="display:flex;flex-direction:column;gap:1rem">
@@ -168,18 +168,25 @@
           <input id="editOldPrice" type="number" class="login-input" placeholder="Oude prijs (€)" min="0">
         </div>
         <input id="editBadge" type="text" class="login-input" placeholder="Badge (bijv. Retourproduct)">
-        <button type="submit" class="btn btn-green" style="justify-content:center;padding:.875rem">Opslaan</button>
+        <select id="editCondition" class="login-input" style="cursor:pointer">
+          <option value="0">Conditie — niet beoordeeld</option>
+          <option value="5">⭐⭐⭐⭐⭐ Excellent (als nieuw)</option>
+          <option value="4">⭐⭐⭐⭐ Goed (lichte gebruikssporen)</option>
+          <option value="3">⭐⭐⭐ Redelijk (zichtbare slijtage)</option>
+          <option value="2">⭐⭐ Beschadigd (functioneel maar niet mooi)</option>
+        </select>
+        <button type="submit" class="btn btn-green" style="justify-content:center;padding:.95rem">Opslaan</button>
       </form>
     </div>
   </div>
 
   <!-- ═══ SHARE MODAL ═══ -->
   <div id="shareModal" class="modal-backdrop" role="dialog" aria-modal="true">
-    <div class="modal-panel" style="max-width:400px;padding:2rem;text-align:center">
+    <div class="modal-panel" style="max-width:420px;padding:2.25rem;text-align:center">
       <button class="modal-close-btn" style="position:absolute;top:1rem;right:1rem" aria-label="Sluiten">&times;</button>
-      <i class="fas fa-share-alt" style="font-size:2rem;color:var(--green);margin-bottom:1rem"></i>
-      <h3 style="font-size:1.25rem;font-weight:700;color:var(--text);margin-bottom:.5rem">Product delen</h3>
-      <p style="font-size:.875rem;color:var(--text-muted);margin-bottom:1.5rem">Deel dit product via een van de onderstaande kanalen.</p>
+      <i class="fas fa-share-alt" style="font-size:2rem;color:var(--green);margin-bottom:1.25rem"></i>
+      <h3 style="font-family:'Fraunces',serif;font-size:1.375rem;font-weight:600;color:var(--text);margin-bottom:.625rem;letter-spacing:-.020em">Product delen</h3>
+      <p style="font-size:.875rem;color:var(--text-muted);margin-bottom:1.75rem;line-height:1.6">Deel dit product via een van de onderstaande kanalen.</p>
       <div style="display:flex;flex-direction:column;gap:.75rem">
         <a id="shareWA" href="#" target="_blank" rel="noopener" class="share-btn share-wa"><i class="fab fa-whatsapp" style="font-size:1.1rem"></i> Delen via WhatsApp</a>
         <a id="shareFB" href="#" target="_blank" rel="noopener" class="share-btn share-fb"><i class="fab fa-facebook" style="font-size:1.1rem"></i> Delen via Facebook</a>
@@ -190,10 +197,10 @@
 
   <!-- ═══ COMPARE MODAL ═══ -->
   <div id="compareModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="compareTitle">
-    <div class="modal-panel" style="max-width:1100px;padding:2rem">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:1rem">
+    <div class="modal-panel" style="max-width:1100px;padding:2.25rem">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:1.25rem">
         <div>
-          <h2 id="compareTitle" style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0 0 .25rem">Producten vergelijken</h2>
+          <h2 id="compareTitle" style="font-family:'Fraunces',serif;font-size:1.625rem;font-weight:600;color:var(--text);margin:0 0 .3rem;letter-spacing:-.020em">Producten vergelijken</h2>
           <p style="color:var(--text-muted);font-size:.875rem;margin:0">Vergelijk maximaal 3 producten naast elkaar.</p>
         </div>
         <button class="modal-close-btn" aria-label="Sluiten">&times;</button>
@@ -227,13 +234,14 @@
   <div id="productModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
     <div class="modal-panel product-modal" style="max-width:980px">
       <!-- Header -->
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1.5rem;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1.75rem;border-bottom:1px solid var(--border)">
         <div style="flex:1;min-width:0">
-          <h2 id="pmTitle" style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0">Productnaam</h2>
-          <div style="display:flex;align-items:center;gap:.75rem;margin-top:.4rem;flex-wrap:wrap">
+          <h2 id="pmTitle" style="font-family:'Fraunces',serif;font-size:1.625rem;font-weight:600;color:var(--text);margin:0;letter-spacing:-.020em;line-height:1.2">Productnaam</h2>
+          <div style="display:flex;align-items:center;gap:.75rem;margin-top:.5rem;flex-wrap:wrap">
             <span id="pmOldPrice"></span>
             <span id="pmStatus" class="badge badge-new"></span>
             <span id="pmDiscount" class="badge badge-sale" style="display:none"></span>
+            <span id="pmCondition" class="condition-grade" style="display:none"></span>
           </div>
         </div>
         <button class="modal-close-btn" aria-label="Sluiten">&times;</button>
@@ -245,24 +253,24 @@
         <div>
           <div style="position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-2);margin-bottom:1rem">
             <img loading="lazy" id="pmMainImage" src="" alt="Product" style="width:100%;aspect-ratio:4/3;object-fit:cover;object-position:center;display:block;transition:transform .25s ease, opacity .3s ease" decoding="async">
-            <button id="pmPrev" style="position:absolute;left:.75rem;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.92);border:none;border-radius:50%;width:2.5rem;height:2.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm);transition:all .2s" aria-label="Vorige afbeelding"><i class="fas fa-chevron-left"></i></button>
-            <button id="pmNext" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.92);border:none;border-radius:50%;width:2.5rem;height:2.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm);transition:all .2s" aria-label="Volgende afbeelding"><i class="fas fa-chevron-right"></i></button>
+            <button id="pmPrev" style="position:absolute;left:.75rem;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border:none;border-radius:50%;width:2.5rem;height:2.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm);transition:all .2s" aria-label="Vorige afbeelding"><i class="fas fa-chevron-left"></i></button>
+            <button id="pmNext" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border:none;border-radius:50%;width:2.5rem;height:2.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm);transition:all .2s" aria-label="Volgende afbeelding"><i class="fas fa-chevron-right"></i></button>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
-            <span style="font-size:.8rem;font-weight:600;color:var(--text)">Galerij</span>
-            <span id="pmCounter" style="font-size:.75rem;color:var(--text-faint)"></span>
+            <span style="font-size:.78rem;font-weight:600;color:var(--text);font-family:'Sora',sans-serif">Galerij</span>
+            <span id="pmCounter" style="font-size:.75rem;color:var(--text-faint);font-family:'Sora',sans-serif"></span>
           </div>
           <div id="pmGallery" style="display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem"></div>
 
           <!-- Related products -->
           <div id="pmRelatedWrap" style="margin-top:1.5rem">
-            <p style="font-size:.875rem;font-weight:600;color:var(--text);margin-bottom:.75rem">Vergelijkbare producten</p>
+            <p style="font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:.75rem;font-family:'Sora',sans-serif">Vergelijkbare producten</p>
             <div id="pmRelated" style="display:flex;gap:.75rem;overflow-x:auto;padding-bottom:.5rem"></div>
           </div>
 
           <!-- Recently viewed -->
           <div id="pmRecentWrap" class="hidden" style="margin-top:1.5rem">
-            <p style="font-size:.875rem;font-weight:600;color:var(--text);margin-bottom:.75rem">Recent bekeken</p>
+            <p style="font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:.75rem;font-family:'Sora',sans-serif">Recent bekeken</p>
             <div id="pmRecent" style="display:flex;gap:.75rem;overflow-x:auto;padding-bottom:.5rem"></div>
           </div>
         </div>
@@ -272,21 +280,21 @@
           <p id="pmDesc" style="color:var(--text-muted);line-height:1.7;font-size:.9rem;margin:0"></p>
 
           <div style="display:flex;align-items:baseline;gap:.75rem;flex-wrap:wrap">
-            <span id="pmPrice" style="font-size:2rem;font-weight:800;color:var(--text)"></span>
-            <span style="font-size:.8rem;font-weight:600;color:var(--green)">Nieuw bestelbaar</span>
+            <span id="pmPrice" style="font-family:'Fraunces',serif;font-size:2.25rem;font-weight:600;color:var(--text);letter-spacing:-.025em"></span>
+            <span style="font-size:.78rem;font-weight:600;color:var(--green);font-family:'Sora',sans-serif">Nieuw bestelbaar</span>
           </div>
 
           <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem">
-            <h3 style="font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:.75rem">Over dit product</h3>
-            <ul style="font-size:.85rem;color:var(--text-muted);display:flex;flex-direction:column;gap:.5rem;list-style:none;padding:0;margin:0">
-              <li><i class="fas fa-check" style="color:var(--green);margin-right:.4rem"></i> Kwalitatief gecontroleerd</li>
-              <li><i class="fas fa-check" style="color:var(--green);margin-right:.4rem"></i> Direct leverbaar</li>
-              <li><i class="fas fa-check" style="color:var(--green);margin-right:.4rem"></i> Duurzaam verkregen</li>
-              <li><i class="fas fa-check" style="color:var(--green);margin-right:.4rem"></i> Eerlijke prijs</li>
+            <h3 style="font-family:'Sora',sans-serif;font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:.875rem;letter-spacing:.06em;text-transform:uppercase">Over dit product</h3>
+            <ul style="font-size:.85rem;color:var(--text-muted);display:flex;flex-direction:column;gap:.625rem;list-style:none;padding:0;margin:0">
+              <li><i class="fas fa-check" style="color:var(--green);margin-right:.5rem"></i> Kwalitatief gecontroleerd</li>
+              <li><i class="fas fa-check" style="color:var(--green);margin-right:.5rem"></i> Direct leverbaar</li>
+              <li><i class="fas fa-check" style="color:var(--green);margin-right:.5rem"></i> Duurzaam verkregen</li>
+              <li><i class="fas fa-check" style="color:var(--green);margin-right:.5rem"></i> Eerlijke prijs</li>
             </ul>
           </div>
 
-          <!-- Wishlist + share -->
+          <!-- Wishlist + share + bid -->
           <div style="display:flex;gap:.5rem;flex-wrap:wrap">
             <button id="pmWishlist" class="btn btn-ghost" data-wishlist="" style="flex:1;justify-content:center">
               <i class="far fa-heart"></i> Verlanglijst
@@ -296,139 +304,424 @@
             </button>
           </div>
 
-          <a id="pmContactBtn" href="mailto:info@lagenco.nl" class="btn btn-green" style="justify-content:center;padding:1rem;text-decoration:none;margin-top:auto">
-            <i class="fas fa-envelope"></i> Neem contact op
-          </a>
-          <a href="assortiment.html" class="btn btn-ghost" style="justify-content:center;padding:.75rem;text-decoration:none">
+          <!-- Place bid button (marktplaats-style) -->
+          <button id="pmBidBtn" class="btn btn-warm" style="justify-content:center;padding:1rem">
+            <i class="fas fa-gavel"></i> Doe een bod
+          </button>
+
+          <!-- Kopersbescherming box (vervangt 'Neem contact op') -->
+          <div class="buyer-protection-box" id="pmBuyerProtection" style="margin-top:auto" onclick="openBuyerProtectionModal()">
+            <div class="buyer-protection-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="buyer-protection-content">
+              <p class="buyer-protection-title"><i class="fas fa-check-circle"></i> Kopersbescherming inbegrepen</p>
+              <p class="buyer-protection-link">Lees meer over kopersbescherming <i class="fas fa-arrow-right"></i></p>
+            </div>
+          </div>
+          <a href="assortiment.html" class="btn btn-ghost" style="justify-content:center;padding:.875rem;text-decoration:none">
             <i class="fas fa-arrow-left text-xs"></i> Bekijk volledig assortiment
           </a>
+        </div>
+      </div>
+
+      <!-- Bid history section (full width below the grid) -->
+      <div id="pmBidsSection" style="border-top:1px solid var(--border);padding:1.75rem"></div>
+    </div>
+  </div>
+
+  <!-- ═══ WHEEL SPIN MODAL ═══ -->
+  <div id="wheelSpinModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="wheelSpinTitle">
+    <div class="modal-panel" style="max-width:560px;text-align:center">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1.5rem;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:.875rem;flex:1;min-width:0">
+          <div style="width:2.75rem;height:2.75rem;background:linear-gradient(135deg,var(--peach),var(--yellow));border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(255,176,136,.30)">
+            <i class="fas fa-circle-notch" style="color:white"></i>
+          </div>
+          <div style="min-width:0;text-align:left">
+            <h2 id="wheelSpinTitle" style="font-family:'Poppins',sans-serif;font-size:1.35rem;font-weight:800;color:var(--text);margin:0;letter-spacing:-.020em;line-height:1.2">Doe een Wheel Spin! 🎡</h2>
+            <p style="font-size:.8rem;color:var(--text-muted);margin:.25rem 0 0">Draai aan het wiel en win een prijs!</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" aria-label="Sluiten">&times;</button>
+      </div>
+
+      <div style="padding:2rem 1.5rem">
+        <!-- Wheel container -->
+        <div class="wheel-container" id="wheelContainer">
+          <div class="wheel-pointer"></div>
+          <div class="wheel" id="wheelEl">
+            <svg viewBox="0 0 200 200" class="wheel-svg" id="wheelSvg">
+              <!-- 4 segments — generated by JS -->
+            </svg>
+            <div class="wheel-center">
+              <i class="fas fa-leaf"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Spin button -->
+        <button id="wheelSpinBtn" class="btn btn-warm" style="margin-top:1.5rem;padding:1rem 2.5rem;font-size:1rem">
+          <i class="fas fa-circle-notch"></i> Draaien maar!
+        </button>
+
+        <!-- Result -->
+        <div id="wheelResult" class="wheel-result hidden">
+          <div class="wheel-result-icon" id="wheelResultIcon">🎉</div>
+          <h3 id="wheelResultTitle" class="wheel-result-title">Gefeliciteerd!</h3>
+          <p id="wheelResultText" class="wheel-result-text"></p>
+          <p id="wheelResultCode" class="wheel-result-code hidden"></p>
+          <button class="btn btn-ghost" style="margin-top:1rem;padding:.75rem 1.5rem" onclick="closeModal('wheelSpinModal')">Sluiten</button>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- ═══ KOPERBESCHERMING MODAL ═══ -->
+  <div id="buyerProtectionModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="bpModalTitle">
+    <div class="modal-panel" style="max-width:560px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1.5rem;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:.875rem;flex:1;min-width:0">
+          <div style="width:2.75rem;height:2.75rem;background:linear-gradient(135deg,var(--green),var(--green-mid));border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(107,191,126,.30)">
+            <i class="fas fa-shield-alt" style="color:white"></i>
+          </div>
+          <div style="min-width:0">
+            <h2 id="bpModalTitle" style="font-family:'Poppins',sans-serif;font-size:1.35rem;font-weight:800;color:var(--text);margin:0;letter-spacing:-.020em;line-height:1.2">Kopersbescherming</h2>
+            <p style="font-size:.8rem;color:var(--text-muted);margin:.25rem 0 0;font-family:'Nunito',sans-serif">Jouw veiligheid is onze prioriteit</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" aria-label="Sluiten">&times;</button>
+      </div>
+
+      <div style="padding:1.5rem">
+        <div class="buyer-protection-info">
+          <div class="buyer-protection-info-item">
+            <div class="buyer-protection-info-icon"><i class="fas fa-undo"></i></div>
+            <div class="buyer-protection-info-text">
+              <h4>14 dagen herroepingsrecht</h4>
+              <p>Je kunt het product binnen 14 dagen na ontvangst retourneren zonder opgaaf van reden. Het aankoopbedrag wordt teruggestort.</p>
+            </div>
+          </div>
+          <div class="buyer-protection-info-item">
+            <div class="buyer-protection-info-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="buyer-protection-info-text">
+              <h4>Kwaliteitsgarantie</h4>
+              <p>Elk product is gecontroleerd en getest door Lagenco. Komt het product niet overeen met de beschrijving? Dan lossen wij dit direct op.</p>
+            </div>
+          </div>
+          <div class="buyer-protection-info-item">
+            <div class="buyer-protection-info-icon"><i class="fas fa-shield-alt"></i></div>
+            <div class="buyer-protection-info-text">
+              <h4>Veilige betaling</h4>
+              <p>Betaal veilig via iDEAL, Bancontact of creditcard. Jouw betaalgegevens worden versleuteld verwerkt.</p>
+            </div>
+          </div>
+          <div class="buyer-protection-info-item">
+            <div class="buyer-protection-info-icon"><i class="fas fa-truck"></i></div>
+            <div class="buyer-protection-info-text">
+              <h4>Verzekerd verzonden</h4>
+              <p>Alle bestellingen worden verzekerd verzonden. Gaat er iets mis onderweg? Dan sturen wij een vervanging of betalen het bedrag terug.</p>
+            </div>
+          </div>
+          <div class="buyer-protection-info-item">
+            <div class="buyer-protection-info-icon"><i class="fas fa-headset"></i></div>
+            <div class="buyer-protection-info-text">
+              <h4>Persoonlijke support</h4>
+              <p>Vragen of problemen? Neem contact op via info@lagenco.nl en wij helpen je binnen 24 uur verder.</p>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-green" style="width:100%;justify-content:center;padding:.875rem;margin-top:1.25rem" onclick="closeModal('buyerProtectionModal')">
+          <i class="fas fa-check"></i> Ik begrijp het
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ BID MODAL ═══ -->
+  <div id="bidModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="bidModalTitle">
+    <div class="modal-panel" style="max-width:640px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1.5rem;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:.875rem;flex:1;min-width:0">
+          <div style="width:2.75rem;height:2.75rem;background:linear-gradient(135deg,var(--warm),var(--warm-deep));border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(192,132,87,.25)">
+            <i class="fas fa-gavel text-white" style="color:white"></i>
+          </div>
+          <div style="min-width:0">
+            <h2 id="bidModalTitle" style="font-family:'Fraunces',serif;font-size:1.35rem;font-weight:600;color:var(--text);margin:0;letter-spacing:-.020em;line-height:1.2">Doe een bod</h2>
+            <p style="font-size:.8rem;color:var(--text-muted);margin:.25rem 0 0">Vul je gegevens in en wij nemen contact met je op</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" aria-label="Sluiten">&times;</button>
+      </div>
+
+      <form id="bidForm" style="padding:1.5rem;max-height:70vh;overflow-y:auto">
+        <!-- Product preview -->
+        <div class="bid-product-preview">
+          <img id="bidProductImg" src="" alt="Product" style="width:4rem;height:3rem;object-fit:cover;border-radius:.5rem;flex-shrink:0;background:var(--bg-2)">
+          <div style="flex:1;min-width:0">
+            <p id="bidProductTitle" style="font-weight:600;color:var(--text);margin:0;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></p>
+            <p id="bidProductPrice" style="font-size:.8rem;color:var(--text-muted);margin:.125rem 0 0"></p>
+          </div>
+          <span id="bidProductBadge" class="badge badge-new" style="position:static"></span>
+        </div>
+
+        <!-- Personal info -->
+        <fieldset class="bid-fieldset">
+          <legend><i class="fas fa-user"></i> Jouw gegevens</legend>
+          <div class="bid-form-grid">
+            <div class="bid-field full">
+              <label for="bidName">Volledige naam <span class="req">*</span></label>
+              <input type="text" id="bidName" name="bidName" placeholder="Bijv. Jan Jansen" required>
+            </div>
+            <div class="bid-field">
+              <label for="bidEmail">E-mailadres <span class="req">*</span></label>
+              <input type="email" id="bidEmail" name="bidEmail" placeholder="naam@voorbeeld.nl" required>
+            </div>
+            <div class="bid-field">
+              <label for="bidPhone">Telefoonnummer</label>
+              <input type="tel" id="bidPhone" name="bidPhone" placeholder="06 12 34 56 78">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Bid amount -->
+        <fieldset class="bid-fieldset">
+          <legend><i class="fas fa-euro-sign"></i> Jouw bod</legend>
+          <div class="bid-field full">
+            <label for="bidAmount">Bod in euro's <span class="req">*</span></label>
+            <div class="bid-amount-input">
+              <span class="bid-amount-prefix">€</span>
+              <input type="number" id="bidAmount" name="bidAmount" step="0.01" min="1" placeholder="0,00" required>
+            </div>
+            <p class="bid-help-text">Minimum bod is 50% van de asking price. Hogere biedingen hebben meer kans.</p>
+          </div>
+          <div class="bid-field full">
+            <label for="bidNote">Bericht aan verkoper (optioneel)</label>
+            <textarea id="bidNote" name="bidNote" rows="2" placeholder="Bijv. Vraag over afhalen, staat van het product, etc."></textarea>
+          </div>
+        </fieldset>
+
+        <!-- Shipping method -->
+        <fieldset class="bid-fieldset">
+          <legend><i class="fas fa-truck"></i> Verzendmethode <span class="req">*</span></legend>
+          <div class="bid-shipping-options">
+            <label class="bid-shipping-option">
+              <input type="radio" name="bidShippingMethod" value="verzenden">
+              <span class="bid-shipping-card">
+                <i class="fas fa-box"></i>
+                <span class="bid-shipping-label">Verzenden</span>
+                <span class="bid-shipping-sub">Product wordt thuisbezorgd</span>
+              </span>
+            </label>
+            <label class="bid-shipping-option">
+              <input type="radio" name="bidShippingMethod" value="afhalen">
+              <span class="bid-shipping-card">
+                <i class="fas fa-store"></i>
+                <span class="bid-shipping-label">Afhalen</span>
+                <span class="bid-shipping-sub">Bij Lagenco ophalen</span>
+              </span>
+            </label>
+            <label class="bid-shipping-option">
+              <input type="radio" name="bidShippingMethod" value="beide">
+              <span class="bid-shipping-card">
+                <i class="fas fa-arrows-alt-h"></i>
+                <span class="bid-shipping-label">Beide</span>
+                <span class="bid-shipping-sub">Verzenden of afhalen</span>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Address (shown only when not pickup-only) -->
+        <fieldset class="bid-fieldset" id="bidAddressFieldset" style="display:none">
+          <legend><i class="fas fa-map-marker-alt"></i> Bezorgadres</legend>
+          <div class="bid-form-grid">
+            <div class="bid-field" style="grid-column:span 2">
+              <label for="bidStreet">Straatnaam <span class="req">*</span></label>
+              <input type="text" id="bidStreet" name="bidStreet" placeholder="Bijv. Kalverstraat">
+            </div>
+            <div class="bid-field">
+              <label for="bidHouseNumber">Huisnummer <span class="req">*</span></label>
+              <input type="text" id="bidHouseNumber" name="bidHouseNumber" placeholder="Bijv. 42">
+            </div>
+            <div class="bid-field">
+              <label for="bidHouseNumberAdd">Toevoeging</label>
+              <input type="text" id="bidHouseNumberAdd" name="bidHouseNumberAdd" placeholder="Bijv. A">
+            </div>
+            <div class="bid-field">
+              <label for="bidPostalCode">Postcode <span class="req">*</span></label>
+              <input type="text" id="bidPostalCode" name="bidPostalCode" placeholder="1012 AB">
+            </div>
+            <div class="bid-field">
+              <label for="bidCity">Woonplaats <span class="req">*</span></label>
+              <input type="text" id="bidCity" name="bidCity" placeholder="Bijv. Amsterdam">
+            </div>
+            <div class="bid-field full">
+              <label for="bidCountry">Land</label>
+              <input type="text" id="bidCountry" name="bidCountry" value="Nederland" placeholder="Nederland">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Terms checkbox -->
+        <div class="bid-terms-field">
+          <input type="checkbox" id="bidTerms" name="bidTerms">
+          <label for="bidTerms" style="font-size:.82rem;color:var(--text);cursor:pointer;line-height:1.5;font-family:'Inter',sans-serif">
+            Ik ga akkoord met de <a href="algemene-voorwaarden.html" target="_blank">algemene voorwaarden</a> en bevestig dat mijn bod serieus en bindend is. <span class="req" style="color:#dc2626">*</span>
+          </label>
+        </div>
+
+        <div style="display:flex;gap:.5rem;margin-top:1rem">
+          <button type="button" onclick="closeModal('bidModal')" class="btn btn-ghost" style="flex:1;justify-content:center;padding:.875rem">Annuleren</button>
+          <button type="submit" class="btn btn-warm" style="flex:2;justify-content:center;padding:.875rem">
+            <i class="fas fa-paper-plane"></i> Bod versturen
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <main id="main">
 
-  <!-- ═══ HERO ═══ -->
-  <header class="hero-gradient" style="padding:6rem 1.5rem 8rem;position:relative;overflow:hidden">
-    <div class="hero-parallax" style="max-width:1200px;margin:0 auto;text-align:center;position:relative;z-index:1">
-      <div class="reveal fade-in-up" data-reveal style="display:inline-flex;align-items:center;gap:.5rem;background:var(--card);border:1px solid var(--border);padding:.4rem 1rem;border-radius:100px;font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:1.75rem">
-        <span style="width:.5rem;height:.5rem;background:var(--green);border-radius:50%;animation:pulse 2s infinite;flex-shrink:0"></span>
+  <!-- ═══ HERO (Concept 3 — Soft & Playful) ═══ -->
+  <header class="hero-gradient" style="padding:7rem 1.5rem 9rem;position:relative;overflow:hidden">
+    <!-- Speelse blob achtergronden -->
+    <div class="blob-decor blob-green" style="width:400px;height:400px;top:5%;left:-5%;animation:heroBlob 18s ease-in-out infinite"></div>
+    <div class="blob-decor blob-peach" style="width:350px;height:350px;top:30%;right:-8%;animation:heroBlob 22s ease-in-out infinite reverse"></div>
+    <div class="blob-decor blob-yellow" style="width:300px;height:300px;bottom:5%;left:20%;animation:heroBlob 25s ease-in-out infinite"></div>
+
+    <div class="hero-parallax" style="max-width:1200px;margin:0 auto;text-align:center;position:relative;z-index:10">
+      <!-- Speelse pill badge -->
+      <div class="reveal fade-in-up" data-reveal style="display:inline-flex;align-items:center;gap:.5rem;background:white;border:1.5px solid var(--green-light);padding:.5rem 1.1rem;border-radius:100px;font-size:.8rem;font-weight:600;color:var(--green-mid);margin-bottom:2rem;font-family:'Poppins',sans-serif;box-shadow:var(--shadow-sm)">
+        <span style="width:.5rem;height:.5rem;background:var(--green);border-radius:50%;box-shadow:0 0 12px var(--green);animation:pulse 2s infinite;flex-shrink:0"></span>
         Duurzaam · Betrouwbaar · Betaalbaar
       </div>
 
-      <h1 class="hero-title-modern reveal fade-in-up stagger-1" data-reveal style="font-size:clamp(2.5rem,7vw,5.5rem);font-weight:300;line-height:1.05;letter-spacing:-.015em;color:var(--text);margin-bottom:1.25rem">
-        Geef producten een<br><em style="font-weight:400;font-style:italic;color:var(--green)">tweede leven.</em>
+      <!-- Headline met groene tekst + gele streep animatie -->
+      <h1 class="hero-title-modern reveal fade-in-up stagger-1" data-reveal style="font-family:'Poppins',sans-serif;font-size:clamp(2.75rem,7vw,5.5rem);font-weight:800;line-height:1.05;letter-spacing:-.030em;color:var(--text);margin-bottom:1.5rem">
+        Geef producten een<br><span class="hero-highlight">tweede leven.</span>
       </h1>
 
-      <p class="reveal fade-in-up stagger-2" data-reveal style="font-size:clamp(1rem,2.5vw,1.2rem);color:var(--text-muted);max-width:40rem;margin:0 auto 2.5rem;line-height:1.7">
-        Restpartijen, retourproducten en tweedehands artikelen — Lagenco geeft kwaliteitsproducten een nieuwe bestemming. Betaalbaar én duurzaam.
+      <p class="reveal fade-in-up stagger-2" data-reveal style="font-size:clamp(1.05rem,1.6vw,1.2rem);color:var(--text-muted);max-width:42rem;margin:0 auto 2.75rem;line-height:1.7;font-family:'Nunito',sans-serif;font-weight:500">
+        <strong style="color:var(--text)">Restpartijen, retourproducten en tweedehands artikelen</strong> — Lagenco geeft kwaliteitsproducten een nieuwe bestemming. Betaalbaar én duurzaam.
       </p>
 
-      <div class="reveal fade-in-up stagger-3" data-reveal style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center">
-        <a href="assortiment.html" class="btn btn-primary" style="padding:.875rem 2rem;font-size:1rem">
+      <div class="reveal fade-in-up stagger-3" data-reveal style="display:flex;flex-wrap:wrap;gap:.875rem;justify-content:center;margin-bottom:4rem">
+        <a href="assortiment.html" class="btn btn-primary" style="padding:1.05rem 2.25rem;font-size:.95rem">
           Bekijk assortiment <i class="fas fa-arrow-right text-xs"></i>
         </a>
-        <a href="contact.html" class="btn btn-ghost" style="padding:.875rem 2rem;font-size:1rem">
+        <a href="contact.html" class="btn btn-ghost" style="padding:1.05rem 2.25rem;font-size:.95rem">
           Neem contact op
         </a>
       </div>
 
-      <!-- Stats row -->
-      <div class="reveal stagger-4" data-reveal style="display:flex;flex-wrap:wrap;justify-content:center;gap:2.5rem;margin-top:4rem">
-        <div style="text-align:center">
-          <div class="stat-number" data-counter="500" data-counter-suffix="+" style="font-size:2rem">0</div>
-          <div style="font-size:.8rem;color:var(--text-muted);font-weight:500">Producten verkocht</div>
+      <!-- Speelse stat cards — strak en recht (geen rotaties) -->
+      <div class="reveal stagger-4" data-reveal style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;max-width:700px;margin:0 auto">
+        <div style="background:white;border:1.5px solid var(--border);border-radius:1.5rem;padding:1.5rem 1rem;box-shadow:var(--shadow-sm);transition:transform .25s,box-shadow .25s">
+          <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:var(--green-light);color:var(--green-mid);display:flex;align-items:center;justify-content:center;margin:0 auto .625rem;font-size:1rem">
+            <i class="fas fa-recycle"></i>
+          </div>
+          <div class="stat-number" data-counter="500" data-counter-suffix="+" style="font-family:'Poppins',sans-serif;font-size:1.65rem;font-weight:800;color:var(--text);letter-spacing:-.02em;line-height:1.1">0</div>
+          <div style="font-size:.78rem;color:var(--text-muted);font-weight:600;margin-top:.3rem;font-family:'Poppins',sans-serif">Producten gered</div>
         </div>
-        <div style="width:1px;background:var(--border);align-self:stretch"></div>
-        <div style="text-align:center">
-          <div class="stat-number" data-counter="100" data-counter-suffix="%" style="font-size:2rem">0</div>
-          <div style="font-size:.8rem;color:var(--text-muted);font-weight:500">Kwaliteitscontrole</div>
+        <div style="background:white;border:1.5px solid var(--border);border-radius:1.5rem;padding:1.5rem 1rem;box-shadow:var(--shadow-sm);transition:transform .25s,box-shadow .25s">
+          <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:var(--peach-soft);color:var(--peach-deep);display:flex;align-items:center;justify-content:center;margin:0 auto .625rem;font-size:1rem">
+            <i class="fas fa-piggy-bank"></i>
+          </div>
+          <div class="stat-number" data-counter="18420" data-counter-prefix="€" style="font-family:'Poppins',sans-serif;font-size:1.65rem;font-weight:800;color:var(--text);letter-spacing:-.02em;line-height:1.1">0</div>
+          <div style="font-size:.78rem;color:var(--text-muted);font-weight:600;margin-top:.3rem;font-family:'Poppins',sans-serif">Bespaard door klanten</div>
         </div>
-        <div style="width:1px;background:var(--border);align-self:stretch"></div>
-        <div style="text-align:center">
-          <div class="stat-number" style="font-size:2rem">CO₂</div>
-          <div style="font-size:.8rem;color:var(--text-muted);font-weight:500">Besparing per product</div>
+        <div style="background:white;border:1.5px solid var(--border);border-radius:1.5rem;padding:1.5rem 1rem;box-shadow:var(--shadow-sm);transition:transform .25s,box-shadow .25s">
+          <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:var(--yellow-soft);color:#B58A00;display:flex;align-items:center;justify-content:center;margin:0 auto .625rem;font-size:1rem">
+            <i class="fas fa-leaf"></i>
+          </div>
+          <div class="stat-number" data-counter="156" data-counter-suffix=" kg" style="font-family:'Poppins',sans-serif;font-size:1.65rem;font-weight:800;color:var(--text);letter-spacing:-.02em;line-height:1.1">0</div>
+          <div style="font-size:.78rem;color:var(--text-muted);font-weight:600;margin-top:.3rem;font-family:'Poppins',sans-serif">CO₂ bespaard</div>
         </div>
       </div>
     </div>
 
-    <!-- Floating cards -->
-    <div class="float-a hidden lg:block" style="position:absolute;top:28%;left:2%;width:14rem">
-      <div class="glass" style="border-radius:1.5rem;padding:.875rem;box-shadow:var(--shadow-lg)">
-        <div style="height:8rem;border-radius:1rem;overflow:hidden;margin-bottom:.75rem;background:var(--bg-2)">
+    <!-- Floating cards — speelsere stijl -->
+    <div class="float-a hidden lg:block" style="position:absolute;top:18%;left:4%;width:13rem;animation:heroBlob 7s ease-in-out infinite">
+      <!-- Handgeschreven accent — nu meebewegen met de card -->
+      <div style="font-family:'Caveat',cursive;font-size:1.4rem;color:var(--peach-deep);transform:rotate(-3deg);position:absolute;top:-1.8rem;left:0;white-space:nowrap;font-weight:600">
+        vers binnengekomen ♡
+      </div>
+      <div style="background:white;border:1.5px solid var(--border);border-radius:1.25rem;padding:.75rem;box-shadow:var(--shadow-md);transform:rotate(-4deg)">
+        <span style="position:absolute;top:-.5rem;left:-.5rem;padding:.25rem .6rem;border-radius:100px;font-size:.6rem;font-weight:700;color:white;background:var(--lavender-deep);box-shadow:0 4px 8px rgba(0,0,0,0.10)">Tweedehands</span>
+        <div style="height:7rem;border-radius:.75rem;overflow:hidden;margin-bottom:.5rem;background:var(--bg-2)">
           <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1619334084350-b093f0a9b40e?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="" style="width:100%;height:100%;object-fit:cover">
         </div>
-        <span class="badge badge-new" style="position:static;margin-bottom:.4rem">Nieuw</span>
-        <p style="font-weight:700;font-size:.875rem;color:var(--text)">Logithec G305 </p>
-        <p style="font-size:.75rem;color:var(--text-muted)">Outletprijs</p>
-        <p style="font-weight:800;font-size:.875rem;color:var(--text);margin-top:.25rem">€ 15</p>
+        <p style="font-family:'Poppins',sans-serif;font-weight:700;font-size:.8rem;color:var(--text);margin:0 0 .15rem">Logithec G305</p>
+        <p style="font-family:'Poppins',sans-serif;font-weight:800;font-size:.9rem;color:var(--green-mid);margin:0">€ 15</p>
       </div>
     </div>
 
-    <div class="float-b hidden lg:block" style="position:absolute;bottom:15%;right:2%;width:14rem">
-      <div class="glass" style="border-radius:1.5rem;padding:.875rem;box-shadow:var(--shadow-lg)">
-        <div style="height:8rem;border-radius:1rem;overflow:hidden;margin-bottom:.75rem;background:var(--bg-2)">
+    <div class="float-b hidden lg:block" style="position:absolute;bottom:18%;right:4%;width:13rem;animation:heroBlob 7s ease-in-out infinite -2.5s">
+      <div style="background:white;border:1.5px solid var(--border);border-radius:1.25rem;padding:.75rem;box-shadow:var(--shadow-md);transform:rotate(3deg)">
+        <span style="position:absolute;top:-.5rem;left:-.5rem;padding:.25rem .6rem;border-radius:100px;font-size:.6rem;font-weight:700;color:white;background:var(--peach-deep);box-shadow:0 4px 8px rgba(0,0,0,0.10)">Retour</span>
+        <div style="height:7rem;border-radius:.75rem;overflow:hidden;margin-bottom:.5rem;background:var(--bg-2)">
           <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1754142654796-cafbcb9f633b?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="" style="width:100%;height:100%;object-fit:cover">
         </div>
-        <span class="badge badge-retour" style="position:static;margin-bottom:.4rem"><i class="fas fa-undo text-[8px]"></i> Retour</span>
-        <p style="font-weight:700;font-size:.875rem;color:var(--text)">Sennheiser Momentum 4 Wireless headphones</p>
-        <p style="font-size:.75rem;color:var(--text-muted)">Gecontroleerd & schoon</p>
-        <p style="font-weight:800;font-size:.875rem;color:var(--text);margin-top:.25rem">€ 40</p>
+        <p style="font-family:'Poppins',sans-serif;font-weight:700;font-size:.8rem;color:var(--text);margin:0 0 .15rem">Momentum 4</p>
+        <p style="font-family:'Poppins',sans-serif;font-weight:800;font-size:.9rem;color:var(--green-mid);margin:0"><span style="color:var(--text-faint);text-decoration:line-through;font-weight:500;font-size:.72rem;margin-right:.3rem">€180</span>€ 40</p>
       </div>
     </div>
   </header>
 
-  <!-- ═══ FEATURED PRODUCTS CAROUSEL ═══ -->
-  <section id="assortiment" style="max-width:1200px;margin:0 auto;padding:5rem 1.5rem 4rem">
-    <nav class="breadcrumbs" aria-label="Kruimelpad">
-      <a href="index.html">Home</a>
-      <i class="fas fa-chevron-right sep" style="font-size:.6rem"></i>
-      <span aria-current="page">Uitgelichte producten</span>
-    </nav>
-
-    <div class="reveal" data-reveal style="text-align:center;margin-bottom:2.5rem">
-      <span class="feature-pill"><i class="fas fa-star"></i> Uitgelicht</span>
-      <h2 style="font-size:clamp(1.75rem,4vw,2.5rem);font-weight:800;letter-spacing:-.03em;color:var(--text);margin:1rem 0 .75rem">Uitgelichte producten</h2>
-      <p style="color:var(--text-muted);max-width:36rem;margin:0 auto">Een selectie van onze beste aanbiedingen. Klik op een product voor meer details.</p>
+  <!-- ═══ LIVE BIEDINGEN (was: Uitgelichte producten) ═══ -->
+  <section id="assortiment" style="max-width:1200px;margin:0 auto;padding:3.5rem 1.5rem 3rem">
+    <div class="reveal" data-reveal style="text-align:center;margin-bottom:2rem">
+      <p style="font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--warm-deep);margin-bottom:1rem;font-family:'Sora',sans-serif;display:inline-flex;align-items:center;gap:.5rem;background:var(--warm-light);padding:.45rem 1.1rem;border-radius:100px">
+        <span style="width:.5rem;height:.5rem;background:var(--warm);border-radius:50%;animation:pulse 2s infinite;flex-shrink:0"></span>
+        Live biedingen — nu bezig
+      </p>
+      <h2 style="font-family:'Fraunces',serif;font-size:clamp(2rem,4.5vw,3rem);font-weight:500;letter-spacing:-.030em;color:var(--text);margin:1.25rem 0 .875rem;line-height:1.1">Er wordt nu geboden 💬</h2>
+      <p style="color:var(--text-muted);max-width:38rem;margin:0 auto;font-size:1rem;line-height:1.65">Bekijk actieve biedingen op onze producten. Wil jij het overnemen? Doe een hoger bod en wie weet is het product van jou!</p>
     </div>
 
-    <p id="featuredProductMessage" class="reveal" data-reveal style="text-align:center;color:var(--text-muted);font-size:.875rem;margin-bottom:1.5rem">Laden…</p>
+    <!-- Biedingen grid -->
+    <div id="liveBidsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem"></div>
 
-    <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-bottom:1.25rem">
-      <button id="assortimentShuffleBtn" class="btn btn-ghost" style="padding:.5rem 1rem;font-size:.8rem"><i class="fas fa-random text-xs"></i> Mix</button>
-      <button id="assortimentResetBtn" class="btn btn-ghost" style="padding:.5rem 1rem;font-size:.8rem"><i class="fas fa-rotate-left text-xs"></i> Reset</button>
-      <button id="prevBtn" class="btn btn-ghost btn-icon" aria-label="Vorige"><i class="fas fa-arrow-left text-xs"></i></button>
-      <button id="nextBtn" class="btn btn-primary btn-icon" aria-label="Volgende"><i class="fas fa-arrow-right text-xs"></i></button>
-    </div>
-
-    <div class="carousel-container reveal" data-reveal>
-      <div id="carouselTrack" class="carousel-track"></div>
+    <!-- Empty state -->
+    <div id="liveBidsEmpty" class="hidden" style="text-align:center;padding:3rem 1.5rem;background:var(--card);border:1px dashed var(--border-2);border-radius:var(--radius-lg)">
+      <div style="width:3.5rem;height:3.5rem;margin:0 auto 1rem;background:var(--bg-2);border-radius:50%;display:flex;align-items:center;justify-content:center">
+        <i class="fas fa-gavel" style="font-size:1.3rem;color:var(--text-faint)"></i>
+      </div>
+      <h3 style="font-family:'Sora',sans-serif;font-size:1.05rem;font-weight:700;color:var(--text);margin:0 0 .5rem">Nog geen biedingen</h3>
+      <p style="color:var(--text-muted);font-size:.9rem;max-width:30rem;margin:0 auto 1.25rem">Zodra iemand een bod plaatst op een product, verschijnt deze hier automatisch. Bekijk ons assortiment en wie weet staat jouw product hier straks!</p>
+      <a href="assortiment.html" class="btn btn-ghost" style="text-decoration:none;padding:.75rem 1.5rem">Bekijk ons assortiment <i class="fas fa-arrow-right text-xs"></i></a>
     </div>
 
     <div style="margin-top:2rem;text-align:center">
-      <a href="assortiment.html" class="btn btn-ghost" style="padding:.75rem 2rem">Bekijk volledig assortiment <i class="fas fa-arrow-right text-xs"></i></a>
+      <a href="assortiment.html" class="btn btn-warm" style="padding:.875rem 2rem;text-decoration:none">
+        <i class="fas fa-gavel"></i> Bekijk alle producten en doe een bod
+      </a>
     </div>
   </section>
 
   <!-- ═══ OVER ONS ═══ -->
-  <section id="over-ons" style="max-width:1200px;margin:0 auto;padding:0 1.5rem 5rem">
-    <div class="reveal card" data-reveal style="padding:3rem 2.5rem;border-radius:var(--radius-xl)">
-      <div style="display:grid;grid-template-columns:1fr;gap:2.5rem" class="md:grid-cols-2">
+  <section id="over-ons" style="max-width:1200px;margin:0 auto;padding:3.5rem 1.5rem">
+    <div class="reveal card" data-reveal style="padding:3.5rem 3rem;border-radius:var(--radius-xl);background:white;border:1.5px solid var(--border);box-shadow:var(--shadow-md)">
+      <div style="display:grid;grid-template-columns:1fr;gap:2.75rem" class="md:grid-cols-2">
         <div>
-          <p style="font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem">Onze Missie</p>
-          <h2 style="font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;letter-spacing:-.03em;color:var(--text);margin-bottom:1rem">Kwaliteit verdient een tweede kans.</h2>
-          <p style="color:var(--text-muted);font-size:1.05rem;line-height:1.7;margin-bottom:1rem">Lagenco geeft kwalitatieve producten een tweede leven. Door restpartijen, overtollige voorraad, retourproducten en tweedehands artikelen een nieuwe bestemming te geven, maken we duurzaam winkelen betaalbaar én toegankelijk.</p>
-          <p style="color:var(--text-muted);font-style:italic;font-size:.95rem;border-left:3px solid var(--green);padding-left:1rem">"Wij geloven dat een goed product niet nieuw hoeft te zijn om waardevol te zijn."</p>
+          <p style="display:inline-flex;align-items:center;gap:.5rem;background:var(--green-light);border:1.5px solid var(--green-light);padding:.45rem 1.1rem;border-radius:100px;font-family:'Poppins',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green-mid);margin-bottom:1rem">
+            <i class="fas fa-seedling" style="font-size:.65rem"></i>
+            Onze missie
+          </p>
+          <h2 style="font-family:'Poppins',sans-serif;font-size:clamp(1.75rem,3.5vw,2.5rem);font-weight:800;letter-spacing:-.03em;color:var(--text);margin-bottom:1.25rem;line-height:1.15">Kwaliteit verdient <span style="color:var(--green-mid)">een tweede kans</span></h2>
+          <p style="color:var(--text-muted);font-size:1.05rem;line-height:1.75;margin-bottom:1.25rem">Lagenco geeft kwalitatieve producten een tweede leven. Door restpartijen, overtollige voorraad, retourproducten en tweedehands artikelen een nieuwe bestemming te geven, maken we duurzaam winkelen betaalbaar én toegankelijk.</p>
+          <p style="font-family:'Poppins',sans-serif;font-style:italic;color:var(--text);font-size:1.05rem;border-left:4px solid var(--green);padding-left:1.25rem;line-height:1.6;font-weight:500">"Wij geloven dat een goed product niet nieuw hoeft te zijn om waardevol te zijn."</p>
         </div>
-        <div style="background:var(--bg-2);border-radius:var(--radius-lg);padding:2rem;border:1px solid var(--border)">
-          <h3 style="font-weight:700;font-size:1.1rem;color:var(--text);margin-bottom:1.25rem">Wij handelen in:</h3>
+        <div style="background:var(--bg-2);border-radius:1.5rem;padding:2rem;border:1.5px solid var(--border)">
+          <h3 style="font-family:'Poppins',sans-serif;font-weight:700;font-size:1rem;color:var(--text);margin-bottom:1.25rem;letter-spacing:-.010em">Wij handelen in:</h3>
           <div style="display:flex;flex-direction:column;gap:.875rem">
-            <div style="display:flex;gap:.875rem;align-items:center"><span style="font-size:1.5rem">♻️</span><span style="font-weight:600;color:var(--text)">Tweedehands producten</span></div>
-            <div style="display:flex;gap:.875rem;align-items:center"><span style="font-size:1.5rem">📦</span><span style="font-weight:600;color:var(--text)">Restpartijen & Partijhandel</span></div>
-            <div style="display:flex;gap:.875rem;align-items:center"><span style="font-size:1.5rem">🛍️</span><span style="font-weight:600;color:var(--text)">Overtollige voorraad</span></div>
-            <div style="display:flex;gap:.875rem;align-items:center"><span style="font-size:1.5rem">🔄</span><span style="font-weight:600;color:var(--text)">Retourproducten</span></div>
-            <div style="display:flex;gap:.875rem;align-items:center"><span style="font-size:1.5rem">✨</span><span style="font-weight:600;color:var(--text)">Nieuw tegen outletprijzen</span></div>
+            <div class="missie-item" style="display:flex;gap:1rem;align-items:center;padding:.75rem 1rem;background:white;border-radius:.75rem;border:1.5px solid var(--border);cursor:default"><span style="font-size:1.5rem">♻️</span><span style="font-weight:600;color:var(--text);font-size:.92rem;font-family:'Poppins',sans-serif">Tweedehands producten</span></div>
+            <div class="missie-item" style="display:flex;gap:1rem;align-items:center;padding:.75rem 1rem;background:white;border-radius:.75rem;border:1.5px solid var(--border);cursor:default"><span style="font-size:1.5rem">📦</span><span style="font-weight:600;color:var(--text);font-size:.92rem;font-family:'Poppins',sans-serif">Restpartijen & Partijhandel</span></div>
+            <div class="missie-item" style="display:flex;gap:1rem;align-items:center;padding:.75rem 1rem;background:white;border-radius:.75rem;border:1.5px solid var(--border);cursor:default"><span style="font-size:1.5rem">🛍️</span><span style="font-weight:600;color:var(--text);font-size:.92rem;font-family:'Poppins',sans-serif">Overtollige voorraad</span></div>
+            <div class="missie-item" style="display:flex;gap:1rem;align-items:center;padding:.75rem 1rem;background:white;border-radius:.75rem;border:1.5px solid var(--border);cursor:default"><span style="font-size:1.5rem">🔄</span><span style="font-weight:600;color:var(--text);font-size:.92rem;font-family:'Poppins',sans-serif">Retourproducten</span></div>
+            <div class="missie-item" style="display:flex;gap:1rem;align-items:center;padding:.75rem 1rem;background:white;border-radius:.75rem;border:1.5px solid var(--border);cursor:default"><span style="font-size:1.5rem">✨</span><span style="font-weight:600;color:var(--text);font-size:.92rem;font-family:'Poppins',sans-serif">Nieuw tegen outletprijzen</span></div>
           </div>
         </div>
       </div>
@@ -436,96 +729,207 @@
   </section>
 
   <!-- ═══ KERNWAARDEN ═══ -->
-  <section id="voordelen" style="max-width:1200px;margin:0 auto;padding:0 1.5rem 5rem">
-    <div class="reveal" data-reveal style="text-align:center;margin-bottom:2.5rem">
-      <p style="font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem">Kernwaarden</p>
-      <h2 style="font-size:clamp(1.75rem,4vw,2.5rem);font-weight:800;letter-spacing:-.03em;color:var(--text)">Waarom Lagenco?</h2>
+  <section id="voordelen" style="max-width:1200px;margin:0 auto;padding:3.5rem 1.5rem">
+    <div class="reveal" data-reveal style="text-align:center;margin-bottom:2rem">
+      <p class="kernwaarden-badge" style="display:inline-flex;align-items:center;gap:.5rem;background:white;border:1.5px solid var(--yellow-soft);padding:.45rem 1.1rem;border-radius:100px;font-family:'Poppins',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#B58A00;margin-bottom:1rem;box-shadow:var(--shadow-sm);position:relative">
+        <i class="fas fa-star" style="font-size:.65rem"></i>
+        Kernwaarden
+        <span class="sparkle sparkle-1">✦</span>
+        <span class="sparkle sparkle-2">✧</span>
+        <span class="sparkle sparkle-3">✦</span>
+        <span class="sparkle sparkle-4">✧</span>
+      </p>
+      <h2 style="font-family:'Poppins',sans-serif;font-size:clamp(2rem,4.5vw,3rem);font-weight:800;letter-spacing:-.03em;color:var(--text);line-height:1.1;margin-bottom:1rem">Waar wij voor <span style="color:var(--peach-deep)">staan</span></h2>
+      <p style="color:var(--text-muted);max-width:36rem;margin:0 auto;font-size:1rem;line-height:1.65">Vier waarden die in elk product en elke transactie terugkomen.</p>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem">
-      <div class="card reveal stagger-1" data-reveal style="padding:2rem;text-align:center">
-        <div style="width:3.5rem;height:3.5rem;background:#dcfce7;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem"><i class="fas fa-seedling" style="font-size:1.4rem;color:#16a34a"></i></div>
-        <h3 style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:.5rem">Duurzaamheid</h3>
-        <p style="font-size:.875rem;color:var(--text-muted)">We verminderen verspilling door producten een tweede kans te geven.</p>
+      <div class="card reveal stagger-1" data-reveal style="padding:2rem 1.5rem;text-align:center;border:1.5px solid var(--border);border-radius:1.5rem">
+        <div style="width:4rem;height:4rem;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:1.5rem;color:var(--green-mid)"><i class="fas fa-leaf"></i></div>
+        <h3 style="font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:.5rem;letter-spacing:-.015em">Duurzaam</h3>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.65">Elk product dat een tweede leven krijgt, bespaart grondstoffen en vermindert afval.</p>
       </div>
-      <div class="card reveal stagger-2" data-reveal style="padding:2rem;text-align:center">
-        <div style="width:3.5rem;height:3.5rem;background:#dbeafe;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem"><i class="fas fa-handshake" style="font-size:1.4rem;color:#2563eb"></i></div>
-        <h3 style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:.5rem">Betrouwbaarheid</h3>
-        <p style="font-size:.875rem;color:var(--text-muted)">Transparantie en eerlijke communicatie staan centraal.</p>
+      <div class="card reveal stagger-2" data-reveal style="padding:2rem 1.5rem;text-align:center;border:1.5px solid var(--border);border-radius:1.5rem">
+        <div style="width:4rem;height:4rem;background:var(--peach-soft);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:1.5rem;color:var(--peach-deep)"><i class="fas fa-shield-heart"></i></div>
+        <h3 style="font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:.5rem;letter-spacing:-.015em">Betrouwbaar</h3>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.65">Gecontroleerde kwaliteit, transparante informatie en eerlijke communicatie.</p>
       </div>
-      <div class="card reveal stagger-3" data-reveal style="padding:2rem;text-align:center">
-        <div style="width:3.5rem;height:3.5rem;background:#f3e8ff;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem"><i class="fas fa-piggy-bank" style="font-size:1.4rem;color:#9333ea"></i></div>
-        <h3 style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:.5rem">Betaalbaarheid</h3>
-        <p style="font-size:.875rem;color:var(--text-muted)">Kwaliteit hoeft niet duur te zijn. Eerlijke prijzen voor iedereen.</p>
+      <div class="card reveal stagger-3" data-reveal style="padding:2rem 1.5rem;text-align:center;border:1.5px solid var(--border);border-radius:1.5rem">
+        <div style="width:4rem;height:4rem;background:var(--yellow-soft);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:1.5rem;color:#B58A00"><i class="fas fa-tag"></i></div>
+        <h3 style="font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:.5rem;letter-spacing:-.015em">Betaalbaar</h3>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.65">Kwaliteit hoeft niet duur te zijn. Onze prijzen zijn eerlijk en toegankelijk.</p>
       </div>
-      <div class="card reveal stagger-4" data-reveal style="padding:2rem;text-align:center">
-        <div style="width:3.5rem;height:3.5rem;background:#fef9c3;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem"><i class="fas fa-star" style="font-size:1.4rem;color:#ca8a04"></i></div>
-        <h3 style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:.5rem">Kwaliteit</h3>
-        <p style="font-size:.875rem;color:var(--text-muted)">Alle producten worden zorgvuldig geselecteerd voordat ze worden aangeboden.</p>
+      <div class="card reveal stagger-4" data-reveal style="padding:2rem 1.5rem;text-align:center;border:1.5px solid var(--border);border-radius:1.5rem">
+        <div style="width:4rem;height:4rem;background:var(--lavender-soft);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:1.5rem;color:var(--lavender-deep)"><i class="fas fa-handshake"></i></div>
+        <h3 style="font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:.5rem;letter-spacing:-.015em">Persoonlijk</h3>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.65">Geen anonieme webshop, maar een community van mensen die waarde hechten aan kwaliteit.</p>
       </div>
     </div>
   </section>
 
-  <!-- ═══ WERKWIJZE — INTERACTIVE TIMELINE ═══ -->
-  <section id="werkwijze" style="max-width:1200px;margin:0 auto;padding:0 1.5rem 5rem">
-    <div class="reveal timeline-section" data-reveal>
-      <div style="text-align:center;margin-bottom:3rem;position:relative;z-index:1">
-        <p style="font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:.75rem">Procedure</p>
-        <h2 style="font-size:clamp(1.75rem,4vw,2.5rem);font-weight:800;color:#fff;margin-bottom:.75rem">Onze werkwijze</h2>
-        <p style="color:rgba(255,255,255,.65);max-width:32rem;margin:0 auto">Van inkoop tot een nieuw leven. Klik op een stap om meer te weten te komen.</p>
-      </div>
-      <div id="timelineContainer" class="timeline-grid"></div>
-      <!-- Decorative blobs -->
-      <div style="position:absolute;top:-4rem;right:-4rem;width:16rem;height:16rem;background:rgba(255,255,255,.03);border-radius:50%;pointer-events:none"></div>
-      <div style="position:absolute;bottom:-5rem;left:-5rem;width:20rem;height:20rem;background:rgba(255,255,255,.02);border-radius:50%;pointer-events:none"></div>
+  <!-- ═══ WERKWIJZE — INTERACTIVE TIMELINE (Concept 3 stijl) ═══ -->
+  <section id="werkwijze" style="max-width:1200px;margin:0 auto;padding:3.5rem 1.5rem">
+    <div class="reveal" data-reveal style="text-align:center;margin-bottom:3rem">
+      <p class="werkwijze-badge" style="display:inline-flex;align-items:center;gap:.5rem;background:white;border:1.5px solid var(--lavender-soft);padding:.45rem 1.1rem;border-radius:100px;font-family:'Poppins',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--lavender-deep);margin-bottom:1rem;box-shadow:var(--shadow-sm);position:relative">
+        <i class="fas fa-route" style="font-size:.65rem"></i>
+        Werkwijze
+        <span class="sparkle-purple sparkle-p1">✦</span>
+        <span class="sparkle-purple sparkle-p2">✧</span>
+        <span class="sparkle-purple sparkle-p3">✦</span>
+        <span class="sparkle-purple sparkle-p4">✧</span>
+      </p>
+      <h2 style="font-family:'Poppins',sans-serif;font-size:clamp(2rem,4.5vw,3rem);font-weight:800;letter-spacing:-.03em;color:var(--text);margin-bottom:1rem;line-height:1.1">Zo werkt <span style="color:var(--lavender-deep)">Lagenco</span></h2>
+      <p style="color:var(--text-muted);max-width:32rem;margin:0 auto;font-size:1rem;line-height:1.65">Van inkoop tot aan je deur — in vijf stappen. Klik op een stap om meer te weten te komen.</p>
     </div>
+    <div id="timelineContainer" class="timeline-grid"></div>
   </section>
 
   <!-- ═══ ZAKELIJK ═══ -->
-  <section id="zakelijk" style="max-width:1200px;margin:0 auto;padding:0 1.5rem 5rem">
-    <div class="reveal" data-reveal style="background:var(--green-light);border:1px solid rgba(46,94,78,.1);border-radius:var(--radius-xl);padding:3.5rem 2.5rem">
-      <div style="display:grid;grid-template-columns:1fr;gap:3rem" class="md:grid-cols-2">
+  <section id="zakelijk" style="max-width:1200px;margin:0 auto;padding:3.5rem 1.5rem">
+    <div class="reveal" data-reveal style="background:linear-gradient(135deg,var(--green-light) 0%,var(--peach-soft) 100%);border:1.5px solid var(--border);border-radius:var(--radius-xl);padding:3.5rem 3rem;position:relative;overflow:hidden">
+      <!-- Decorative yellow blob -->
+      <div style="position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:radial-gradient(circle,var(--yellow-soft),transparent 70%);border-radius:50%;pointer-events:none"></div>
+      <div style="display:grid;grid-template-columns:1fr;gap:3rem;position:relative;z-index:1" class="md:grid-cols-2">
         <div>
-          <p style="font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem">Zakelijke samenwerking</p>
-          <h2 style="font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;letter-spacing:-.03em;color:var(--text);margin-bottom:1rem">Ruimte in uw magazijn?<br>Wij kopen het op.</h2>
-          <p style="color:var(--text-muted);font-size:1rem;line-height:1.7;margin-bottom:1.75rem">Bedrijven kunnen bij ons terecht voor het snel en transparant opkopen van overtollige voorraad, retourpartijen of partijhandel. Wij ontzorgen u volledig.</p>
-          <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.75rem;font-size:.95rem">
-            <div style="display:flex;gap:.75rem;align-items:center;color:var(--text);font-weight:500"><i class="fas fa-check-circle" style="color:var(--green)"></i> Vlotte afname van overstock</div>
-            <div style="display:flex;gap:.75rem;align-items:center;color:var(--text);font-weight:500"><i class="fas fa-check-circle" style="color:var(--green)"></i> Eerlijke en snelle betaling</div>
-            <div style="display:flex;gap:.75rem;align-items:center;color:var(--text);font-weight:500"><i class="fas fa-check-circle" style="color:var(--green)"></i> Bijdrage aan circulariteit</div>
+          <p class="zakelijk-badge" style="display:inline-flex;align-items:center;gap:.5rem;background:white;border:1.5px solid var(--blue-soft);padding:.45rem 1.1rem;border-radius:100px;font-family:'Poppins',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-deep);margin-bottom:1rem;box-shadow:var(--shadow-sm);position:relative">
+            <i class="fas fa-briefcase" style="font-size:.65rem"></i>
+            Zakelijke samenwerking
+            <span class="sparkle-blue sparkle-b1">✦</span>
+            <span class="sparkle-blue sparkle-b2">✧</span>
+            <span class="sparkle-blue sparkle-b3">✦</span>
+            <span class="sparkle-blue sparkle-b4">✧</span>
+          </p>
+          <h2 style="font-family:'Poppins',sans-serif;font-size:clamp(1.75rem,3.5vw,2.5rem);font-weight:800;letter-spacing:-.03em;color:var(--text);margin-bottom:1.25rem;line-height:1.15">Ruimte in uw magazijn?<br><span style="color:var(--blue-deep)">Wij kopen het op</span></h2>
+          <p style="color:var(--text-muted);font-size:1.05rem;line-height:1.7;margin-bottom:2rem">Bedrijven kunnen bij ons terecht voor het snel en transparant opkopen van overtollige voorraad, retourpartijen of partijhandel. Wij ontzorgen u volledig.</p>
+          <div style="display:flex;flex-direction:column;gap:.875rem;margin-bottom:2rem;font-size:.95rem">
+            <div style="display:flex;gap:.75rem;align-items:center;color:var(--text);font-weight:600;font-family:'Poppins',sans-serif">
+              <span style="width:1.75rem;height:1.75rem;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0"><i class="fas fa-check"></i></span>
+              Vlotte afname van overstock
+            </div>
+            <div style="display:flex;gap:.75rem;align-items:center;color:var(--text);font-weight:600;font-family:'Poppins',sans-serif">
+              <span style="width:1.75rem;height:1.75rem;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0"><i class="fas fa-check"></i></span>
+              Eerlijke en snelle betaling
+            </div>
+            <div style="display:flex;gap:.75rem;align-items:center;color:var(--text);font-weight:600;font-family:'Poppins',sans-serif">
+              <span style="width:1.75rem;height:1.75rem;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0"><i class="fas fa-check"></i></span>
+              Bijdrage aan circulariteit
+            </div>
           </div>
-          <a href="contact.html?subject=Inkoop-offerte" class="btn btn-primary" style="padding:.875rem 2rem;text-decoration:none">Vraag een inkoop-offerte aan <i class="fas fa-arrow-right text-xs"></i></a>
+          <a href="contact.html?subject=Inkoop-offerte" class="btn btn-primary" style="padding:1rem 2rem;text-decoration:none">Vraag een inkoop-offerte aan <i class="fas fa-arrow-right text-xs"></i></a>
         </div>
-        <div class="card" style="padding:2rem;border-radius:var(--radius-lg)">
-          <h3 style="font-weight:700;font-size:1.1rem;color:var(--text);margin-bottom:1.25rem">Direct contact voor bedrijven</h3>
+        <div class="card" style="padding:2rem;border-radius:1.5rem;background:white;border:1.5px solid var(--border);box-shadow:var(--shadow-md)">
+          <h3 style="font-family:'Poppins',sans-serif;font-weight:700;font-size:1.05rem;color:var(--text);margin-bottom:1.25rem;letter-spacing:-.010em">Direct contact voor bedrijven</h3>
           <form id="quickContactForm" style="display:flex;flex-direction:column;gap:1rem" onsubmit="event.preventDefault(); toast('Bericht ontvangen! We nemen spoedig contact op.', 'success'); this.reset();">
             <div>
-              <label style="font-size:.8rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:.4rem" for="qcCompany">Bedrijfsnaam</label>
+              <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:.4rem;font-family:'Poppins',sans-serif" for="qcCompany">Bedrijfsnaam</label>
               <input id="qcCompany" type="text" placeholder="Uw bedrijf B.V." class="login-input" style="padding:.75rem 1rem" required>
             </div>
             <div>
-              <label style="font-size:.8rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:.4rem" for="qcEmail">E-mail</label>
+              <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:.4rem;font-family:'Poppins',sans-serif" for="qcEmail">E-mail</label>
               <input id="qcEmail" type="email" placeholder="naam@bedrijf.nl" class="login-input" style="padding:.75rem 1rem" required>
             </div>
             <div>
-              <label style="font-size:.8rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:.4rem" for="qcMsg">Wat wilt u verkopen?</label>
+              <label style="font-size:.78rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:.4rem;font-family:'Poppins',sans-serif" for="qcMsg">Wat wilt u verkopen?</label>
               <textarea id="qcMsg" rows="3" placeholder="Omschrijving van de partij..." class="login-input" style="padding:.75rem 1rem;resize:vertical" required></textarea>
             </div>
-            <button type="submit" class="btn btn-green" style="justify-content:center;padding:.875rem">Verstuur aanvraag</button>
+            <button type="submit" class="btn btn-green" style="justify-content:center;padding:.95rem">Verstuur aanvraag</button>
           </form>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ═══ ADMIN PANEL ═══ -->
-  <section style="max-width:1200px;margin:0 auto;padding:0 1.5rem 5rem">
-    <div id="adminPanel" class="admin-panel hidden reveal" data-reveal>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem">
+  <!-- ═══ COMMUNITY POSTS ═══ -->
+  <section id="community" style="max-width:1000px;margin:0 auto;padding:0 1.5rem 3rem">
+    <div class="reveal" data-reveal style="text-align:center;margin-bottom:1.75rem">
+      <p class="community-badge" style="display:inline-flex;align-items:center;gap:.5rem;background:white;border:1.5px solid var(--green-light);padding:.45rem 1.1rem;border-radius:100px;font-family:'Poppins',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green-mid);margin-bottom:1rem;box-shadow:var(--shadow-sm);position:relative">
+        <i class="fas fa-users" style="font-size:.65rem"></i>
+        Community
+        <span class="thumb-green thumb-1"><i class="fas fa-thumbs-up"></i></span>
+        <span class="thumb-green thumb-2"><i class="fas fa-thumbs-up"></i></span>
+        <span class="thumb-green thumb-3"><i class="fas fa-thumbs-up"></i></span>
+        <span class="thumb-green thumb-4"><i class="fas fa-thumbs-up"></i></span>
+      </p>
+      <h2 style="font-family:'Poppins',sans-serif;font-size:clamp(1.75rem,4vw,2.75rem);font-weight:800;letter-spacing:-.03em;color:var(--text);margin-bottom:1rem;line-height:1.1">Laatste nieuws & <span style="color:var(--green-mid)">mededelingen</span></h2>
+      <p style="color:var(--text-muted);max-width:38rem;margin:0 auto;line-height:1.7;font-size:1rem;font-family:'Nunito',sans-serif">Blijf op de hoogte van ons laatste nieuws en mededelingen. Reageer gerust met je gebruikersnaam!</p>
+    </div>
+
+    <!-- Admin post form (alleen zichtbaar voor admin) -->
+    <div id="communityAdminForm" class="hidden" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:2rem;box-shadow:var(--shadow-sm)">
+      <div style="display:flex;align-items:center;gap:.625rem;margin-bottom:1rem">
+        <div style="width:2rem;height:2rem;background:linear-gradient(135deg,var(--green),var(--green-mid));border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="fas fa-leaf" style="color:white;font-size:.7rem"></i>
+        </div>
         <div>
-          <h3 style="font-size:1.5rem;font-weight:800;color:var(--text);margin-bottom:.25rem">Admin: Producten beheren</h3>
+          <p style="margin:0;font-weight:600;color:var(--text);font-size:.875rem">Nieuw bericht plaatsen</p>
+          <p style="margin:0;font-size:.72rem;color:var(--text-faint)">Als admin kun je hier mededelingen delen met de community</p>
+        </div>
+      </div>
+      <input type="text" id="communityPostTitle" placeholder="Titel van je bericht (bijv. 'Nieuwe partij microfoons binnen!')" style="width:100%;padding:.75rem 1rem;border:1px solid var(--border);border-radius:var(--radius-xs);font-family:'Inter',sans-serif;font-size:.875rem;margin-bottom:.625rem;box-sizing:border-box;background:#fff;color:var(--text)">
+      <textarea id="communityPostBody" rows="4" placeholder="Schrijf je bericht..." style="width:100%;padding:.75rem 1rem;border:1px solid var(--border);border-radius:var(--radius-xs);font-family:'Inter',sans-serif;font-size:.875rem;margin-bottom:.625rem;box-sizing:border-box;resize:vertical;background:#fff;color:var(--text)"></textarea>
+
+      <!-- Snelkoppelingen toolbar -->
+      <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.625rem;padding:.625rem;background:var(--bg-2);border-radius:var(--radius-xs);border:1px solid var(--border)">
+        <span style="font-size:.7rem;font-weight:700;color:var(--text-muted);font-family:'Poppins',sans-serif;letter-spacing:.04em;text-transform:uppercase;align-self:center;margin-right:.25rem">Snelkoppeling:</span>
+        <button type="button" class="community-quicklink" data-link="assortiment.html" data-label="Ga naar assortiment" style="padding:.35rem .7rem;background:white;border:1px solid var(--border);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--green-mid);cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s"><i class="fas fa-shopping-bag" style="font-size:.65rem;margin-right:.25rem"></i>Assortiment</button>
+        <button type="button" class="community-quicklink" data-link="algemene-voorwaarden.html" data-label="Bekijk algemene voorwaarden" style="padding:.35rem .7rem;background:white;border:1px solid var(--border);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--green-mid);cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s"><i class="fas fa-file-contract" style="font-size:.65rem;margin-right:.25rem"></i>Voorwaarden</button>
+        <button type="button" class="community-quicklink" data-link="contact.html" data-label="Neem contact op" style="padding:.35rem .7rem;background:white;border:1px solid var(--border);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--green-mid);cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s"><i class="fas fa-envelope" style="font-size:.65rem;margin-right:.25rem"></i>Contact</button>
+        <button type="button" class="community-quicklink" data-link="retourbeleid.html" data-label="Lees ons retourbeleid" style="padding:.35rem .7rem;background:white;border:1px solid var(--border);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--green-mid);cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s"><i class="fas fa-undo" style="font-size:.65rem;margin-right:.25rem"></i>Retourbeleid</button>
+        <button type="button" class="community-quicklink" data-link="privacybeleid.html" data-label="Lees ons privacybeleid" style="padding:.35rem .7rem;background:white;border:1px solid var(--border);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--green-mid);cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s"><i class="fas fa-shield-alt" style="font-size:.65rem;margin-right:.25rem"></i>Privacybeleid</button>
+        <button type="button" class="community-quicklink" data-link="reviews.html" data-label="Lees reviews" style="padding:.35rem .7rem;background:white;border:1px solid var(--border);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--green-mid);cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s"><i class="fas fa-star" style="font-size:.65rem;margin-right:.25rem"></i>Reviews</button>
+        <button type="button" class="community-quicklink" data-link="leer-ons-kennen.html" data-label="Leer ons kennen" style="padding:.35rem .7rem;background:white;border:1px solid var(--border);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--green-mid);cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s"><i class="fas fa-heart" style="font-size:.65rem;margin-right:.25rem"></i>Leer ons kennen</button>
+        <button type="button" class="community-quicklink community-quicklink-wheelspin" data-link="wheelspin" data-label="Doe een wheel spin" style="padding:.35rem .7rem;background:linear-gradient(135deg,var(--peach-soft),var(--yellow-soft));border:1.5px solid var(--peach);border-radius:100px;font-size:.75rem;font-weight:700;color:var(--peach-deep);cursor:pointer;font-family:'Poppins',sans-serif;transition:all .2s"><i class="fas fa-circle-notch" style="font-size:.65rem;margin-right:.25rem"></i>Wheel spin 🎡</button>
+      </div>
+
+      <!-- Afbeelding upload -->
+      <div style="margin-bottom:.625rem">
+        <label style="display:block;font-size:.72rem;font-weight:700;color:var(--text-muted);font-family:'Poppins',sans-serif;letter-spacing:.04em;text-transform:uppercase;margin-bottom:.4rem">Afbeelding toevoegen (optioneel)</label>
+        <input type="file" id="communityPostImage" accept="image/*" style="display:none">
+        <div id="communityImageUploadArea" style="padding:1rem;border:2px dashed var(--border-2);border-radius:var(--radius-xs);text-align:center;cursor:pointer;background:var(--bg-2);transition:all .2s">
+          <i class="fas fa-image" style="font-size:1.5rem;color:var(--text-faint);margin-bottom:.4rem;display:block"></i>
+          <p style="font-size:.78rem;color:var(--text-muted);margin:0;font-family:'Poppins',sans-serif;font-weight:600">Klik om een afbeelding te kiezen</p>
+          <p style="font-size:.68rem;color:var(--text-faint);margin:.2rem 0 0">JPG, PNG of GIF — max 2MB</p>
+        </div>
+        <div id="communityImagePreview" class="hidden" style="position:relative;margin-top:.5rem;border-radius:var(--radius-xs);overflow:hidden;border:1px solid var(--border)">
+          <img id="communityImagePreviewImg" src="" alt="" style="width:100%;max-height:200px;object-fit:cover;display:block">
+          <button type="button" id="communityImageRemove" style="position:absolute;top:.5rem;right:.5rem;background:rgba(0,0,0,.65);color:white;border:none;border-radius:50%;width:2rem;height:2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap">
+        <button type="button" id="communityPostCancel" class="btn btn-ghost" style="padding:.6rem 1.25rem;font-size:.85rem">Annuleren</button>
+        <button type="button" id="communityPostSubmit" class="btn btn-green" style="padding:.6rem 1.25rem;font-size:.85rem"><i class="fas fa-paper-plane"></i> Plaats bericht</button>
+      </div>
+    </div>
+
+    <!-- Nieuw bericht knop (alleen voor admin, compacte versie) -->
+    <div id="communityAdminToggle" class="hidden" style="text-align:center;margin-bottom:1.5rem">
+      <button type="button" id="communityNewPostBtn" class="btn btn-green" style="padding:.75rem 1.5rem">
+        <i class="fas fa-plus"></i> Nieuw bericht plaatsen
+      </button>
+    </div>
+
+    <!-- Posts container -->
+    <div id="communityPostsList" style="display:flex;flex-direction:column;gap:1.5rem"></div>
+
+    <!-- Empty state -->
+    <div id="communityEmpty" class="hidden" style="text-align:center;padding:3rem 1.5rem;background:var(--card);border:1px dashed var(--border-2);border-radius:var(--radius-lg)">
+      <div style="width:3.5rem;height:3.5rem;margin:0 auto 1rem;background:var(--bg-2);border-radius:50%;display:flex;align-items:center;justify-content:center">
+        <i class="fas fa-bullhorn" style="font-size:1.3rem;color:var(--text-faint)"></i>
+      </div>
+      <h3 style="font-family:'Sora',sans-serif;font-size:1.05rem;font-weight:700;color:var(--text);margin:0 0 .5rem">Nog geen berichten</h3>
+      <p style="color:var(--text-muted);font-size:.9rem;max-width:30rem;margin:0 auto">Zodra Lagenco een mededeling plaatst, verschijnt deze hier. Kom later terug!</p>
+    </div>
+  </section>
+
+  <!-- ═══ ADMIN PANEL ═══ -->
+  <section style="max-width:1200px;margin:0 auto;padding:0 1.5rem 3rem">
+    <div id="adminPanel" class="admin-panel hidden reveal" data-reveal>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1.75rem">
+        <div>
+          <h3 style="font-family:'Fraunces',serif;font-size:1.625rem;font-weight:600;color:var(--text);margin-bottom:.3rem;letter-spacing:-.020em">Admin: Producten beheren</h3>
           <p style="font-size:.875rem;color:var(--text-muted)">Producten worden lokaal opgeslagen in uw browser.</p>
         </div>
-        <span style="display:inline-flex;align-items:center;gap:.5rem;padding:.4rem 1rem;background:var(--green-light);color:var(--green);border-radius:100px;font-size:.8rem;font-weight:700"><i class="fas fa-shield-alt"></i> Admin-modus actief</span>
+        <span style="display:inline-flex;align-items:center;gap:.5rem;padding:.45rem 1.05rem;background:var(--green-light);color:var(--green);border-radius:100px;font-size:.78rem;font-weight:700;font-family:'Sora',sans-serif"><i class="fas fa-shield-alt"></i> Admin-modus actief</span>
       </div>
 
       <div class="admin-tabs">
@@ -541,6 +945,13 @@
           <input id="productPrice" type="number" class="login-input" placeholder="Prijs (€) *" required min="0" step="0.01">
           <input id="productOldPrice" type="number" class="login-input" placeholder="Oude prijs (€) — optioneel" min="0" step="0.01">
           <input id="productBadge" type="text" class="login-input" placeholder="Badge (bijv. Retourproduct, Nieuw, Tweedehands)" style="grid-column:1/-1">
+          <select id="productCondition" class="login-input" style="grid-column:1/-1;cursor:pointer">
+            <option value="0">Conditie — niet beoordeeld</option>
+            <option value="5">⭐⭐⭐⭐⭐ Excellent (als nieuw)</option>
+            <option value="4">⭐⭐⭐⭐ Goed (lichte gebruikssporen)</option>
+            <option value="3">⭐⭐⭐ Redelijk (zichtbare slijtage)</option>
+            <option value="2">⭐⭐ Beschadigd (functioneel maar niet mooi)</option>
+          </select>
           <div style="grid-column:1/-1;display:flex;gap:.5rem;flex-wrap:wrap">
             <input id="productImageURL" type="url" class="login-input" placeholder="Afbeeldings-URL toevoegen (optioneel)" style="flex:1;min-width:200px">
             <button type="button" id="addImageUrlBtn" class="btn btn-ghost" style="padding:.75rem 1rem"><i class="fas fa-plus"></i> Voeg toe</button>
@@ -570,8 +981,8 @@
   </section>
 
   <!-- ═══ AMBITIES ═══ -->
-  <section style="max-width:1200px;margin:0 auto;padding:0 1.5rem 5rem;text-align:center">
-    <p class="reveal" data-reveal style="font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-faint);margin-bottom:1.25rem">Onze ambities</p>
+  <section style="max-width:1200px;margin:0 auto;padding:0 1.5rem 3rem;text-align:center">
+    <p class="reveal" data-reveal style="font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text-faint);margin-bottom:1.5rem;font-family:'Sora',sans-serif">— Onze ambities</p>
     <div class="reveal" data-reveal style="display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem">
       <span class="filter-pill">Eigen Webshop</span>
       <span class="filter-pill">Bol.com Partner</span>
@@ -585,51 +996,56 @@
   </main>
 
   <!-- ═══ FOOTER ═══ -->
-  <footer style="background:var(--card);border-top:1px solid var(--border);margin-top:2rem">
-    <div style="max-width:1200px;margin:0 auto;padding:4rem 1.5rem">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:2.5rem;margin-bottom:3rem">
+  <footer style="background:linear-gradient(135deg,#2D3A2E 0%,#1F2A20 100%);color:white;margin-top:2rem;position:relative;overflow:hidden">
+    <!-- Decoratieve blob -->
+    <div style="position:absolute;top:-50px;right:-50px;width:300px;height:300px;background:radial-gradient(circle,rgba(107,191,126,0.10),transparent 70%);border-radius:50%;pointer-events:none"></div>
+    <div style="max-width:1200px;margin:0 auto;padding:4rem 1.5rem 2.5rem;position:relative;z-index:1">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:2.5rem;margin-bottom:2.5rem">
         <div style="grid-column:span 2" class="min-w-0">
-          <div style="display:flex;align-items:center;gap:.625rem;margin-bottom:1rem">
-            <div style="width:2.25rem;height:2.25rem;background:var(--green);border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-leaf text-white text-sm"></i></div>
-            <span style="font-size:1.2rem;font-weight:800;color:var(--text)">Lagenco</span>
+          <div style="display:flex;align-items:center;gap:.625rem;margin-bottom:1.25rem">
+            <div style="width:2.5rem;height:2.5rem;background:linear-gradient(135deg,var(--green),var(--green-mid));border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(107,191,126,.30)"><i class="fas fa-leaf" style="color:white;font-size:.9rem"></i></div>
+            <span style="font-family:'Poppins',sans-serif;font-size:1.4rem;font-weight:700;color:white;letter-spacing:-.02em">Lagenco</span>
           </div>
-          <p style="font-size:.875rem;color:var(--text-muted);max-width:18rem;line-height:1.6">Slim inkopen. Duurzaam doorverkopen. Wij geven kwalitatieve producten een tweede kans.</p>
-          <div style="display:flex;gap:.75rem;margin-top:1.25rem">
-            <a href="#" style="width:2.25rem;height:2.25rem;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;color:var(--text-muted);text-decoration:none;transition:all .2s" onmouseover="this.style.background='var(--green)';this.style.color='#fff'" onmouseout="this.style.background='var(--bg-2)';this.style.color='var(--text-muted)'" aria-label="LinkedIn"><i class="fab fa-linkedin" style="font-size:.8rem"></i></a>
-            <a href="#" style="width:2.25rem;height:2.25rem;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;color:var(--text-muted);text-decoration:none;transition:all .2s" onmouseover="this.style.background='var(--green)';this.style.color='#fff'" onmouseout="this.style.background='var(--bg-2)';this.style.color='var(--text-muted)'" aria-label="Instagram"><i class="fab fa-instagram" style="font-size:.8rem"></i></a>
-            <a href="mailto:info@lagenco.nl" style="width:2.25rem;height:2.25rem;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;color:var(--text-muted);text-decoration:none;transition:all .2s" onmouseover="this.style.background='var(--green)';this.style.color='#fff'" onmouseout="this.style.background='var(--bg-2)';this.style.color='var(--text-muted)'" aria-label="E-mail"><i class="fas fa-envelope" style="font-size:.8rem"></i></a>
+          <p style="font-size:.9rem;color:rgba(255,255,255,0.7);max-width:22rem;line-height:1.7;font-family:'Nunito',sans-serif">Slim inkopen. Duurzaam doorverkopen. Wij geven kwalitatieve producten een tweede kans.</p>
+          <div style="display:flex;gap:.625rem;margin-top:1.5rem">
+            <a href="#" style="width:2.5rem;height:2.5rem;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;color:white;text-decoration:none;transition:all .25s" onmouseover="this.style.background='var(--green)';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.transform=''" aria-label="LinkedIn"><i class="fab fa-linkedin" style="font-size:.85rem"></i></a>
+            <a href="#" style="width:2.5rem;height:2.5rem;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;color:white;text-decoration:none;transition:all .25s" onmouseover="this.style.background='var(--green)';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.transform=''" aria-label="Instagram"><i class="fab fa-instagram" style="font-size:.85rem"></i></a>
+            <a href="mailto:info@lagenco.nl" style="width:2.5rem;height:2.5rem;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;color:white;text-decoration:none;transition:all .25s" onmouseover="this.style.background='var(--green)';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.transform=''" aria-label="E-mail"><i class="fas fa-envelope" style="font-size:.85rem"></i></a>
           </div>
         </div>
         <div>
-          <h4 style="font-weight:700;font-size:.875rem;color:var(--text);margin-bottom:1rem">Navigatie</h4>
-          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.625rem;font-size:.875rem">
-            <li><a class="footer-link" href="#assortiment">Assortiment</a></li>
-            <li><a class="footer-link" href="#over-ons">Over ons</a></li>
-            <li><a class="footer-link" href="#voordelen">Kernwaarden</a></li>
-            <li><a class="footer-link" href="#werkwijze">Werkwijze</a></li>
-            <li><a class="footer-link" href="assortiment.html">Volledig assortiment</a></li>
-            <li><a class="footer-link" href="contact.html">Contact</a></li>
+          <h4 style="font-family:'Poppins',sans-serif;font-weight:700;font-size:.75rem;color:var(--green);margin-bottom:1.25rem;text-transform:uppercase;letter-spacing:.10em">Navigatie</h4>
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.6rem;font-size:.88rem">
+            <li><a class="footer-link" href="#assortiment" style="color:rgba(255,255,255,0.75);text-decoration:none;font-family:'Nunito',sans-serif;transition:color .2s,padding-left .2s;display:inline-block">Assortiment</a></li>
+            <li><a class="footer-link" href="#over-ons" style="color:rgba(255,255,255,0.75);text-decoration:none;font-family:'Nunito',sans-serif;transition:color .2s,padding-left .2s;display:inline-block">Over ons</a></li>
+            <li><a class="footer-link" href="#voordelen" style="color:rgba(255,255,255,0.75);text-decoration:none;font-family:'Nunito',sans-serif;transition:color .2s,padding-left .2s;display:inline-block">Kernwaarden</a></li>
+            <li><a class="footer-link" href="#werkwijze" style="color:rgba(255,255,255,0.75);text-decoration:none;font-family:'Nunito',sans-serif;transition:color .2s,padding-left .2s;display:inline-block">Werkwijze</a></li>
+            <li><a class="footer-link" href="assortiment.html" style="color:rgba(255,255,255,0.75);text-decoration:none;font-family:'Nunito',sans-serif;transition:color .2s,padding-left .2s;display:inline-block">Volledig assortiment</a></li>
+            <li><a class="footer-link" href="contact.html" style="color:rgba(255,255,255,0.75);text-decoration:none;font-family:'Nunito',sans-serif;transition:color .2s,padding-left .2s;display:inline-block">Contact</a></li>
           </ul>
         </div>
         <div>
-          <h4 style="font-weight:700;font-size:.875rem;color:var(--text);margin-bottom:1rem">Klantenservice</h4>
-          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.625rem;font-size:.875rem">
-            <li><a class="footer-link" href="algemene-voorwaarden.html">Algemene voorwaarden</a></li>
-            <li><a class="footer-link" href="privacybeleid.html">Privacybeleid</a></li>
-            <li><a class="footer-link" href="cookiebeleid.html">Cookiebeleid</a></li>
-            <li><a class="footer-link" href="disclaimer.html">Disclaimer</a></li>
-            <li><a class="footer-link" href="retourbeleid.html">Retourbeleid</a></li>
-            <li><a class="footer-link" href="verzendinformatie.html">Verzendinformatie</a></li>
+          <h4 style="font-family:'Poppins',sans-serif;font-weight:700;font-size:.75rem;color:var(--green);margin-bottom:1.25rem;text-transform:uppercase;letter-spacing:.10em">Klantenservice</h4>
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.6rem;font-size:.88rem">
+            <li><a class="footer-link" href="algemene-voorwaarden.html" style="color:rgba(255,255,255,0.75);text-decoration:none;font-family:'Nunito',sans-serif;transition:color .2s,padding-left .2s;display:inline-block">Algemene voorwaarden</a></li>
+            <li><a class="footer-link" href="privacybeleid.html" style="color:rgba(255,255,255,0.75);text-decoration:none;font-family:'Nunito',sans-serif;transition:color .2s,padding-left .2s;display:inline-block">Privacybeleid</a></li>
+            <li><a class="footer-link" href="cookiebeleid.html" style="color:rgba(255,255,255,0.75);text-decoration:none;font-family:'Nunito',sans-serif;transition:color .2s,padding-left .2s;display:inline-block">Cookiebeleid</a></li>
+            <li><a class="footer-link" href="disclaimer.html" style="color:rgba(255,255,255,0.75);text-decoration:none;font-family:'Nunito',sans-serif;transition:color .2s,padding-left .2s;display:inline-block">Disclaimer</a></li>
+            <li><a class="footer-link" href="retourbeleid.html" style="color:rgba(255,255,255,0.75);text-decoration:none;font-family:'Nunito',sans-serif;transition:color .2s,padding-left .2s;display:inline-block">Retourbeleid</a></li>
+            <li><a class="footer-link" href="verzendinformatie.html" style="color:rgba(255,255,255,0.75);text-decoration:none;font-family:'Nunito',sans-serif;transition:color .2s,padding-left .2s;display:inline-block">Verzendinformatie</a></li>
           </ul>
         </div>
         <div>
-          <h4 style="font-weight:700;font-size:.875rem;color:var(--text);margin-bottom:1rem">Contact</h4>
-          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.625rem;font-size:.875rem;color:var(--text-muted)">
-            <li><a href="mailto:info@lagenco.nl" style="color:inherit;text-decoration:none">info@lagenco.nl</a></li>
+          <h4 style="font-family:'Poppins',sans-serif;font-weight:700;font-size:.75rem;color:var(--green);margin-bottom:1.25rem;text-transform:uppercase;letter-spacing:.10em">Info</h4>
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.6rem;font-size:.88rem;color:rgba(255,255,255,0.75);font-family:'Nunito',sans-serif">
+            <li><a href="mailto:info@lagenco.nl" style="color:rgba(255,255,255,0.75);text-decoration:none;transition:color .2s,padding-left .2s;display:inline-block"><i class="fas fa-envelope" style="margin-right:.4rem;font-size:.75rem;color:var(--green)"></i>info@lagenco.nl</a></li>
+            <li style="display:flex;align-items:center;gap:.4rem"><i class="fas fa-leaf" style="font-size:.75rem;color:var(--green)"></i> Duurzaam ondernemen</li>
+            <li style="display:flex;align-items:center;gap:.4rem"><i class="fas fa-shield-alt" style="font-size:.75rem;color:var(--green)"></i> Veilig betalen</li>
+            <li style="display:flex;align-items:center;gap:.4rem"><i class="fas fa-truck" style="font-size:.75rem;color:var(--green)"></i> Snelle levering</li>
           </ul>
         </div>
       </div>
-      <div style="border-top:1px solid var(--border);padding-top:1.5rem;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem;font-size:.8rem;color:var(--text-faint)">
+      <div style="border-top:1px solid rgba(255,255,255,0.10);padding-top:1.5rem;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem;font-size:.78rem;color:rgba(255,255,255,0.55);font-family:'Poppins',sans-serif">
         <p>© 2024 Lagenco. Alle rechten voorbehouden.</p>
         <p>Gemaakt met ♻️ voor een duurzamere wereld</p>
       </div>
@@ -660,6 +1076,7 @@
     });
   </script>
   <!-- Admin Modus floating button — only visible when logged in. Lazy-loaded, zero impact on performance. -->
+  <script src="mobile-menu.js"></script>
   <script src="admin-button.js?v=6" defer></script>
 </body>
 </html>

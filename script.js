@@ -102,6 +102,18 @@ const badgeClass = (badge = '') => {
   return 'badge-new';
 };
 
+// Condition grade helper — returns stars + label + CSS class
+const conditionInfo = (condition) => {
+  const c = parseInt(condition) || 0;
+  switch (c) {
+    case 5:  return { stars: '★★★★★', label: 'Excellent', cls: 'condition-excellent', desc: 'Als nieuw' };
+    case 4:  return { stars: '★★★★☆', label: 'Goed', cls: 'condition-good', desc: 'Lichte gebruikssporen' };
+    case 3:  return { stars: '★★★☆☆', label: 'Redelijk', cls: 'condition-fair', desc: 'Zichtbare slijtage' };
+    case 2:  return { stars: '★★☆☆☆', label: 'Beschadigd', cls: 'condition-poor', desc: 'Functioneel maar niet mooi' };
+    default: return null; // no grade set
+  }
+};
+
 const escapeHtml = (str = '') => String(str)
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
@@ -312,15 +324,22 @@ const buildCarouselCard = (product, admin = false) => {
   const bClass = badgeClass(product.badge);
   const wished = isWishlisted(product.id);
   const inCompare = getCompare().includes(product.id);
+  const bidCount = (typeof getBids === 'function' ? getBidsForProduct(product.id).length : 0);
+  const bidBadge = bidCount > 0
+    ? `<span class="bid-count-badge" title="${bidCount} ${bidCount === 1 ? 'bod' : 'biedingen'} geplaatst"><i class="fas fa-gavel"></i> ${bidCount}</span>`
+    : '';
   const discTag = disc
     ? `<span class="tag" style="background:#fef3c7;color:#92400e">-${disc}%</span>`
     : `<span class="tag" style="background:var(--green-light);color:var(--green)">Uitgelicht</span>`;
+  const cond = conditionInfo(product.condition);
+  const condHtml = cond ? `<div class="condition-grade ${cond.cls}" title="${cond.label} — ${cond.desc}"><span class="condition-stars">${cond.stars}</span> <span class="condition-label">${cond.label}</span></div>` : '';
 
   return `
   <article class="card product-card carousel-item" data-product-id="${product.id}">
-    <div class="card-img">
+    <div class="card-img" data-action="view" data-id="${product.id}" style="cursor:pointer">
       <img src="${img}" alt="${escapeHtml(product.title)}" loading="lazy" decoding="async">
       <span class="badge ${bClass}"><i class="fas fa-tag"></i>${escapeHtml(product.badge || 'Uitgelicht')}</span>
+      ${bidBadge}
       <div class="card-actions">
         <button class="action-btn ${wished ? 'active' : ''}" data-wishlist="${product.id}" title="Verlanglijst" aria-label="Toevoegen aan verlanglijst"><i class="fas fa-heart"></i></button>
         <button class="action-btn ${inCompare ? 'active' : ''}" data-action="compare" data-id="${product.id}" title="Vergelijken" aria-label="Toevoegen aan vergelijking"><i class="fas fa-balance-scale"></i></button>
@@ -329,6 +348,7 @@ const buildCarouselCard = (product, admin = false) => {
     </div>
     <div class="p-5">
       <h3 class="font-semibold text-lg mb-1" style="color:var(--text)">${escapeHtml(product.title)}</h3>
+      ${condHtml}
       <p class="text-sm mb-3" style="color:var(--text-muted)">${escapeHtml(product.description)}</p>
       <div class="flex items-center justify-between gap-2 flex-wrap">
         <div>
@@ -352,13 +372,20 @@ const buildGridCard = (product, admin = false) => {
   const bClass = badgeClass(product.badge);
   const wished = isWishlisted(product.id);
   const inCompare = getCompare().includes(product.id);
+  const bidCount = (typeof getBids === 'function' ? getBidsForProduct(product.id).length : 0);
+  const bidBadge = bidCount > 0
+    ? `<span class="bid-count-badge" title="${bidCount} ${bidCount === 1 ? 'bod' : 'biedingen'} geplaatst"><i class="fas fa-gavel"></i> ${bidCount}</span>`
+    : '';
+  const cond = conditionInfo(product.condition);
+  const condHtml = cond ? `<div class="condition-grade ${cond.cls}" title="${cond.label} — ${cond.desc}"><span class="condition-stars">${cond.stars}</span> <span class="condition-label">${cond.label}</span></div>` : '';
 
   return `
   <article class="card product-card reveal" data-reveal data-product-id="${product.id}">
-    <div class="card-img">
+    <div class="card-img" data-action="view" data-id="${product.id}" style="cursor:pointer">
       <img src="${img}" alt="${escapeHtml(product.title)}" loading="lazy" decoding="async">
       <span class="badge ${bClass}"><i class="fas fa-tag"></i>${escapeHtml(product.badge || 'Uitgelicht')}</span>
       ${disc ? `<span class="badge" style="top:.75rem;right:.75rem;left:auto;background:var(--warm);color:white">-${disc}%</span>` : ''}
+      ${bidBadge}
       <div class="card-actions">
         <button class="action-btn ${wished ? 'active' : ''}" data-wishlist="${product.id}" aria-label="Verlanglijst"><i class="fas fa-heart"></i></button>
         <button class="action-btn ${inCompare ? 'active' : ''}" data-action="compare" data-id="${product.id}" aria-label="Vergelijken"><i class="fas fa-balance-scale"></i></button>
@@ -367,6 +394,7 @@ const buildGridCard = (product, admin = false) => {
     </div>
     <div class="p-6 flex flex-col" style="flex:1">
       <h3 class="text-xl font-semibold mb-2" style="color:var(--text)">${escapeHtml(product.title)}</h3>
+      ${condHtml}
       <p class="text-sm mb-4" style="color:var(--text-muted);flex:1">${escapeHtml(product.description)}</p>
       <div class="flex items-center justify-between gap-3 flex-wrap mt-auto">
         <div>
@@ -632,6 +660,20 @@ const openProductModal = (id) => {
   const discEl = q('#pmDiscount');
   if (discEl) { discEl.textContent = disc ? `-${disc}%` : ''; discEl.style.display = disc ? '' : 'none'; }
 
+  // Condition grade
+  const condEl = q('#pmCondition');
+  if (condEl) {
+    const cond = conditionInfo(product.condition);
+    if (cond) {
+      condEl.className = `condition-grade ${cond.cls}`;
+      condEl.innerHTML = `<span class="condition-stars">${cond.stars}</span> <span class="condition-label">${cond.label}</span>`;
+      condEl.style.display = '';
+      condEl.title = cond.desc;
+    } else {
+      condEl.style.display = 'none';
+    }
+  }
+
   // Gallery
   const gallery = q('#pmGallery');
   if (gallery) {
@@ -659,6 +701,13 @@ const openProductModal = (id) => {
 
   renderRelated(product);
   renderRecent();
+  renderBidsSection(id);
+
+  // Wire up the "Place bid" button in product modal
+  const bidBtn = q('#pmBidBtn');
+  if (bidBtn) {
+    bidBtn.onclick = () => openBidModal(id);
+  }
 
   openModal('productModal');
 };
@@ -704,6 +753,277 @@ const renderRecent = () => {
       </div>
     </div>`).join('');
 };
+
+// ────────────────────────────────────────────────────────
+// BID SYSTEM — place bids on products (marktplaats-style)
+// ────────────────────────────────────────────────────────
+const getBids = ()        => storage.get('lagencoBids', []);
+const saveBids = (bids)   => storage.set('lagencoBids', bids);
+const getBidsForProduct = (productId) => getBids().filter(b => b.productId === productId).sort((a, b) => b.amount - a.amount);
+
+const addBid = (bid) => {
+  const bids = getBids();
+  bid.id = 'bid_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  bid.createdAt = new Date().toISOString();
+  bid.status = bid.status || 'in_afwachting'; // in_afwachting | geaccepteerd | afgewezen
+  bids.push(bid);
+  saveBids(bids);
+  return bid;
+};
+
+const updateBidStatus = (bidId, status) => {
+  const bids = getBids();
+  const bid = bids.find(b => b.id === bidId);
+  if (bid) {
+    bid.status = status;
+    bid.updatedAt = new Date().toISOString();
+    saveBids(bids);
+  }
+};
+
+const deleteBid = (bidId) => {
+  saveBids(getBids().filter(b => b.id !== bidId));
+};
+
+// Format bid status for display
+const bidStatusInfo = (status) => {
+  switch (status) {
+    case 'geaccepteerd':  return { label: 'Geaccepteerd',  cls: 'bid-status-success', icon: 'fa-check' };
+    case 'afgewezen':     return { label: 'Afgewezen',     cls: 'bid-status-danger',  icon: 'fa-times' };
+    case 'in_afwachting':
+    default:              return { label: 'In afwachting', cls: 'bid-status-warn',    icon: 'fa-clock' };
+  }
+};
+
+// Format Dutch date for bid display
+const fmtBidDate = (iso) => {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) +
+      ' · ' + d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+  } catch { return ''; }
+};
+
+// ─── Render the bid history section inside the product modal ───
+const renderBidsSection = (productId) => {
+  const container = document.getElementById('pmBidsSection');
+  if (!container) return;
+
+  const bids = getBidsForProduct(productId);
+  const product = getProducts().find(p => p.id === productId);
+  const askingPrice = product ? parseFloat(product.price) || 0 : 0;
+  const highestBid = bids.length ? bids[0].amount : 0;
+  const bidCount = bids.length;
+
+  let html = `
+    <div class="bids-header">
+      <div>
+        <span class="bids-title"><i class="fas fa-gavel"></i> Biedingen</span>
+        <span class="bids-count">${bidCount} ${bidCount === 1 ? 'bod' : 'biedingen'}</span>
+      </div>
+      ${bidCount > 0 ? `
+        <div class="bids-summary">
+          <div class="bid-summary-item">
+            <span class="bid-summary-label">Hoogste bod</span>
+            <span class="bid-summary-value">€ ${highestBid.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          </div>
+          <div class="bid-summary-item">
+            <span class="bid-summary-label">Asking price</span>
+            <span class="bid-summary-value">€ ${askingPrice.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          </div>
+        </div>` : ''}
+    </div>`;
+
+  if (bidCount === 0) {
+    html += `
+      <div class="bids-empty">
+        <i class="fas fa-gavel"></i>
+        <p>Nog geen biedingen geplaatst. Wees de eerste!</p>
+      </div>`;
+  } else {
+    html += `<div class="bids-list">`;
+    bids.forEach((bid, i) => {
+      const status = bidStatusInfo(bid.status);
+      const isHighest = i === 0;
+      const initials = bid.name.split(' ').map(w => w.charAt(0)).slice(0, 2).join('').toUpperCase();
+      html += `
+        <div class="bid-item ${isHighest ? 'bid-item-highest' : ''}">
+          <div class="bid-item-avatar">${escapeHtml(initials)}</div>
+          <div class="bid-item-main">
+            <div class="bid-item-top">
+              <span class="bid-item-name">${escapeHtml(bid.name)}</span>
+              ${isHighest ? '<span class="bid-badge-highest">Hoogste bod</span>' : ''}
+              <span class="bid-status ${status.cls}"><i class="fas ${status.icon}"></i> ${status.label}</span>
+            </div>
+            <div class="bid-item-meta">
+              <i class="fas fa-clock"></i> ${fmtBidDate(bid.createdAt)} ·
+              <i class="fas fa-truck"></i> ${escapeHtml(bid.shippingMethod)}
+            </div>
+          </div>
+          <div class="bid-item-amount">€ ${bid.amount.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Privacy notice — let visitors know their address is only visible to admin
+  html += `
+    <div class="bids-privacy-notice">
+      <i class="fas fa-shield-alt"></i>
+      <span>Uw adresgegevens zijn alleen zichtbaar voor de verkoper en worden niet getoond aan andere bezoekers.</span>
+    </div>`;
+
+  container.innerHTML = html;
+};
+
+// ─── Open the bid form modal for a product ───
+let bidModalProductId = null;
+
+const openBidModal = (productId) => {
+  const product = getProducts().find(p => p.id === productId);
+  if (!product) { toast('Product niet gevonden', 'error'); return; }
+
+  bidModalProductId = productId;
+  const askingPrice = parseFloat(product.price) || 0;
+  const minBid = Math.max(1, Math.round(askingPrice * 0.5 * 100) / 100);
+
+  // Set product preview
+  const previewImg = document.getElementById('bidProductImg');
+  const previewTitle = document.getElementById('bidProductTitle');
+  const previewPrice = document.getElementById('bidProductPrice');
+  const previewBadge = document.getElementById('bidProductBadge');
+  if (previewImg) previewImg.src = getImg(product);
+  if (previewTitle) previewTitle.textContent = product.title;
+  if (previewPrice) previewPrice.textContent = 'Asking price: € ' + askingPrice.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (previewBadge) {
+    previewBadge.textContent = product.badge || 'Uitgelicht';
+    previewBadge.className = 'badge ' + badgeClass(product.badge);
+  }
+
+  // Set min attribute on amount field
+  const amountInput = document.getElementById('bidAmount');
+  if (amountInput) {
+    amountInput.min = minBid;
+    amountInput.placeholder = 'Min. € ' + minBid.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Reset form
+  const form = document.getElementById('bidForm');
+  if (form) form.reset();
+
+  // Show shipping address fieldset based on shipping method
+  toggleBidAddressFields();
+
+  openModal('bidModal');
+};
+
+// Show/hide address fields based on selected shipping method
+const toggleBidAddressFields = () => {
+  const method = document.querySelector('input[name="bidShippingMethod"]:checked');
+  const addrFieldset = document.getElementById('bidAddressFieldset');
+  if (!addrFieldset) return;
+  if (!method) { addrFieldset.style.display = 'none'; return; }
+  // Show address for "verzenden" (shipping) and "beide" (both). Hide for "afhalen" (pickup).
+  if (method.value === 'afhalen') {
+    addrFieldset.style.display = 'none';
+  } else {
+    addrFieldset.style.display = '';
+  }
+};
+
+// ─── Handle bid form submission ───
+const handleBidSubmit = (e) => {
+  e.preventDefault();
+  if (!bidModalProductId) { toast('Geen product geselecteerd', 'error'); return; }
+
+  const product = getProducts().find(p => p.id === bidModalProductId);
+  if (!product) { toast('Product niet gevonden', 'error'); return; }
+
+  const name = (document.getElementById('bidName')?.value || '').trim();
+  const email = (document.getElementById('bidEmail')?.value || '').trim();
+  const amountStr = document.getElementById('bidAmount')?.value || '';
+  const amount = parseFloat(amountStr.replace(',', '.'));
+  const shippingMethod = document.querySelector('input[name="bidShippingMethod"]:checked')?.value || '';
+  const street = (document.getElementById('bidStreet')?.value || '').trim();
+  const houseNumber = (document.getElementById('bidHouseNumber')?.value || '').trim();
+  const houseNumberAdd = (document.getElementById('bidHouseNumberAdd')?.value || '').trim();
+  const postalCode = (document.getElementById('bidPostalCode')?.value || '').trim();
+  const city = (document.getElementById('bidCity')?.value || '').trim();
+  const country = (document.getElementById('bidCountry')?.value || 'Nederland').trim();
+  const phone = (document.getElementById('bidPhone')?.value || '').trim();
+  const note = (document.getElementById('bidNote')?.value || '').trim();
+
+  // Validations
+  if (name.length < 2) { toast('Vul je volledige naam in', 'error'); document.getElementById('bidName')?.focus(); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('Vul een geldig e-mailadres in', 'error'); document.getElementById('bidEmail')?.focus(); return; }
+  if (!amount || isNaN(amount) || amount <= 0) { toast('Vul een geldig bod in', 'error'); document.getElementById('bidAmount')?.focus(); return; }
+
+  const askingPrice = parseFloat(product.price) || 0;
+  const minBid = Math.max(1, Math.round(askingPrice * 0.5 * 100) / 100);
+  if (amount < minBid) { toast('Bod moet minimaal € ' + minBid.toLocaleString('nl-NL') + ' zijn', 'error'); document.getElementById('bidAmount')?.focus(); return; }
+
+  if (!shippingMethod) { toast('Kies een verzendmethode', 'error'); return; }
+
+  // Address required if not pickup-only
+  if (shippingMethod !== 'afhalen') {
+    if (street.length < 2) { toast('Vul je straatnaam in', 'error'); document.getElementById('bidStreet')?.focus(); return; }
+    if (houseNumber.length < 1) { toast('Vul je huisnummer in', 'error'); document.getElementById('bidHouseNumber')?.focus(); return; }
+    if (postalCode.length < 4) { toast('Vul een geldige postcode in', 'error'); document.getElementById('bidPostalCode')?.focus(); return; }
+    if (city.length < 2) { toast('Vul je woonplaats in', 'error'); document.getElementById('bidCity')?.focus(); return; }
+  }
+
+  // Terms checkbox must be checked
+  const termsChecked = document.getElementById('bidTerms')?.checked;
+  if (!termsChecked) { toast('Accepteer de algemene voorwaarden om je bod te plaatsen', 'error'); document.getElementById('bidTerms')?.focus(); return; }
+
+  // Build shipping method label
+  const shippingLabels = { verzenden: 'Verzenden', afhalen: 'Afhalen', beide: 'Verzenden of afhalen' };
+  const shippingLabel = shippingLabels[shippingMethod] || shippingMethod;
+
+  // Build full address (empty if pickup)
+  const fullAddress = shippingMethod === 'afhalen'
+    ? ''
+    : `${street} ${houseNumber}${houseNumberAdd ? ' ' + houseNumberAdd : ''}, ${postalCode} ${city}${country && country !== 'Nederland' ? ', ' + country : ''}`;
+
+  // Save the bid
+  const bid = addBid({
+    productId: bidModalProductId,
+    productTitle: product.title,
+    productPrice: askingPrice,
+    name,
+    email,
+    phone,
+    amount,
+    shippingMethod: shippingLabel,
+    shippingMethodKey: shippingMethod,
+    street,
+    houseNumber,
+    houseNumberAdd,
+    postalCode,
+    city,
+    country,
+    fullAddress,
+    note,
+    status: 'in_afwachting'
+  });
+
+  toast('Bod van € ' + amount.toLocaleString('nl-NL', { minimumFractionDigits: 2 }) + ' geplaatst!', 'success', 4000);
+
+  // Close the bid modal
+  closeModal('bidModal');
+
+  // Refresh the bids section in the product modal
+  renderBidsSection(bidModalProductId);
+
+  // Refresh the live bids section on homepage (if present)
+  renderLiveBids();
+
+  bidModalProductId = null;
+};
+
+// Expose for inline onclick handlers
+window.openBidModal = openBidModal;
+window.toggleBidAddressFields = toggleBidAddressFields;
 
 // ────────────────────────────────────────────────────────
 // Modal open/close helpers (FIXED CENTERING + body scroll lock)
@@ -890,6 +1210,9 @@ window.openCompareModal = () => {
 // ────────────────────────────────────────────────────────
 const initActions = () => {
   document.addEventListener('click', e => {
+    // If user clicked on an action button (wishlist/compare/share), don't trigger view
+    if (e.target.closest('.action-btn')) return;
+
     const viewBtn = e.target.closest('[data-action="view"]');
     if (viewBtn) { openProductModal(viewBtn.dataset.id); return; }
 
@@ -934,6 +1257,7 @@ const updateAuthUI = () => {
   document.getElementById('adminPanel')?.classList.toggle('hidden', !logged);
   renderFeatured();
   if (PAGE === 'assortiment') renderAssortment();
+  if (PAGE === 'index') renderCommunityPosts();
 };
 
 const initLogin = () => {
@@ -1216,6 +1540,8 @@ const initAddProduct = () => {
     const price = Number(priceEl?.value);
     const oldPr = Number(oldPrEl?.value) || null;
     const badge = badgeEl?.value.trim() || 'Uitgelicht';
+    const conditionEl = document.getElementById('productCondition');
+    const condition = conditionEl ? parseInt(conditionEl.value) || 0 : 0;
 
     // Validation with field-level feedback
     if (!title) { toast('Vul een productnaam in', 'warn'); titleEl?.focus(); return; }
@@ -1238,6 +1564,7 @@ const initAddProduct = () => {
       title, description: desc,
       price, oldPrice: (oldPr && oldPr > 0) ? oldPr : null,
       badge, image: images[0], images,
+      condition,
       createdAt: Date.now()
     };
 
@@ -1287,6 +1614,8 @@ const openEditModal = (id) => {
   document.getElementById('editPrice').value          = product.price;
   document.getElementById('editOldPrice').value       = product.oldPrice || '';
   document.getElementById('editBadge').value          = product.badge || '';
+  const editCond = document.getElementById('editCondition');
+  if (editCond) editCond.value = parseInt(product.condition) || 0;
 
   openModal('editModal');
 };
@@ -1303,9 +1632,11 @@ const initEditProduct = () => {
     const price = Number(document.getElementById('editPrice')?.value);
     const oldPr = Number(document.getElementById('editOldPrice')?.value) || null;
     const badge = document.getElementById('editBadge')?.value.trim() || 'Uitgelicht';
+    const editCond = document.getElementById('editCondition');
+    const condition = editCond ? parseInt(editCond.value) || 0 : 0;
     if (!title || !price) { toast('Vul naam en prijs in', 'warn'); return; }
 
-    const products = getProducts().map(p => p.id === id ? { ...p, title, description: desc, price, oldPrice: oldPr, badge } : p);
+    const products = getProducts().map(p => p.id === id ? { ...p, title, description: desc, price, oldPrice: oldPr, badge, condition } : p);
     saveProducts(products);
     renderFeatured();
     if (PAGE === 'assortiment') renderAssortment();
@@ -1520,16 +1851,43 @@ const openTimelineStep = (n) => {
 const initTimeline = () => {
   const container = document.getElementById('timelineContainer');
   if (!container) return;
-  // Build timeline nodes dynamically
-  container.innerHTML = TIMELINE_STEPS.map((s, i) => `
-    <button class="timeline-node" data-timeline-step="${i}">
-      <div class="timeline-num">${i + 1}</div>
-      <div class="timeline-info">
-        <p class="timeline-title">${s.title}</p>
-        <p class="timeline-short">${s.short}</p>
+
+  // Color per step (matching concept 3 palette)
+  const stepColors = [
+    { bg: 'linear-gradient(135deg, var(--green), var(--green-mid))', shadow: 'rgba(107, 191, 126, 0.30)' },     // Inkoop - groen
+    { bg: 'linear-gradient(135deg, var(--peach), var(--peach-deep))', shadow: 'rgba(255, 139, 92, 0.30)' },     // Selectie - perzik
+    { bg: 'linear-gradient(135deg, var(--yellow), var(--yellow-deep))', shadow: 'rgba(212, 162, 78, 0.30)' },   // Controle - geel
+    { bg: 'linear-gradient(135deg, var(--lavender), var(--lavender-deep))', shadow: 'rgba(159, 138, 201, 0.30)' }, // Verkoop - lavendel
+    { bg: 'linear-gradient(135deg, var(--blue), var(--blue-deep))', shadow: 'rgba(91, 168, 201, 0.30)' }        // Tweede leven - blauw
+  ];
+
+  // Build timeline nodes dynamically — Concept 3 stijl: witte cards met gekleurde nummer-cirkels
+  container.innerHTML = TIMELINE_STEPS.map((s, i) => {
+    const color = stepColors[i] || stepColors[0];
+    return `
+    <button class="timeline-node" data-timeline-step="${i}" style="background:white;border:1.5px solid var(--border);border-radius:1.5rem;padding:1.75rem 1.25rem;box-shadow:var(--shadow-sm);transition:all .25s;cursor:pointer;text-align:center;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:.875rem;position:relative;z-index:1">
+      <div class="timeline-num" style="width:4rem;height:4rem;border-radius:50%;background:${color.bg};color:white;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-size:1.5rem;font-weight:800;box-shadow:0 8px 20px ${color.shadow};border:none;transition:all .25s">${i + 1}</div>
+      <div class="timeline-info" style="text-align:center">
+        <p class="timeline-title" style="font-family:'Poppins',sans-serif;font-size:1rem;font-weight:700;color:var(--text);margin:0 0 .5rem">${s.title}</p>
+        <p class="timeline-short" style="font-size:.85rem;color:var(--text-muted);line-height:1.6;margin:0">${s.short}</p>
       </div>
-    </button>
-  `).join('');
+    </button>`;
+  }).join('');
+
+  // Add hover effect via JS (since we use inline styles)
+  container.querySelectorAll('.timeline-node').forEach((node, i) => {
+    const color = stepColors[i] || stepColors[0];
+    node.addEventListener('mouseenter', () => {
+      node.style.transform = 'translateY(-4px)';
+      node.style.boxShadow = 'var(--shadow-md)';
+      node.style.borderColor = 'var(--peach)';
+    });
+    node.addEventListener('mouseleave', () => {
+      node.style.transform = '';
+      node.style.boxShadow = 'var(--shadow-sm)';
+      node.style.borderColor = 'var(--border)';
+    });
+  });
 
   // Wire prev/next buttons inside modal
   const modal = document.getElementById('timelineModal');
@@ -2107,6 +2465,1106 @@ const initReviewsPage = () => {
   renderReviews();
 };
 
+// ─── Initialize bid form (event listeners) ───
+const initBidForm = () => {
+  const form = document.getElementById('bidForm');
+  if (form) {
+    form.addEventListener('submit', handleBidSubmit);
+  }
+
+  // Wire up shipping method radio buttons to toggle address fields
+  document.querySelectorAll('input[name="bidShippingMethod"]').forEach(radio => {
+    radio.addEventListener('change', toggleBidAddressFields);
+  });
+};
+
+// ─── Render Live Bids section (on homepage) ───
+const renderLiveBids = () => {
+  const grid = document.getElementById('liveBidsGrid');
+  const empty = document.getElementById('liveBidsEmpty');
+  if (!grid) return; // only on index page
+
+  const products = getProducts();
+  if (!products.length) {
+    grid.innerHTML = '';
+    if (empty) empty.classList.remove('hidden');
+    return;
+  }
+
+  // Build map of product -> bids (sorted by amount desc, highest first)
+  const productBids = products.map(p => ({
+    product: p,
+    bids: getBidsForProduct(p.id),
+    highestBid: (() => {
+      const list = getBidsForProduct(p.id);
+      return list.length ? list[0].amount : 0;
+    })()
+  })).filter(x => x.bids.length > 0); // only products WITH bids
+
+  if (!productBids.length) {
+    grid.innerHTML = '';
+    if (empty) empty.classList.remove('hidden');
+    return;
+  }
+
+  // Sort: most bids first, then by highest bid
+  productBids.sort((a, b) => {
+    if (b.bids.length !== a.bids.length) return b.bids.length - a.bids.length;
+    return b.highestBid - a.highestBid;
+  });
+
+  if (empty) empty.classList.add('hidden');
+
+  grid.innerHTML = productBids.map(({ product, bids, highestBid }) => {
+    const img = getImg(product);
+    const askingPrice = parseFloat(product.price) || 0;
+    const bidCount = bids.length;
+    const minNextBid = Math.round((highestBid + 1) * 100) / 100;
+    const initials = bids[0].name.split(' ').map(w => w.charAt(0)).slice(0, 2).join('').toUpperCase();
+    const timeAgo = (() => {
+      try {
+        const diff = Date.now() - new Date(bids[0].createdAt).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'zojuist';
+        if (mins < 60) return mins + ' min geleden';
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return hrs + ' uur geleden';
+        const days = Math.floor(hrs / 24);
+        return days + ' dag' + (days > 1 ? 'en' : '') + ' geleden';
+      } catch { return ''; }
+    })();
+    // Product badge (RETOURPRODUCT / Tweedehands / Nieuw / etc.)
+    const productBadge = product.badge ? `<span class="badge ${badgeClass(product.badge)} live-bid-product-badge"><i class="fas fa-tag"></i>${escapeHtml(product.badge)}</span>` : '';
+
+    return `
+    <article class="card live-bid-card reveal" data-reveal data-product-id="${product.id}">
+      <div class="live-bid-img-wrap" data-action="view" data-id="${product.id}" style="cursor:pointer">
+        <img src="${img}" alt="${escapeHtml(product.title)}" loading="lazy" decoding="async">
+        ${productBadge}
+        <span class="live-bid-pulse">
+          <span class="pulse-dot"></span>
+          ${bidCount} ${bidCount === 1 ? 'bod' : 'biedingen'}
+        </span>
+      </div>
+      <div class="live-bid-body">
+        <h3 class="live-bid-title">${escapeHtml(product.title)}</h3>
+
+        <div class="live-bid-current">
+          <div class="live-bid-current-label">Hoogste bod nu</div>
+          <div class="live-bid-current-amount">€ ${highestBid.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        </div>
+
+        <div class="live-bid-bidder">
+          <div class="live-bid-avatar">${escapeHtml(initials)}</div>
+          <div class="live-bid-bidder-info">
+            <div class="live-bid-bidder-name">${escapeHtml(bids[0].name)}</div>
+            <div class="live-bid-time"><i class="far fa-clock"></i> ${timeAgo}</div>
+          </div>
+        </div>
+
+        <div class="live-bid-asking">
+          Asking price: <strong>€ ${askingPrice.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+        </div>
+
+        <div class="live-bid-actions">
+          <button class="btn btn-warm live-bid-cta" data-action="view" data-id="${product.id}">
+            <i class="fas fa-gavel"></i> Bied meer (vanaf € ${minNextBid.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+          </button>
+          <button class="btn btn-ghost live-bid-details" data-action="view" data-id="${product.id}">
+            Productdetails <i class="fas fa-arrow-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+
+  // Trigger scroll reveal animation on newly added cards
+  setTimeout(() => {
+    if (typeof initScrollReveal === 'function') initScrollReveal();
+  }, 50);
+};
+
+// ═══════════════════════════════════════════════════════
+// COMMUNITY POSTS — admin posts + user reactions
+// ═══════════════════════════════════════════════════════
+const getCommunityPosts = ()  => storage.get('lagencoCommunityPosts', []);
+const saveCommunityPosts = (posts) => storage.set('lagencoCommunityPosts', posts);
+
+const addCommunityPost = (post) => {
+  const posts = getCommunityPosts();
+  post.id = 'post_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  post.createdAt = new Date().toISOString();
+  post.comments = post.comments || [];
+  posts.unshift(post); // newest first
+  saveCommunityPosts(posts);
+  return post;
+};
+
+const addCommunityComment = (postId, comment) => {
+  const posts = getCommunityPosts();
+  const post = posts.find(p => p.id === postId);
+  if (post) {
+    comment.id = 'cmt_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    comment.createdAt = new Date().toISOString();
+    post.comments = post.comments || [];
+    post.comments.push(comment);
+    saveCommunityPosts(posts);
+    return comment;
+  }
+  return null;
+};
+
+const deleteCommunityPost = (postId) => {
+  saveCommunityPosts(getCommunityPosts().filter(p => p.id !== postId));
+};
+
+const deleteCommunityComment = (postId, commentId) => {
+  const posts = getCommunityPosts();
+  const post = posts.find(p => p.id === postId);
+  if (post) {
+    post.comments = (post.comments || []).filter(c => c.id !== commentId);
+    saveCommunityPosts(posts);
+  }
+};
+
+// Format relative time
+const fmtRelativeTime = (iso) => {
+  try {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'zojuist';
+    if (mins < 60) return mins + ' min geleden';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + ' uur geleden';
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return days + ' dag' + (days > 1 ? 'en' : '') + ' geleden';
+    const weeks = Math.floor(days / 7);
+    if (weeks < 5) return weeks + ' week' + (weeks > 1 ? 'en' : '') + ' geleden';
+    return new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch { return ''; }
+};
+
+// Get initials from username/name
+const getInitials = (name = '') => {
+  return name.trim().split(/\s+/).map(w => w.charAt(0)).slice(0, 2).join('').toUpperCase() || '?';
+};
+
+// Generate a stable color from a string (for avatar backgrounds)
+const colorFromString = (str = '') => {
+  const colors = [
+    ['#0F3D2E', '#1E5A42'], // green
+    ['#C08457', '#9A6534'], // warm
+    ['#2C5F8D', '#1e4a72'], // blue
+    ['#7A4F8D', '#5c3a72'], // purple
+    ['#8D4F4F', '#6e3a3a'], // red-brown
+    ['#4F8D6F', '#3a6e54'], // emerald
+    ['#8D7A4F', '#6e5c3a']  // gold
+  ];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+};
+
+// Parse community post body to render quick links as clickable buttons
+// Format: [[LINK|LABEL]]  →  <a href="LINK" class="community-quicklink-rendered">LABEL</a>
+// Special: [[wheelspin|LABEL]]  →  wheel spin button
+const parseCommunityBody = (text) => {
+  if (!text) return '';
+  // First escape HTML
+  let html = escapeHtml(text);
+  // Preserve newlines
+  html = html.replace(/\n/g, '<br>');
+  // Replace [[LINK|LABEL]] pattern with styled link or wheel spin button
+  html = html.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, (match, link, label) => {
+    const safeLink = escapeHtml(link.trim());
+    const safeLabel = escapeHtml(label.trim());
+    // Special: wheel spin button
+    if (safeLink === 'wheelspin') {
+      return `<button class="community-wheelspin-btn" onclick="openWheelSpin()"><i class="fas fa-circle-notch"></i> ${safeLabel} 🎡</button>`;
+    }
+    // Only allow relative links to internal pages (security)
+    if (/^[\w-]+\.html(#.*)?$/.test(safeLink) || safeLink.startsWith('mailto:') || safeLink.startsWith('tel:')) {
+      return `<a href="${safeLink}" class="community-quicklink-rendered"><i class="fas fa-arrow-right"></i> ${safeLabel}</a>`;
+    }
+    return safeLabel;
+  });
+  return html;
+};
+
+// Render a single community post
+const renderCommunityPost = (post, admin = false) => {
+  const [c1, c2] = colorFromString('Lagenco');
+  const postTime = fmtRelativeTime(post.createdAt);
+  const commentCount = (post.comments || []).length;
+
+  // Comments HTML
+  const commentsHtml = (post.comments || []).map(c => {
+    const [bc1, bc2] = colorFromString(c.username || 'Anoniem');
+    const cmtTime = fmtRelativeTime(c.createdAt);
+    return `
+      <div class="community-comment" data-comment-id="${c.id}">
+        <div class="community-comment-avatar" style="background:linear-gradient(135deg,${bc1},${bc2})">${escapeHtml(getInitials(c.username))}</div>
+        <div class="community-comment-body">
+          <div class="community-comment-header">
+            <span class="community-comment-name">${escapeHtml(c.username || 'Anoniem')}</span>
+            <span class="community-comment-time"><i class="far fa-clock"></i> ${cmtTime}</span>
+            ${admin ? `<button class="community-comment-delete" data-delete-comment="${post.id}|${c.id}" title="Reactie verwijderen"><i class="fas fa-times"></i></button>` : ''}
+          </div>
+          <p class="community-comment-text">${escapeHtml(c.text)}</p>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Image HTML (if post has an image)
+  const imageHtml = post.image
+    ? `<div class="community-post-image" style="margin:.5rem 0 1.25rem;border-radius:1rem;overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm)"><img src="${post.image}" alt="Bericht afbeelding" style="width:100%;max-height:400px;object-fit:cover;display:block" loading="lazy"></div>`
+    : '';
+
+  return `
+  <article class="community-post reveal" data-reveal data-post-id="${post.id}">
+    <div class="community-post-header">
+      <div class="community-post-avatar" style="background:linear-gradient(135deg,${c1},${c2})">
+        <i class="fas fa-leaf"></i>
+      </div>
+      <div class="community-post-meta">
+        <div class="community-post-author">
+          <span class="community-post-author-name">Lagenco</span>
+          <span class="community-post-author-badge"><i class="fas fa-check-circle"></i> Officieel</span>
+        </div>
+        <div class="community-post-time"><i class="far fa-clock"></i> ${postTime}</div>
+      </div>
+      ${admin ? `<button class="community-post-delete" data-delete-post="${post.id}" title="Bericht verwijderen"><i class="fas fa-trash"></i></button>` : ''}
+    </div>
+
+    <h3 class="community-post-title">${escapeHtml(post.title)}</h3>
+    <p class="community-post-body">${parseCommunityBody(post.body)}</p>
+    ${imageHtml}
+
+    <div class="community-post-stats">
+      <span class="community-post-stat"><i class="far fa-comment"></i> ${commentCount} ${commentCount === 1 ? 'reactie' : 'reacties'}</span>
+    </div>
+
+    <div class="community-comments" id="comments_${post.id}">
+      ${commentsHtml}
+    </div>
+
+    <form class="community-comment-form" data-post-id="${post.id}" onsubmit="return false;">
+      <input type="text" class="community-comment-username" placeholder="Jouw gebruikersnaam" maxlength="30" required>
+      <input type="text" class="community-comment-text-input" placeholder="Schrijf een reactie..." maxlength="500" required>
+      <button type="submit" class="community-comment-submit"><i class="fas fa-paper-plane"></i></button>
+    </form>
+  </article>`;
+};
+
+// Render all community posts
+const renderCommunityPosts = () => {
+  const list = document.getElementById('communityPostsList');
+  const empty = document.getElementById('communityEmpty');
+  if (!list) return; // only on index page
+
+  const posts = getCommunityPosts();
+  const admin = isLoggedIn();
+
+  // Show/hide admin controls
+  const adminToggle = document.getElementById('communityAdminToggle');
+  if (adminToggle) {
+    if (admin) adminToggle.classList.remove('hidden');
+    else adminToggle.classList.add('hidden');
+  }
+  // Hide the admin form by default (only show when clicking "nieuw bericht")
+  const adminForm = document.getElementById('communityAdminForm');
+  if (adminForm) adminForm.classList.add('hidden');
+
+  if (!posts.length) {
+    list.innerHTML = '';
+    if (empty) empty.classList.remove('hidden');
+    return;
+  }
+  if (empty) empty.classList.add('hidden');
+
+  list.innerHTML = posts.map(p => renderCommunityPost(p, admin)).join('');
+
+  // Trigger scroll reveal on new posts
+  setTimeout(() => {
+    if (typeof initScrollReveal === 'function') initScrollReveal();
+  }, 50);
+};
+
+// Initialize community events
+const initCommunity = () => {
+  // "Nieuw bericht" button — open form
+  const newBtn = document.getElementById('communityNewPostBtn');
+  if (newBtn) {
+    newBtn.addEventListener('click', () => {
+      const form = document.getElementById('communityAdminForm');
+      const toggle = document.getElementById('communityAdminToggle');
+      if (form) form.classList.remove('hidden');
+      if (toggle) toggle.classList.add('hidden');
+      const titleInput = document.getElementById('communityPostTitle');
+      if (titleInput) titleInput.focus();
+    });
+  }
+
+  // Cancel button
+  const cancelBtn = document.getElementById('communityPostCancel');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      const form = document.getElementById('communityAdminForm');
+      const toggle = document.getElementById('communityAdminToggle');
+      if (form) form.classList.add('hidden');
+      if (toggle) toggle.classList.remove('hidden');
+      const titleInput = document.getElementById('communityPostTitle');
+      const bodyInput = document.getElementById('communityPostBody');
+      if (titleInput) titleInput.value = '';
+      if (bodyInput) bodyInput.value = '';
+      // Reset image preview
+      const imageInput = document.getElementById('communityPostImage');
+      const imagePreview = document.getElementById('communityImagePreview');
+      if (imageInput) imageInput.value = '';
+      if (imagePreview) imagePreview.classList.add('hidden');
+      window._communityImage = null;
+    });
+  }
+
+  // Quick link buttons — voegt [[link|label]] toe aan body
+  document.querySelectorAll('.community-quicklink').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const link = btn.dataset.link;
+      const label = btn.dataset.label;
+      const bodyInput = document.getElementById('communityPostBody');
+      if (!bodyInput) return;
+      // Voeg snelkoppeling marker toe op cursor positie
+      const start = bodyInput.selectionStart;
+      const end = bodyInput.selectionEnd;
+      const text = bodyInput.value;
+      const insert = ` [[${link}|${label}]] `;
+      bodyInput.value = text.slice(0, start) + insert + text.slice(end);
+      bodyInput.focus();
+      bodyInput.setSelectionRange(start + insert.length, start + insert.length);
+      toast('Snelkoppeling toegevoegd', 'success', 1500);
+    });
+    // Hover effect
+    btn.addEventListener('mouseenter', () => {
+      btn.style.transform = 'translateY(-1px) scale(1.05)';
+      btn.style.borderColor = 'var(--green)';
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = '';
+      btn.style.borderColor = 'var(--border)';
+    });
+  });
+
+  // Image upload handler
+  const uploadArea = document.getElementById('communityImageUploadArea');
+  const imageInput = document.getElementById('communityPostImage');
+  const imagePreview = document.getElementById('communityImagePreview');
+  const imagePreviewImg = document.getElementById('communityImagePreviewImg');
+  const imageRemoveBtn = document.getElementById('communityImageRemove');
+
+  if (uploadArea && imageInput) {
+    uploadArea.addEventListener('click', () => imageInput.click());
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.style.borderColor = 'var(--green)';
+      uploadArea.style.background = 'var(--green-light)';
+    });
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.style.borderColor = 'var(--border-2)';
+      uploadArea.style.background = 'var(--bg-2)';
+    });
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.style.borderColor = 'var(--border-2)';
+      uploadArea.style.background = 'var(--bg-2)';
+      if (e.dataTransfer.files.length) {
+        imageInput.files = e.dataTransfer.files;
+        imageInput.dispatchEvent(new Event('change'));
+      }
+    });
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        toast('Selecteer een afbeelding', 'error');
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        toast('Afbeelding te groot (max 2MB)', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        window._communityImage = e.target.result;
+        if (imagePreviewImg) imagePreviewImg.src = e.target.result;
+        if (imagePreview) imagePreview.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  if (imageRemoveBtn) {
+    imageRemoveBtn.addEventListener('click', () => {
+      if (imageInput) imageInput.value = '';
+      if (imagePreview) imagePreview.classList.add('hidden');
+      window._communityImage = null;
+    });
+  }
+
+  // Submit post button
+  const submitBtn = document.getElementById('communityPostSubmit');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', () => {
+      const titleInput = document.getElementById('communityPostTitle');
+      const bodyInput = document.getElementById('communityPostBody');
+      const title = (titleInput?.value || '').trim();
+      const body = (bodyInput?.value || '').trim();
+
+      if (title.length < 3) { toast('Titel moet minimaal 3 tekens zijn', 'error'); titleInput?.focus(); return; }
+      if (body.length < 5) { toast('Bericht moet minimaal 5 tekens zijn', 'error'); bodyInput?.focus(); return; }
+      if (!isLoggedIn()) { toast('Alleen admins kunnen berichten plaatsen', 'error'); return; }
+
+      // Save post with optional image
+      const postData = { title, body, author: 'Lagenco' };
+      if (window._communityImage) postData.image = window._communityImage;
+      addCommunityPost(postData);
+      toast('Bericht geplaatst!', 'success');
+      if (titleInput) titleInput.value = '';
+      if (bodyInput) bodyInput.value = '';
+      if (imageInput) imageInput.value = '';
+      if (imagePreview) imagePreview.classList.add('hidden');
+      window._communityImage = null;
+      const form = document.getElementById('communityAdminForm');
+      const toggle = document.getElementById('communityAdminToggle');
+      if (form) form.classList.add('hidden');
+      if (toggle) toggle.classList.remove('hidden');
+      renderCommunityPosts();
+    });
+  }
+
+  // Event delegation for post interactions
+  document.addEventListener('click', e => {
+    // Submit comment via button click
+    const submitCommentBtn = e.target.closest('.community-comment-submit');
+    if (submitCommentBtn) {
+      const form = submitCommentBtn.closest('.community-comment-form');
+      if (form) handleCommentSubmit(form);
+      return;
+    }
+    // Delete post
+    const deletePostBtn = e.target.closest('[data-delete-post]');
+    if (deletePostBtn) {
+      const postId = deletePostBtn.dataset.deletePost;
+      if (confirm('Weet je zeker dat je dit bericht wilt verwijderen?')) {
+        deleteCommunityPost(postId);
+        toast('Bericht verwijderd', 'success');
+        renderCommunityPosts();
+      }
+      return;
+    }
+    // Delete comment
+    const deleteCommentBtn = e.target.closest('[data-delete-comment]');
+    if (deleteCommentBtn) {
+      const [postId, commentId] = deleteCommentBtn.dataset.deleteComment.split('|');
+      if (confirm('Reactie verwijderen?')) {
+        deleteCommunityComment(postId, commentId);
+        toast('Reactie verwijderd', 'success');
+        renderCommunityPosts();
+      }
+      return;
+    }
+  });
+
+  // Event delegation for Enter key in comment form
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.target.classList.contains('community-comment-text-input') || e.target.classList.contains('community-comment-username'))) {
+      if (e.target.classList.contains('community-comment-username')) {
+        const form = e.target.closest('.community-comment-form');
+        const textInput = form?.querySelector('.community-comment-text-input');
+        if (textInput) textInput.focus();
+        e.preventDefault();
+        return;
+      }
+      if (e.target.classList.contains('community-comment-text-input')) {
+        const form = e.target.closest('.community-comment-form');
+        if (form) handleCommentSubmit(form);
+        e.preventDefault();
+      }
+    }
+  });
+};
+
+// Handle comment form submission
+const handleCommentSubmit = (form) => {
+  const postId = form.dataset.postId;
+  const usernameInput = form.querySelector('.community-comment-username');
+  const textInput = form.querySelector('.community-comment-text-input');
+  const username = (usernameInput?.value || '').trim();
+  const text = (textInput?.value || '').trim();
+
+  if (username.length < 2) { toast('Vul een gebruikersnaam in (min. 2 tekens)', 'error'); usernameInput?.focus(); return; }
+  if (text.length < 1) { toast('Schrijf eerst een reactie', 'error'); textInput?.focus(); return; }
+
+  addCommunityComment(postId, { username, text });
+  toast('Reactie geplaatst!', 'success', 2000);
+  if (textInput) textInput.value = '';
+  renderCommunityPosts();
+};
+
+// Expose for inline use
+window.renderCommunityPosts = renderCommunityPosts;
+
+// ═══════════════════════════════════════════════════════
+// WHEEL SPIN — kansberekening + animatie + prijs
+// ═══════════════════════════════════════════════════════
+
+// Default wheel segments (matching website palette)
+const DEFAULT_WHEEL_SEGMENTS = [
+  {
+    id: 'korting5', label: '€5 Korting', short: '€5 Korting', chance: 0.01,
+    color: '#6BBF7E', textColor: '#fff', icon: '🎁',
+    title: 'Je hebt €5 korting gewonnen!',
+    text: 'Gefeliciteerd! Je hebt een kortingscode van €5 gewonnen. Gebruik deze code bij je volgende aankoop:',
+    hasCode: true, codePrefix: 'LAGENCO5-'
+  },
+  {
+    id: 'gratisretour', label: 'Gratis Retour', short: 'Gratis Retour', chance: 0.005,
+    color: '#FFB088', textColor: '#fff', icon: '📦',
+    title: 'Je hebt een gratis retourproduct gewonnen!',
+    text: 'Wow! Je hebt 1 gratis retourproduct van je keuze gewonnen. Gebruik deze code bij het afrekenen:',
+    hasCode: true, codePrefix: 'GRATISRETOUR-'
+  },
+  {
+    id: 'gratisverzend', label: 'Gratis Verzending', short: 'Gratis Verzend', chance: 0.05,
+    color: '#FFD56B', textColor: '#2D3A2E', icon: '🚚',
+    title: 'Je hebt gratis verzending gewonnen!',
+    text: 'Leuk! Je hebt gratis verzending op je volgende bestelling gewonnen. Gebruik deze code bij het afrekenen:',
+    hasCode: true, codePrefix: 'FREESHIP-'
+  },
+  {
+    id: 'niks', label: 'Helaas!', short: 'Niks', chance: 0.935,
+    color: '#C5B6E5', textColor: '#fff', icon: '😊',
+    title: 'Helaas, geen prijs deze keer!',
+    text: 'Geen zorgen — je kunt het altijd nog een keer proberen als er een nieuwe wheel spin is! Bedankt voor het meedoen.',
+    hasCode: false, codePrefix: null
+  }
+];
+
+// Load wheel settings from localStorage (admin can adjust via dashboard)
+const getWheelSegments = () => {
+  try {
+    const raw = localStorage.getItem('lagencoWheelSettings');
+    if (raw) {
+      const settings = JSON.parse(raw);
+      if (settings && settings.length) {
+        // Convert percentage (1-100) to decimal (0-1) and add 'short' field
+        return settings.map(s => ({
+          ...s,
+          short: s.label,
+          chance: (parseFloat(s.chance) || 0) / 100
+        }));
+      }
+    }
+  } catch (e) {}
+  return DEFAULT_WHEEL_SEGMENTS;
+};
+
+// Check if spins have been reset (via dashboard reset token)
+const checkSpinReset = () => {
+  try {
+    const currentToken = localStorage.getItem('lagencoWheelSpinResetToken');
+    const visitorToken = sessionStorage.getItem('lagencoWheelSpinResetToken');
+    if (currentToken && currentToken !== visitorToken) {
+      // Token changed → reset visitor's spin flag
+      sessionStorage.removeItem('lagencoWheelSpinDone');
+      sessionStorage.setItem('lagencoWheelSpinResetToken', currentToken);
+    }
+  } catch (e) {}
+};
+
+let wheelSpinning = false;
+let wheelCurrentRotation = 0;
+
+// Generate the wheel SVG with 4 colored segments
+const buildWheelSVG = () => {
+  const svg = document.getElementById('wheelSvg');
+  if (!svg) return;
+
+  const cx = 100, cy = 100, r = 90;
+  // Calculate segment angles based on chances (but for visual balance, give each equal visual size)
+  // Visual: equal segments (4 x 90°), but chance is calculated separately
+  const segments = getWheelSegments();
+  const segmentAngle = 360 / segments.length;
+  let startAngle = -90; // start at top
+
+  let svgContent = '';
+  segments.forEach((seg, i) => {
+    const endAngle = startAngle + segmentAngle;
+    const startRad = (startAngle * Math.PI) / 180;
+    const endRad = (endAngle * Math.PI) / 180;
+    const x1 = cx + r * Math.cos(startRad);
+    const y1 = cy + r * Math.sin(startRad);
+    const x2 = cx + r * Math.cos(endRad);
+    const y2 = cy + r * Math.sin(endRad);
+    const largeArc = segmentAngle > 180 ? 1 : 0;
+
+    // Path for segment
+    svgContent += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z" fill="${seg.color}" stroke="white" stroke-width="2"/>`;
+
+    // Label position (midpoint of segment)
+    const midAngle = startAngle + segmentAngle / 2;
+    const midRad = (midAngle * Math.PI) / 180;
+    const labelR = r * 0.6;
+    const labelX = cx + labelR * Math.cos(midRad);
+    const labelY = cy + labelR * Math.sin(midRad);
+
+    // Icon + label text
+    svgContent += `<text x="${labelX}" y="${labelY - 5}" text-anchor="middle" font-size="14" fill="${seg.textColor}" font-family="Poppins, sans-serif" font-weight="700">${seg.icon}</text>`;
+    svgContent += `<text x="${labelX}" y="${labelY + 12}" text-anchor="middle" font-size="7" fill="${seg.textColor}" font-family="Poppins, sans-serif" font-weight="700" letter-spacing="0.5">${seg.short.toUpperCase()}</text>`;
+
+    startAngle = endAngle;
+  });
+
+  svg.innerHTML = svgContent;
+};
+
+// Pick a winning segment based on chances
+const pickWinningSegment = () => {
+  const segments = getWheelSegments();
+  const rand = Math.random();
+  let cumulative = 0;
+  for (const seg of segments) {
+    cumulative += seg.chance;
+    if (rand < cumulative) return seg;
+  }
+  return segments[segments.length - 1]; // fallback
+};
+
+// Generate a unique prize code
+const generatePrizeCode = (prefix) => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = prefix;
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
+
+// Open the wheel spin modal
+const openWheelSpin = () => {
+  // Check if spins have been reset (via dashboard)
+  checkSpinReset();
+
+  // Check if user already spun (1x per session)
+  try {
+    const alreadySpun = sessionStorage.getItem('lagencoWheelSpinDone');
+    if (alreadySpun === '1') {
+      toast('Je hebt al een keer gedraaid!', 'Kom terug bij de volgende wheel spin.', 'info', 4000);
+      return;
+    }
+  } catch (e) {}
+
+  // Reset state
+  wheelSpinning = false;
+  wheelCurrentRotation = 0;
+  const wheelEl = document.getElementById('wheelEl');
+  if (wheelEl) wheelEl.style.transition = 'none';
+  if (wheelEl) wheelEl.style.transform = 'rotate(0deg)';
+  const result = document.getElementById('wheelResult');
+  if (result) result.classList.add('hidden');
+  const spinBtn = document.getElementById('wheelSpinBtn');
+  if (spinBtn) {
+    spinBtn.classList.remove('hidden');
+    spinBtn.disabled = false;
+    spinBtn.innerHTML = '<i class="fas fa-circle-notch"></i> Draaien maar!';
+  }
+
+  // Build wheel
+  buildWheelSVG();
+  openModal('wheelSpinModal');
+};
+
+// Spin the wheel
+const spinWheel = () => {
+  if (wheelSpinning) return;
+  wheelSpinning = true;
+
+  const spinBtn = document.getElementById('wheelSpinBtn');
+  if (spinBtn) {
+    spinBtn.disabled = true;
+    spinBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Draaien...';
+  }
+
+  // Pick winning segment
+  const winner = pickWinningSegment();
+  const segments = getWheelSegments();
+  const segmentIndex = segments.indexOf(winner);
+  const segmentAngle = 360 / segments.length;
+
+  // Calculate target rotation: pointer at top (0°), need winning segment centered at top
+  // Segments start at -90° (top), so segment i center is at: -90 + (i + 0.5) * 90 = -90 + i*90 + 45
+  // To bring segment i to top (0°), rotate by: 360 - (i * 90 + 45) + full spins
+  const segmentCenterOffset = segmentIndex * segmentAngle + segmentAngle / 2;
+  const fullSpins = 5 + Math.floor(Math.random() * 3); // 5-7 full spins
+  const targetRotation = wheelCurrentRotation + fullSpins * 360 + (360 - segmentCenterOffset);
+
+  // Animate
+  const wheelEl = document.getElementById('wheelEl');
+  if (wheelEl) {
+    wheelEl.style.transition = 'transform 4s cubic-bezier(0.16, 1, 0.3, 1)';
+    wheelEl.style.transform = `rotate(${targetRotation}deg)`;
+  }
+  wheelCurrentRotation = targetRotation;
+
+  // Show result after animation
+  setTimeout(() => {
+    showWheelResult(winner);
+    wheelSpinning = false;
+    // Mark as spun (1x per session)
+    try { sessionStorage.setItem('lagencoWheelSpinDone', '1'); } catch (e) {}
+  }, 4200);
+};
+
+// Show the result
+const showWheelResult = (winner) => {
+  const result = document.getElementById('wheelResult');
+  const resultIcon = document.getElementById('wheelResultIcon');
+  const resultTitle = document.getElementById('wheelResultTitle');
+  const resultText = document.getElementById('wheelResultText');
+  const resultCode = document.getElementById('wheelResultCode');
+  const spinBtn = document.getElementById('wheelSpinBtn');
+
+  if (spinBtn) spinBtn.classList.add('hidden');
+
+  if (resultIcon) resultIcon.textContent = winner.icon;
+  if (resultTitle) resultTitle.textContent = winner.title;
+  if (resultText) resultText.textContent = winner.text;
+
+  // Build result HTML based on whether won or not
+  if (winner.hasCode) {
+    // WINNER — toon naam/email formulier + gegenereerde code
+    const code = generatePrizeCode(winner.codePrefix);
+
+    // Sla de coupon op met status 'ongebruikt'
+    try {
+      const prizes = storage.get('lagencoWheelPrizes', []);
+      prizes.push({
+        code,
+        type: winner.id,
+        label: winner.label,
+        wonAt: new Date().toISOString(),
+        status: 'ongebruikt',  // ongebruikt | gebruikt
+        usedAt: null,
+        winnerName: '',
+        winnerEmail: ''
+      });
+      storage.set('lagencoWheelPrizes', prizes);
+    } catch (e) {}
+
+    // Toon het resultaat met naam/email veld EN de code
+    if (result) {
+      result.innerHTML = `
+        <div class="wheel-result-icon" id="wheelResultIcon">${winner.icon}</div>
+        <h3 class="wheel-result-title" id="wheelResultTitle">${winner.title}</h3>
+        <p class="wheel-result-text" id="wheelResultText">${winner.text}</p>
+        <div style="margin:1rem 0">
+          <label style="display:block;font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:.4rem;font-family:'Poppins',sans-serif">Jouw naam (optioneel)</label>
+          <input type="text" id="wheelWinnerName" placeholder="Bijv. Jan Jansen" style="width:100%;padding:.65rem .875rem;border:1.5px solid var(--border);border-radius:.75rem;font-family:'Nunito',sans-serif;font-size:.875rem;background:white;color:var(--text);box-sizing:border-box;margin-bottom:.625rem">
+        </div>
+        <div style="margin:1rem 0">
+          <label style="display:block;font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:.4rem;font-family:'Poppins',sans-serif">E-mail (optioneel — voor verificatie)</label>
+          <input type="email" id="wheelWinnerEmail" placeholder="naam@voorbeeld.nl" style="width:100%;padding:.65rem .875rem;border:1.5px solid var(--border);border-radius:.75rem;font-family:'Nunito',sans-serif;font-size:.875rem;background:white;color:var(--text);box-sizing:border-box;margin-bottom:.625rem">
+        </div>
+        <p style="font-size:.72rem;color:var(--text-muted);margin:.5rem 0 .25rem;font-family:'Poppins',sans-serif;font-weight:600">Jouw kortingscode:</p>
+        <p id="wheelResultCode" class="wheel-result-code">${code}</p>
+        <button class="btn btn-green" style="margin-top:1rem;padding:.75rem 1.5rem" id="wheelSaveWinner">
+          <i class="fas fa-check"></i> Code opslaan
+        </button>
+        <button class="btn btn-ghost" style="margin-top:.5rem;padding:.65rem 1.25rem;font-size:.85rem" onclick="closeModal('wheelSpinModal')">Sluiten</button>
+      `;
+      result.classList.remove('hidden');
+
+      // Wire save button
+      const saveBtn = document.getElementById('wheelSaveWinner');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+          const nameInput = document.getElementById('wheelWinnerName');
+          const emailInput = document.getElementById('wheelWinnerEmail');
+          const name = (nameInput?.value || '').trim();
+          const email = (emailInput?.value || '').trim();
+
+          // Update the stored coupon with name + email
+          try {
+            const prizes = storage.get('lagencoWheelPrizes', []);
+            const coupon = prizes.find(p => p.code === code);
+            if (coupon) {
+              coupon.winnerName = name;
+              coupon.winnerEmail = email;
+              storage.set('lagencoWheelPrizes', prizes);
+            }
+          } catch (e) {}
+
+          toast('Code opgeslagen! Bewaar hem goed.', 'success', 4000);
+          setTimeout(() => closeModal('wheelSpinModal'), 800);
+        });
+      }
+    }
+  } else {
+    // GEEN PRIJS — toon gewoon het resultaat, sla op als 'geen prijs'
+    try {
+      const prizes = storage.get('lagencoWheelPrizes', []);
+      prizes.push({
+        code: null,
+        type: winner.id,
+        label: winner.label,
+        wonAt: new Date().toISOString(),
+        status: 'geen_prijs',
+        usedAt: null,
+        winnerName: '',
+        winnerEmail: ''
+      });
+      storage.set('lagencoWheelPrizes', prizes);
+    } catch (e) {}
+
+    if (result) {
+      result.innerHTML = `
+        <div class="wheel-result-icon" id="wheelResultIcon">${winner.icon}</div>
+        <h3 class="wheel-result-title" id="wheelResultTitle">${winner.title}</h3>
+        <p class="wheel-result-text" id="wheelResultText">${winner.text}</p>
+        <button class="btn btn-ghost" style="margin-top:1rem;padding:.75rem 1.5rem" onclick="closeModal('wheelSpinModal')">Sluiten</button>
+      `;
+      result.classList.remove('hidden');
+    }
+  }
+
+  // Show toast
+  if (winner.id !== 'niks') {
+    toast('🎉 ' + winner.title, 'success', 5000);
+  }
+};
+
+// Initialize wheel spin events
+const initWheelSpin = () => {
+  const spinBtn = document.getElementById('wheelSpinBtn');
+  if (spinBtn) {
+    spinBtn.addEventListener('click', spinWheel);
+  }
+};
+
+// Expose for inline onclick
+window.openWheelSpin = openWheelSpin;
+
+// Open kopersbescherming info modal
+const openBuyerProtectionModal = () => {
+  openModal('buyerProtectionModal');
+};
+window.openBuyerProtectionModal = openBuyerProtectionModal;
+
+// ═══════════════════════════════════════════════════════
+// NOTIFICATION STACK — beheert meerdere notificaties zonder overlap
+// ═══════════════════════════════════════════════════════
+const getNotificationStack = () => {
+  let stack = document.getElementById('notificationStack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.id = 'notificationStack';
+    document.body.appendChild(stack);
+  }
+  return stack;
+};
+
+const addToNotificationStack = (notif) => {
+  const stack = getNotificationStack();
+  stack.appendChild(notif);
+};
+
+const removeFromNotificationStack = (notif, delay = 500) => {
+  notif.classList.add('hiding');
+  setTimeout(() => {
+    notif.remove();
+    // Remove stack container if empty
+    const stack = document.getElementById('notificationStack');
+    if (stack && stack.children.length === 0) {
+      stack.remove();
+    }
+  }, delay);
+};
+
+// ═══════════════════════════════════════════════════════
+// LIVE BOD NOTIFICATIE — toon popup na 15s met laatste bod (1x per bezoeker)
+// ═══════════════════════════════════════════════════════
+const initLiveBidNotification = () => {
+  // Only on homepage and assortiment pages
+  if (PAGE !== 'index' && PAGE !== 'assortiment') return;
+
+  // Check if visitor already saw the notification (1x per bezoeker)
+  try {
+    const alreadyShown = sessionStorage.getItem('lagencoBidNotifShown');
+    if (alreadyShown === '1') return; // already shown this session, don't show again
+  } catch (e) { /* sessionStorage might fail, continue anyway */ }
+
+  // Wait 15 seconds before showing notification
+  setTimeout(() => {
+    // Double-check: maybe shown in another tab
+    try {
+      if (sessionStorage.getItem('lagencoBidNotifShown') === '1') return;
+    } catch (e) {}
+    const shown = showLiveBidNotification();
+    if (shown) {
+      // Mark as shown so it doesn't appear again this session
+      try { sessionStorage.setItem('lagencoBidNotifShown', '1'); } catch (e) {}
+    }
+  }, 15000);
+};
+
+const showLiveBidNotification = () => {
+  // Get all bids
+  const bids = getBids();
+  if (!bids.length) return false; // no bids → no notification, return false so flag isn't set
+
+  // Get most recent bid
+  const sorted = [...bids].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const latestBid = sorted[0];
+
+  // Find the product
+  const product = getProducts().find(p => p.id === latestBid.productId);
+  if (!product) return false;
+
+  // Calculate time ago
+  const timeAgo = (() => {
+    try {
+      const diff = Date.now() - new Date(latestBid.createdAt).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'zojuist';
+      if (mins < 60) return mins + ' min geleden';
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs + ' uur geleden';
+      const days = Math.floor(hrs / 24);
+      return days + ' dag' + (days > 1 ? 'en' : '') + ' geleden';
+    } catch { return 'recentelijk'; }
+  })();
+
+  // Get bidder first name
+  const firstName = (latestBid.name || 'Iemand').split(' ')[0];
+
+  // Remove existing live-bid notification if any
+  const existing = document.querySelector('.live-bid-notification');
+  if (existing) existing.remove();
+
+  // Create notification element
+  const notif = document.createElement('div');
+  notif.className = 'live-bid-notification';
+  notif.innerHTML = `
+    <div class="live-bid-notification-icon">
+      <i class="fas fa-gavel"></i>
+    </div>
+    <div class="live-bid-notification-content">
+      <p class="live-bid-notification-title">Nieuw bod geplaatst</p>
+      <p class="live-bid-notification-text">
+        <strong>${escapeHtml(firstName)}</strong> heeft ${timeAgo} een bod gedaan op <strong>${escapeHtml(product.title)}</strong>: <span class="bid-amount">€ ${Number(latestBid.amount).toFixed(2).replace('.', ',')}</span>
+      </p>
+    </div>
+    <button class="live-bid-notification-close" aria-label="Sluiten"><i class="fas fa-times"></i></button>
+  `;
+  // Add to notification stack (stapelt automatisch zonder overlap)
+  addToNotificationStack(notif);
+
+  // Close button
+  notif.querySelector('.live-bid-notification-close').addEventListener('click', () => {
+    removeFromNotificationStack(notif);
+  });
+
+  // Auto-dismiss after 8 seconds
+  const dismissTimer = setTimeout(() => {
+    removeFromNotificationStack(notif);
+  }, 8000);
+
+  // Pause auto-dismiss on hover
+  notif.addEventListener('mouseenter', () => clearTimeout(dismissTimer));
+
+  return true; // successfully shown
+};
+
+// ═══════════════════════════════════════════════════════
+// WHEEL SPIN NOTIFICATIE — toon popup als er een wheel spin post is
+// ═══════════════════════════════════════════════════════
+const initWheelSpinNotification = () => {
+  // Only on homepage
+  if (PAGE !== 'index') return;
+
+  // Wait 8 seconds before checking
+  setTimeout(() => {
+    showWheelSpinNotification();
+  }, 8000);
+};
+
+const showWheelSpinNotification = () => {
+  // Check if there's a community post with a wheel spin
+  const posts = getCommunityPosts();
+  const wheelSpinPost = posts.find(p => p.body && p.body.includes('[[wheelspin|'));
+  if (!wheelSpinPost) return; // no wheel spin post
+
+  // Check if user already saw this notification (1x per session)
+  try {
+    const shown = sessionStorage.getItem('lagencoWheelSpinNotifShown');
+    if (shown === wheelSpinPost.id) return; // already notified about this post
+  } catch (e) {}
+
+  // Check if user already spun (don't show notification if already spun)
+  try {
+    const alreadySpun = sessionStorage.getItem('lagencoWheelSpinDone');
+    if (alreadySpun === '1') return;
+  } catch (e) {}
+
+  // Remove existing wheel-spin notification
+  const existing = document.querySelector('.wheel-spin-notification');
+  if (existing) existing.remove();
+
+  // Create notification
+  const notif = document.createElement('div');
+  notif.className = 'wheel-spin-notification';
+  notif.innerHTML = `
+    <div class="wheel-spin-notification-icon">
+      <i class="fas fa-circle-notch"></i>
+    </div>
+    <div class="wheel-spin-notification-content">
+      <p class="wheel-spin-notification-title">🎉 Wheel Spin beschikbaar!</p>
+      <p class="wheel-spin-notification-text">Hey! Er is een nieuwe mededeling — je kunt nu een <strong>wheel spin</strong> doen voor een kans op een gratis product, korting of gratis verzending!</p>
+    </div>
+    <button class="wheel-spin-notification-action" aria-label="Open wheel spin"><i class="fas fa-arrow-right"></i></button>
+    <button class="wheel-spin-notification-close" aria-label="Sluiten"><i class="fas fa-times"></i></button>
+  `;
+  // Add to notification stack (stapelt automatisch zonder overlap)
+  addToNotificationStack(notif);
+
+  // Click on action button → scroll to community + open wheel spin
+  notif.querySelector('.wheel-spin-notification-action').addEventListener('click', () => {
+    // Scroll to community section
+    const communitySection = document.getElementById('community');
+    if (communitySection) {
+      communitySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    // Mark as seen
+    try { sessionStorage.setItem('lagencoWheelSpinNotifShown', wheelSpinPost.id); } catch (e) {}
+    // Dismiss notification
+    removeFromNotificationStack(notif);
+  });
+
+  // Close button
+  notif.querySelector('.wheel-spin-notification-close').addEventListener('click', () => {
+    removeFromNotificationStack(notif);
+    // Mark as seen so it doesn't reappear
+    try { sessionStorage.setItem('lagencoWheelSpinNotifShown', wheelSpinPost.id); } catch (e) {}
+  });
+
+  // Auto-dismiss after 10 seconds
+  const dismissTimer = setTimeout(() => {
+    removeFromNotificationStack(notif);
+    try { sessionStorage.setItem('lagencoWheelSpinNotifShown', wheelSpinPost.id); } catch (e) {}
+  }, 10000);
+
+  // Pause auto-dismiss on hover
+  notif.addEventListener('mouseenter', () => clearTimeout(dismissTimer));
+};
+
 const init = () => {
   cleanupOldDemoProducts();
   initScrollReveal();
@@ -2116,6 +3574,11 @@ const init = () => {
   initBackToTop();
   initTimeline();
   initContactForm();
+  initBidForm();
+  initCommunity();
+  initWheelSpin();
+  initLiveBidNotification();
+  initWheelSpinNotification();
   updateAuthUI();
   updateWishlistCounter();
   updateCompareCounter();
@@ -2131,6 +3594,8 @@ const init = () => {
     initCarousel();
     initAddProduct();
     initEditProduct();
+    renderLiveBids();
+    renderCommunityPosts();
   }
 
   if (PAGE === 'assortiment') {

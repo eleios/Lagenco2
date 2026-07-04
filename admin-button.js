@@ -99,25 +99,27 @@
       'gap:10px',
       'padding:14px 22px',
       'border-radius:999px',
-      'font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif',
+      'font-family:Poppins,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif',
       'font-size:14px',
-      'font-weight:600',
-      'letter-spacing:-0.01em',
+      'font-weight:700',
+      'letter-spacing:-0.02em',
       'color:#fff',
-      'background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#2563eb 100%)',
-      'box-shadow:0 10px 30px rgba(79,70,229,0.35),0 4px 12px rgba(0,0,0,0.1)',
+      'background:linear-gradient(135deg,#6BBF7E 0%,#4A9D5E 100%)',
+      'box-shadow:0 8px 24px rgba(107,191,126,0.35),0 4px 12px rgba(0,0,0,0.08)',
       'text-decoration:none',
-      'border:none',
+      'border:2px solid rgba(255,255,255,0.25)',
       'cursor:pointer',
-      'transition:transform .25s cubic-bezier(0.16,1,0.3,1),box-shadow .25s ease,opacity .3s ease',
+      'transition:transform .25s cubic-bezier(0.34,1.56,0.64,1),box-shadow .25s ease,opacity .3s ease',
       'opacity:0',
       'transform:translateY(20px) scale(0.9)',
       'pointer-events:none',
-      'will-change:transform'
+      'will-change:transform',
+      'backdrop-filter:blur(10px)',
+      '-webkit-backdrop-filter:blur(10px)'
     ].join(';');
 
     a.innerHTML =
-      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">' +
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">' +
         '<path d="M3 3h7v7H3z"/>' +
         '<path d="M14 3h7v7h-7z"/>' +
         '<path d="M14 14h7v7h-7z"/>' +
@@ -126,12 +128,12 @@
       '<span>Admin Modus</span>';
 
     a.addEventListener('mouseenter', function () {
-      a.style.transform = 'translateY(-3px) scale(1.03)';
-      a.style.boxShadow = '0 16px 40px rgba(79,70,229,0.45),0 6px 16px rgba(0,0,0,0.12)';
+      a.style.transform = 'translateY(-4px) scale(1.05)';
+      a.style.boxShadow = '0 14px 36px rgba(107,191,126,0.50),0 6px 16px rgba(0,0,0,0.10)';
     });
     a.addEventListener('mouseleave', function () {
       a.style.transform = 'translateY(0) scale(1)';
-      a.style.boxShadow = '0 10px 30px rgba(79,70,229,0.35),0 4px 12px rgba(0,0,0,0.1)';
+      a.style.boxShadow = '0 8px 24px rgba(107,191,126,0.35),0 4px 12px rgba(0,0,0,0.08)';
     });
 
     document.body.appendChild(a);

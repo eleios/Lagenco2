@@ -139,6 +139,7 @@
 
   const VIEW_META = {
     dashboard:    { title: 'Dashboard',         sub: 'Overzicht van je handelsadministratie' },
+    websiteproducten: { title: 'Website Producten', sub: 'Beheer producten die op de website staan' },
     producten:    { title: 'Producten',          sub: 'Beheer je productcatalogus en prijzen' },
     voorraad:     { title: 'Voorraad',           sub: 'Voorraadniveaus en magazijnbeheer' },
     inkoop:       { title: 'Inkoop',             sub: 'Inkooporders en leveranciers' },
@@ -147,6 +148,9 @@
     klanten:      { title: 'Klanten',            sub: 'Klantendatabase en orderhistorie' },
     tracking:     { title: 'Tracking',           sub: 'Zendingen volgen en status beheren' },
     marktplaats:  { title: 'Marktplaats',        sub: 'Actieve advertenties en verkopen' },
+    biedingen:    { title: 'Biedingen',          sub: 'Biedingen van klanten op je producten' },
+    coupons:      { title: 'Wheel Spin Coupons',  sub: 'Gewonnen kortingscodes en coupon status' },
+    wheelsettings:{ title: 'Wheel Spin Instellingen', sub: 'Prijzen, kansen en spins beheren' },
     research:     { title: 'Research',           sub: 'Onderzoek nieuwe producten om in te kopen' },
     werknemers:   { title: 'Werknemers',         sub: 'Uitkeringen en werknemersbetalingen' },
     rapporten:    { title: 'Rapporten',          sub: 'Inzichten en bedrijfsanalytics' },
@@ -422,6 +426,202 @@
       }
     };
   }
+
+  // ═══════════════════════════════════════════════════════
+  // VIEW: WEBSITE PRODUCTEN (beheer producten op de website)
+  // ═══════════════════════════════════════════════════════
+  view('websiteproducten', function (root) {
+    // Lees website producten uit localStorage
+    let products = [];
+    try {
+      const raw = localStorage.getItem('lagencoProducts');
+      products = raw ? JSON.parse(raw) : [];
+    } catch (e) { products = []; }
+
+    // Condition grade labels
+    const GRADES = {
+      5: { label: 'Excellent', stars: '⭐⭐⭐⭐⭐', desc: 'Als nieuw', color: 'var(--bp-success)' },
+      4: { label: 'Goed', stars: '⭐⭐⭐⭐', desc: 'Lichte gebruikssporen', color: 'var(--bp-info)' },
+      3: { label: 'Redelijk', stars: '⭐⭐⭐', desc: 'Zichtbare slijtage', color: 'var(--bp-warn)' },
+      2: { label: 'Beschadigd', stars: '⭐⭐', desc: 'Functioneel maar niet mooi', color: 'var(--bp-danger)' },
+      0: { label: 'Niet beoordeeld', stars: '—', desc: 'Geen conditie ingesteld', color: 'var(--bp-text-faint)' }
+    };
+
+    const getGrade = (p) => {
+      const g = parseInt(p.condition) || 0;
+      return GRADES[g] || GRADES[0];
+    };
+
+    // KPI's
+    const total = products.length;
+    const withGrade = products.filter(p => parseInt(p.condition) > 0).length;
+    const withoutGrade = total - withGrade;
+    const totalValue = products.reduce((a, p) => a + (parseFloat(p.price) || 0), 0);
+
+    let html = '<div class="bp-kpi-grid" style="margin-bottom:1rem">';
+    html += kpiCard('Website producten', D.fmtNum(total), 'fa-globe', 'primary');
+    html += kpiCard('Met conditie grade', D.fmtNum(withGrade), 'fa-star', 'success');
+    html += kpiCard('Zonder grade', D.fmtNum(withoutGrade), 'fa-exclamation', withoutGrade > 0 ? 'warn' : 'success');
+    html += kpiCard('Totale waarde', D.fmtEuro(totalValue), 'fa-euro-sign', 'info');
+    html += '</div>';
+
+    // Search
+    html += '<div class="bp-filter-bar">' +
+      '<input type="text" class="bp-input" id="wsProductSearch" placeholder="Zoek op naam of badge…" style="flex:1;max-width:400px">' +
+      '</div>';
+
+    html += '<div id="wsProductList">' + renderWSProductList(products, '') + '</div>';
+    root.innerHTML = html;
+
+    // Search handler
+    $('#wsProductSearch', root).addEventListener('input', () => {
+      const s = ($('#wsProductSearch', root).value || '').toLowerCase();
+      $('#wsProductList', root).innerHTML = renderWSProductList(products, s);
+      setTimeout(() => wireWSActions(), 50);
+    });
+    setTimeout(() => wireWSActions(), 50);
+
+    function wireWSActions() {
+      $$('.ws-edit-btn', root).forEach(b => b.addEventListener('click', e => {
+        const id = e.currentTarget.dataset.id;
+        const product = products.find(p => p.id === id);
+        if (product) editWSProduct(product);
+      }));
+      $$('.ws-delete-btn', root).forEach(b => b.addEventListener('click', e => {
+        const id = e.currentTarget.dataset.id;
+        confirmModal('Verwijderen', 'Dit product van de website verwijderen?', () => {
+          const filtered = products.filter(p => p.id !== id);
+          try { localStorage.setItem('lagencoProducts', JSON.stringify(filtered)); } catch (e) {}
+          toast('Product verwijderd', '', 'success');
+          navigate('websiteproducten');
+        });
+      }));
+    }
+
+    function renderWSProductList(allProducts, search) {
+      let list = allProducts;
+      if (search) {
+        list = list.filter(p =>
+          (p.title || '').toLowerCase().includes(search) ||
+          (p.badge || '').toLowerCase().includes(search) ||
+          (p.description || '').toLowerCase().includes(search)
+        );
+      }
+      if (!list.length) {
+        return emptyState('fa-globe', 'Geen website producten', 'Voeg producten toe via de website admin modus', '', null).outerHTML;
+      }
+
+      let h = '<div class="bp-card"><div class="bp-card-body-p0"><div class="bp-table-wrap"><table class="bp-table">' +
+        '<thead><tr><th>Naam</th><th>Beschrijving</th><th class="num">Prijs</th><th>Oude prijs</th><th>Badge</th><th>Conditie</th><th class="num">Acties</th></tr></thead><tbody>';
+      list.forEach(p => {
+        const grade = getGrade(p);
+        const descShort = (p.description || '').length > 40 ? (p.description || '').substring(0, 40) + '…' : (p.description || '—');
+        h += '<tr data-id="' + esc(p.id) + '">' +
+          '<td class="strong">' + esc(p.title || 'Naamloos') + '</td>' +
+          '<td style="max-width:200px;font-size:.82rem;color:var(--bp-text-muted)">' + esc(descShort) + '</td>' +
+          '<td class="num strong">' + D.fmtEuro(p.price) + '</td>' +
+          '<td class="num bp-muted">' + (p.oldPrice ? D.fmtEuro(p.oldPrice) : '—') + '</td>' +
+          '<td>' + esc(p.badge || '—') + '</td>' +
+          '<td><span style="color:' + grade.color + ';font-weight:600;font-size:.82rem">' + grade.stars + ' ' + grade.label + '</span></td>' +
+          '<td class="num"></td></tr>';
+      });
+      h += '</tbody></table></div></div></div>';
+      setTimeout(() => {
+        $$('#wsProductList tr[data-id]').forEach(tr => {
+          const id = tr.dataset.id;
+          const product = products.find(p => p.id === id);
+          if (!product) return;
+          const wrap = document.createElement('div');
+          wrap.className = 'bp-row-actions';
+          const eb = document.createElement('button');
+          eb.className = 'bp-row-action ws-edit-btn'; eb.title = 'Bewerken';
+          eb.dataset.id = id;
+          eb.innerHTML = '<i class="fas fa-pen"></i>';
+          wrap.appendChild(eb);
+          const db = document.createElement('button');
+          db.className = 'bp-row-action ws-delete-btn'; db.title = 'Verwijderen';
+          db.dataset.id = id;
+          db.innerHTML = '<i class="fas fa-trash"></i>';
+          wrap.appendChild(db);
+          tr.querySelector('td:last-child').appendChild(wrap);
+        });
+      }, 0);
+      return h;
+    }
+
+    function editWSProduct(product) {
+      const grade = getGrade(product);
+      const body = '<div class="bp-form-grid">' +
+        '<div class="bp-field full">' +
+          '<label class="bp-label">Product naam <span class="req">*</span></label>' +
+          '<input class="bp-input" id="wsEditTitle" value="' + esc(product.title || '') + '">' +
+        '</div>' +
+        '<div class="bp-field full">' +
+          '<label class="bp-label">Beschrijving</label>' +
+          '<textarea class="bp-textarea" id="wsEditDesc" rows="3">' + esc(product.description || '') + '</textarea>' +
+        '</div>' +
+        '<div class="bp-field">' +
+          '<label class="bp-label">Prijs (€) <span class="req">*</span></label>' +
+          '<div class="bp-input-group"><span class="bp-prefix">€</span><input type="number" step="0.01" class="bp-input" id="wsEditPrice" value="' + (product.price || 0) + '"></div>' +
+        '</div>' +
+        '<div class="bp-field">' +
+          '<label class="bp-label">Oude prijs (€)</label>' +
+          '<div class="bp-input-group"><span class="bp-prefix">€</span><input type="number" step="0.01" class="bp-input" id="wsEditOldPrice" value="' + (product.oldPrice || '') + '"></div>' +
+        '</div>' +
+        '<div class="bp-field">' +
+          '<label class="bp-label">Badge / Categorie</label>' +
+          '<input class="bp-input" id="wsEditBadge" value="' + esc(product.badge || '') + '" placeholder="Tweedehands / Retourproduct / Nieuw">' +
+        '</div>' +
+        '<div class="bp-field">' +
+          '<label class="bp-label">Conditie grade</label>' +
+          '<select class="bp-select" id="wsEditCondition">' +
+            '<option value="0"' + (!parseInt(product.condition) ? ' selected' : '') + '>— Niet beoordeeld</option>' +
+            '<option value="5"' + (parseInt(product.condition) === 5 ? ' selected' : '') + '>⭐⭐⭐⭐⭐ Excellent (als nieuw)</option>' +
+            '<option value="4"' + (parseInt(product.condition) === 4 ? ' selected' : '') + '>⭐⭐⭐⭐ Goed (lichte gebruikssporen)</option>' +
+            '<option value="3"' + (parseInt(product.condition) === 3 ? ' selected' : '') + '>⭐⭐⭐ Redelijk (zichtbare slijtage)</option>' +
+            '<option value="2"' + (parseInt(product.condition) === 2 ? ' selected' : '') + '>⭐⭐ Beschadigd (functioneel maar niet mooi)</option>' +
+          '</select>' +
+        '</div>' +
+        '</div>' +
+        '<div style="margin-top:1rem;padding:.75rem 1rem;background:var(--bp-bg-2);border-radius:.5rem;display:flex;gap:.5rem;align-items:center">' +
+          '<i class="fas fa-info-circle" style="color:var(--bp-info)"></i>' +
+          '<p style="margin:0;font-size:.78rem;color:var(--bp-text-muted)">Wijzigingen worden direct opgeslagen op de website. Bezoekers zien de update direct.</p>' +
+        '</div>';
+
+      openModal({
+        title: 'Product bewerken', icon: 'fa-edit', large: true, body: body,
+        footer:
+          '<button class="bp-btn bp-btn-ghost" data-action="cancel">Annuleren</button>' +
+          '<button class="bp-btn bp-btn-primary" data-action="save"><i class="fas fa-check"></i> Opslaan</button>',
+        onMount: (m, close) => {
+          m.querySelector('[data-action="cancel"]').addEventListener('click', close);
+          m.querySelector('[data-action="save"]').addEventListener('click', () => {
+            const title = m.querySelector('#wsEditTitle').value.trim();
+            const desc = m.querySelector('#wsEditDesc').value.trim();
+            const price = parseFloat(m.querySelector('#wsEditPrice').value) || 0;
+            const oldPrice = parseFloat(m.querySelector('#wsEditOldPrice').value) || 0;
+            const badge = m.querySelector('#wsEditBadge').value.trim();
+            const condition = parseInt(m.querySelector('#wsEditCondition').value) || 0;
+
+            if (!title) { toast('Fout', 'Naam is verplicht', 'error'); return; }
+
+            // Update product in localStorage
+            product.title = title;
+            product.description = desc;
+            product.price = price;
+            product.oldPrice = oldPrice || undefined;
+            product.badge = badge;
+            product.condition = condition;
+
+            try { localStorage.setItem('lagencoProducts', JSON.stringify(products)); } catch (e) {}
+            toast('Product bijgewerkt!', '', 'success');
+            close();
+            navigate('websiteproducten');
+          });
+        }
+      });
+    }
+  });
 
   // ═══════════════════════════════════════════════════════
   // VIEW: PRODUCTEN
@@ -1258,6 +1458,1438 @@
       toast('Opgeslagen', '', 'success'); close(); navigate('marktplaats');
     }, m || {});
   }
+
+  // ═══════════════════════════════════════════════════════
+  // VIEW: BIEDINGEN (bids from customers)
+  // ═══════════════════════════════════════════════════════
+  view('biedingen', function (root) {
+    // Read bids from main website storage (lagencoBids key)
+    let bids = [];
+    try {
+      const raw = localStorage.getItem('lagencoBids');
+      bids = raw ? JSON.parse(raw) : [];
+    } catch (e) { bids = []; }
+
+    // Sort: newest first
+    bids.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const total = bids.length;
+    const pending = bids.filter(b => (b.status || 'in_afwachting') === 'in_afwachting').length;
+    const accepted = bids.filter(b => b.status === 'geaccepteerd').length;
+    const rejected = bids.filter(b => b.status === 'afgewezen').length;
+    const totalBidValue = bids.reduce((a, b) => a + D.parseNum(b.amount), 0);
+    const highestBid = bids.reduce((a, b) => Math.max(a, D.parseNum(b.amount)), 0);
+
+    let html = '<div class="bp-kpi-grid" style="margin-bottom:1rem">';
+    html += kpiCard('Totaal biedingen', D.fmtNum(total), 'fa-gavel', 'primary');
+    html += kpiCard('In afwachting', D.fmtNum(pending), 'fa-clock', pending > 0 ? 'warn' : 'success');
+    html += kpiCard('Geaccepteerd', D.fmtNum(accepted), 'fa-check', 'success');
+    html += kpiCard('Afgewezen', D.fmtNum(rejected), 'fa-times', 'danger');
+    html += kpiCard('Totale bodwaarde', D.fmtEuro(totalBidValue), 'fa-euro-sign', 'info');
+    html += kpiCard('Hoogste bod', D.fmtEuro(highestBid), 'fa-arrow-trend-up', 'violet');
+    html += '</div>';
+
+    // Filter buttons
+    html += '<div class="bp-filter-bar">' +
+      '<select class="bp-select" id="bidFilter" style="min-width:200px">' +
+        '<option value="all">Alle biedingen (' + total + ')</option>' +
+        '<option value="in_afwachting">In afwachting (' + pending + ')</option>' +
+        '<option value="geaccepteerd">Geaccepteerd (' + accepted + ')</option>' +
+        '<option value="afgewezen">Afgewezen (' + rejected + ')</option>' +
+      '</select>' +
+      '<input type="text" class="bp-input" id="bidSearch" placeholder="Zoek op naam, e-mail of product…" style="flex:1;max-width:400px">' +
+      '</div>';
+
+    html += '<div id="bidList">' + renderBidList(bids, 'all', '') + '</div>';
+    root.innerHTML = html;
+
+    // Wire filters
+    function refilter() {
+      const f = $('#bidFilter', root).value;
+      const s = ($('#bidSearch', root).value || '').toLowerCase();
+      $('#bidList', root).innerHTML = renderBidList(bids, f, s);
+      wireBidActions();
+    }
+    $('#bidFilter', root).addEventListener('change', refilter);
+    $('#bidSearch', root).addEventListener('input', refilter);
+    wireBidActions();
+
+    function wireBidActions() {
+      $$('.bp-row-action.accept', root).forEach(b => b.addEventListener('click', e => {
+        const id = e.currentTarget.closest('tr').dataset.id;
+        const bid = bids.find(x => x.id === id);
+        if (bid) openAcceptBidModal(bid);
+      }));
+      $$('.bp-row-action.reject', root).forEach(b => b.addEventListener('click', e => {
+        const id = e.currentTarget.closest('tr').dataset.id;
+        const bid = bids.find(x => x.id === id);
+        if (bid) openRejectBidModal(bid);
+      }));
+      $$('.bp-row-action.view', root).forEach(b => b.addEventListener('click', e => {
+        const id = e.currentTarget.closest('tr').dataset.id;
+        const bid = bids.find(x => x.id === id);
+        if (bid) showBidDetail(bid);
+      }));
+      $$('.bp-row-action.delete', root).forEach(b => b.addEventListener('click', e => {
+        const id = e.currentTarget.closest('tr').dataset.id;
+        confirmModal('Verwijderen', 'Bod definitief verwijderen?', () => {
+          removeBid(id);
+          toast('Verwijderd', '', 'success');
+          navigate('biedingen');
+        });
+      }));
+    }
+
+    // ─── Reject-bid flow: 2 choices (reject only / send rejection email) ───
+    function openRejectBidModal(bid) {
+      const body = '<div style="text-align:center;padding:.5rem 0 1rem">' +
+        '<div style="width:3.5rem;height:3.5rem;margin:0 auto .875rem;background:var(--bp-danger-soft,#f8e4e1);border-radius:50%;display:flex;align-items:center;justify-content:center">' +
+          '<i class="fas fa-times" style="font-size:1.3rem;color:var(--bp-danger,#b8453a)"></i>' +
+        '</div>' +
+        '<p style="font-size:.95rem;color:var(--bp-text,#1a1612);margin:0 0 .25rem">Je staat op het punt het bod van <strong>' + esc(bid.name) + '</strong> af te wijzen.</p>' +
+        '<p style="font-size:.85rem;color:var(--bp-muted,#6b6258);margin:.25rem 0 0">Bedrag: <strong>€ ' + Number(bid.amount).toFixed(2) + '</strong> · ' + esc(bid.productTitle || '') + '</p>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:.625rem;margin-top:1rem">' +
+          '<button class="bp-btn bp-btn-danger" data-action="email" style="padding:.875rem 1rem;justify-content:flex-start;text-align:left">' +
+            '<i class="fas fa-envelope" style="margin-right:.625rem"></i>' +
+            '<span><strong>Afwijzing mail sturen</strong><br><span style="font-size:.78rem;opacity:.85">Genereer een vriendelijke HTML e-mail met de afwijzing — direct in je mailprogramma te plakken</span></span>' +
+          '</button>' +
+          '<button class="bp-btn bp-btn-ghost" data-action="reject-only" style="padding:.875rem 1rem;justify-content:flex-start;text-align:left">' +
+            '<i class="fas fa-times" style="margin-right:.625rem"></i>' +
+            '<span><strong>Alleen afwijzen</strong><br><span style="font-size:.78rem;opacity:.85">Markeer als afgewezen zonder e-mail te sturen</span></span>' +
+          '</button>' +
+        '</div>';
+      openModal({
+        title: 'Bod afwijzen', icon: 'fa-times', large: true, body: body,
+        footer: '<button class="bp-btn bp-btn-ghost" data-action="cancel">Annuleren</button>',
+        onMount: (m, close) => {
+          m.querySelector('[data-action="cancel"]').addEventListener('click', close);
+          m.querySelector('[data-action="email"]').addEventListener('click', () => {
+            close();
+            openRejectionEmailModal(bid);
+          });
+          m.querySelector('[data-action="reject-only"]').addEventListener('click', () => {
+            setBidStatus(bid.id, 'afgewezen');
+            toast('Bod afgewezen', '', 'success');
+            close();
+            navigate('biedingen');
+          });
+        }
+      });
+    }
+
+    // ─── Rejection email modal (similar to payment request modal) ───
+    function openRejectionEmailModal(bid) {
+      const body = '<div style="margin-bottom:1rem">' +
+        '<label class="bp-label" style="display:block;margin-bottom:.4rem">Persoonlijke boodschap (optioneel)</label>' +
+        '<textarea class="bp-textarea" id="rejectMsgInput" rows="3" placeholder="Bijv. Bedankt voor je bod. Helaas hebben we besloten het niet te accepteren. Blijf onze nieuwe producten volgen!" style="width:100%"></textarea>' +
+        '<p style="font-size:.78rem;color:var(--bp-muted,#6b6258);margin:.4rem 0 0">Laat leeg om de standaardboodschap te gebruiken. De klant ontvangt een vriendelijke mail met de afwijzing.</p>' +
+        '</div>' +
+        '<div style="display:flex;gap:.5rem;flex-wrap:wrap">' +
+          '<button class="bp-btn bp-btn-primary" id="genRejectEmailBtn"><i class="fas fa-magic"></i> Afwijzingsmail genereren</button>' +
+        '</div>' +
+        '<div id="emailPreviewWrap" style="display:none;margin-top:1.25rem">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;gap:.5rem;flex-wrap:wrap">' +
+            '<p style="font-weight:600;margin:0;font-size:.875rem">E-mail preview</p>' +
+            '<div style="display:flex;gap:.4rem;flex-wrap:wrap">' +
+              '<button class="bp-btn bp-btn-success" id="copyRichBtn" style="padding:.5rem .75rem;font-size:.78rem"><i class="fas fa-copy"></i> Kopieer (geformatteerd)</button>' +
+              '<button class="bp-btn bp-btn-ghost" id="copyHtmlBtn" style="padding:.5rem .75rem;font-size:.78rem"><i class="fas fa-code"></i> Kopieer HTML</button>' +
+              '<button class="bp-btn bp-btn-ghost" id="downloadHtmlBtn" style="padding:.5rem .75rem;font-size:.78rem"><i class="fas fa-download"></i> Download .html</button>' +
+              '<button class="bp-btn bp-btn-ghost" id="mailtoBtn" style="padding:.5rem .75rem;font-size:.78rem"><i class="fas fa-envelope"></i> Open in mail</button>' +
+            '</div>' +
+          '</div>' +
+          '<div style="border:1px solid var(--bp-border,#e8dfcd);border-radius:.5rem;overflow:hidden;background:#fff">' +
+            '<iframe id="emailPreviewIframe" style="width:100%;height:480px;border:0;display:block" sandbox="allow-same-origin"></iframe>' +
+          '</div>' +
+          '<p style="font-size:.78rem;color:var(--bp-muted,#6b6258);margin:.5rem 0 0"><i class="fas fa-info-circle"></i> Klik op "Kopieer (geformatteerd)" en plak (Ctrl+V) in Gmail/Outlook — opmaak blijft behouden.</p>' +
+        '</div>';
+      openModal({
+        title: 'Afwijzingsmail sturen', icon: 'fa-envelope', large: true, body: body,
+        footer:
+          '<button class="bp-btn bp-btn-ghost" data-action="cancel">Annuleren</button>' +
+          '<button class="bp-btn bp-btn-danger" data-action="reject-only"><i class="fas fa-times"></i> Toch alleen afwijzen</button>',
+        onMount: (m, close) => {
+          m.querySelector('[data-action="cancel"]').addEventListener('click', close);
+          m.querySelector('[data-action="reject-only"]').addEventListener('click', () => {
+            setBidStatus(bid.id, 'afgewezen');
+            toast('Bod afgewezen', '', 'success');
+            close();
+            navigate('biedingen');
+          });
+          m.querySelector('#genRejectEmailBtn').addEventListener('click', () => {
+            const rejectMsg = (m.querySelector('#rejectMsgInput').value || '').trim();
+            const html = generateRejectionEmailHtml(bid, rejectMsg);
+
+            const wrap = m.querySelector('#emailPreviewWrap');
+            wrap.style.display = '';
+            const iframe = m.querySelector('#emailPreviewIframe');
+            iframe.srcdoc = html;
+
+            m.querySelector('#copyRichBtn').addEventListener('click', () => copyRichHtml(html, rejectMsg, bid));
+            m.querySelector('#copyHtmlBtn').addEventListener('click', () => copyPlainText(html));
+            m.querySelector('#downloadHtmlBtn').addEventListener('click', () => downloadEmailHtml(html, bid));
+            m.querySelector('#mailtoBtn').addEventListener('click', () => openRejectionMailto(bid, rejectMsg));
+
+            setTimeout(() => wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+            toast('Afwijzingsmail gegenereerd', 'Klik op een knop om hem te kopiëren of te downloaden', 'success', 4000);
+          });
+        }
+      });
+    }
+
+    // ─── Generate the REJECTION email HTML ───
+    function generateRejectionEmailHtml(bid, customMsg) {
+      const amountStr = '€ ' + Number(bid.amount).toFixed(2).replace('.', ',');
+      const firstName = (bid.name || '').split(' ')[0] || 'erf';
+      const msg = customMsg || 'Helaas is je bod dit keer niet geaccepteerd. Dit kan verschillende redenen hebben — mogelijk was er een hoger bod, of was de asking price hoger dan jouw bod. Blijf onze producten volgen, want er komen regelmatig nieuwe items bij!';
+
+      return '' +
+'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">' +
+'<html xmlns="http://www.w3.org/1999/xhtml">' +
+'<head>' +
+  '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />' +
+  '<meta name="viewport" content="width=device-width, initial-scale=1.0" />' +
+  '<title>Update over je bod — Lagenco</title>' +
+'</head>' +
+'<body style="margin:0;padding:0;background-color:#FFF8F0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',\'Inter\',Roboto,Helvetica,Arial,sans-serif;color:#2D3A2E;">' +
+
+  '<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Update over je bod op ' + esc(bid.productTitle || 'ons product') + ' bij Lagenco.</div>' +
+
+  '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#FFF8F0;padding:24px 12px;">' +
+    '<tr>' +
+      '<td align="center">' +
+
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(26,22,18,0.05);">' +
+
+          // Header
+          '<tr>' +
+            '<td style="background:linear-gradient(135deg,#6BBF7E 0%,#4A9D5E 100%);padding:28px 40px;text-align:center;">' +
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">' +
+                '<tr>' +
+                  '<td style="width:40px;height:40px;background:rgba(255,255,255,0.12);border-radius:12px;text-align:center;vertical-align:middle;">' +
+                    '<span style="font-size:22px;line-height:40px;color:#FFFFFF;font-weight:700;font-family:Georgia,serif;">L</span>' +
+                  '</td>' +
+                  '<td style="padding-left:12px;vertical-align:middle;">' +
+                    '<span style="font-family:Georgia,\'Times New Roman\',serif;font-size:24px;font-weight:600;color:#FFFFFF;letter-spacing:-0.020em;">Lagenco</span>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+            '</td>' +
+          '</tr>' +
+
+          // Accent strip (soft red)
+          '<tr><td style="background:#E06055;height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>' +
+
+          // Body
+          '<tr>' +
+            '<td style="padding:40px;">' +
+
+              // Badge: helaas
+              '<p style="margin:0 0 16px 0;text-align:center;">' +
+                '<span style="display:inline-block;padding:6px 14px;background-color:#FFE0DC;color:#E06055;border-radius:100px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Update over je bod</span>' +
+              '</p>' +
+
+              '<h1 style="margin:0 0 12px 0;font-family:Georgia,\'Times New Roman\',serif;font-size:28px;font-weight:600;color:#2D3A2E;text-align:center;letter-spacing:-0.025em;line-height:1.2;">' +
+                'Hoi ' + esc(firstName) + ',<br/>bedankt voor je bod' +
+              '</h1>' +
+
+              '<p style="margin:0 0 28px 0;font-size:16px;line-height:1.6;color:#6B7A6C;text-align:center;">' +
+                'Jammer genoeg hebben we besloten je bod op <strong style="color:#2D3A2E;">' + esc(bid.productTitle || 'dit product') + '</strong> niet te accepteren. ' +
+                'We waarderen je interesse en hopen je snel terug te zien op Lagenco.' +
+              '</p>' +
+
+              // Personal message
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:28px;">' +
+                '<tr>' +
+                  '<td style="padding:16px 20px;background-color:#FFF8F0;border-left:4px solid #E06055;border-radius:8px;">' +
+                    '<p style="margin:0;font-size:14px;line-height:1.6;color:#6B7A6C;font-style:italic;">"' + esc(msg) + '"</p>' +
+                    '<p style="margin:8px 0 0 0;font-size:12px;color:#A5B5A7;">— Lagenco</p>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+
+              // Summary card
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#FFF8F0;border:1px solid #FFE0CC;border-radius:12px;margin-bottom:28px;">' +
+                '<tr>' +
+                  '<td style="padding:20px 24px;text-align:center;">' +
+                    '<p style="margin:0 0 4px 0;font-size:11px;font-weight:700;color:#A5B5A7;letter-spacing:0.08em;text-transform:uppercase;">Jouw bod op dit product</p>' +
+                    '<p style="margin:0 0 12px 0;font-size:22px;font-weight:700;color:#E06055;font-family:Georgia,serif;letter-spacing:-0.02em;">' + amountStr + '</p>' +
+                    '<p style="margin:0;font-size:13px;color:#A5B5A7;">Helaas niet geaccepteerd</p>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+
+              // CTA: see other products
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">' +
+                '<tr>' +
+                  '<td align="center">' +
+                    '<a href="https://lagenco.nl/assortiment.html" target="_blank" style="display:inline-block;padding:16px 40px;background:linear-gradient(135deg,#6BBF7E 0%,#4A9D5E 100%);color:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',\'Inter\',Roboto,sans-serif;font-size:15px;font-weight:700;text-decoration:none;border-radius:100px;box-shadow:0 6px 20px rgba(107,191,126,0.30);letter-spacing:0.02em;">' +
+                      'Bekijk andere producten →' +
+                    '</a>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+
+              '<p style="margin:0 0 28px 0;font-size:13px;color:#A5B5A7;text-align:center;">' +
+                'Er komen regelmatig nieuwe producten bij — houd onze website in de gaten!' +
+              '</p>' +
+
+              // Divider
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:24px;">' +
+                '<tr><td style="border-top:1px solid #FFE0CC;line-height:1px;font-size:1px;">&nbsp;</td></tr>' +
+              '</table>' +
+
+              // Why rejected?
+              '<h2 style="margin:0 0 14px 0;font-size:15px;font-weight:700;color:#2D3A2E;letter-spacing:0.04em;text-transform:uppercase;">Waarom is mijn bod niet geaccepteerd?</h2>' +
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">' +
+                '<tr>' +
+                  '<td style="vertical-align:top;padding:0 12px 8px 0;width:24px;">' +
+                    '<span style="color:#A5B5A7;">•</span>' +
+                  '</td>' +
+                  '<td style="vertical-align:top;padding-bottom:8px;">' +
+                    '<p style="margin:0;font-size:14px;line-height:1.5;color:#6B7A6C;">Er is mogelijk een hoger bod geplaatst</p>' +
+                  '</td>' +
+                '</tr>' +
+                '<tr>' +
+                  '<td style="vertical-align:top;padding:0 12px 8px 0;width:24px;">' +
+                    '<span style="color:#A5B5A7;">•</span>' +
+                  '</td>' +
+                  '<td style="vertical-align:top;padding-bottom:8px;">' +
+                    '<p style="margin:0;font-size:14px;line-height:1.5;color:#6B7A6C;">Het bod lag onder onze asking price</p>' +
+                  '</td>' +
+                '</tr>' +
+                '<tr>' +
+                  '<td style="vertical-align:top;padding:0 12px 0 0;width:24px;">' +
+                    '<span style="color:#A5B5A7;">•</span>' +
+                  '</td>' +
+                  '<td style="vertical-align:top;">' +
+                    '<p style="margin:0;font-size:14px;line-height:1.5;color:#6B7A6C;">Het product is inmiddels aan iemand anders verkocht</p>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+
+            '</td>' +
+          '</tr>' +
+
+          // Footer
+          '<tr>' +
+            '<td style="background-color:#FFF8F0;padding:28px 40px;border-top:1px solid #FFE0CC;">' +
+              '<p style="margin:0 0 8px 0;font-size:13px;color:#6B7A6C;text-align:center;">' +
+                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.nl" style="color:#6BBF7E;font-weight:600;">info@lagenco.nl</a>' +
+              '</p>' +
+              '<p style="margin:0 0 16px 0;font-size:12px;color:#A5B5A7;text-align:center;">' +
+                'Lagenco · Kwaliteit verdient een tweede kans' +
+              '</p>' +
+              '<p style="margin:0;font-size:11px;color:#A5B5A7;text-align:center;line-height:1.5;">' +
+                'Je ontvangt deze mail omdat je een bod hebt geplaatst op Lagenco.<br/>' +
+                '<a href="#" style="color:#A5B5A7;">Algemene voorwaarden</a> · <a href="#" style="color:#A5B5A7;">Privacybeleid</a>' +
+              '</p>' +
+            '</td>' +
+          '</tr>' +
+
+        '</table>' +
+
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;">' +
+          '<tr><td style="height:24px;line-height:24px;font-size:24px;">&nbsp;</td></tr>' +
+        '</table>' +
+
+      '</td>' +
+    '</tr>' +
+  '</table>' +
+'</body>' +
+'</html>';
+    }
+
+    function openRejectionMailto(bid, customMsg) {
+      const subject = 'Update over je bod — ' + (bid.productTitle || 'Lagenco');
+      const msg = customMsg || 'Helaas is je bod dit keer niet geaccepteerd. Blijf onze producten volgen!';
+      const body = 'Beste ' + (bid.name || '') + ',\n\n' +
+        'Bedankt voor je bod op ' + (bid.productTitle || 'ons product') + '.\n' +
+        'Bedrag: € ' + Number(bid.amount).toFixed(2).replace('.', ',') + '\n\n' +
+        msg + '\n\n' +
+        'Bekijk onze andere producten op https://lagenco.nl/assortiment.html\n\n' +
+        'Met vriendelijke groet,\nLagenco';
+      const mailto = 'mailto:' + encodeURIComponent(bid.email || '') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      window.location.href = mailto;
+    }
+
+    // ─── Payment reminder email modal (for accepted bids) ───
+    function openReminderEmailModal(bid) {
+      const body = '<div style="margin-bottom:1rem;padding:.875rem 1rem;background:var(--bp-warn-soft,#f5e6d3);border:1px solid rgba(192,132,87,0.25);border-radius:.5rem">' +
+        '<div style="display:flex;gap:.625rem;align-items:flex-start">' +
+          '<i class="fas fa-info-circle" style="color:var(--bp-warn,#FFB088);font-size:1rem;margin-top:.125rem"></i>' +
+          '<div>' +
+            '<p style="margin:0 0 .25rem;font-size:.85rem;color:var(--bp-text,#1a1612);font-weight:600">Herinnering voor niet-betaald bod</p>' +
+            '<p style="margin:0;font-size:.78rem;color:var(--bp-muted,#6b6258);line-height:1.5">Dit bod is geaccepteerd op ' + esc(fmtBidDateNL(bid.updatedAt || bid.createdAt)) + '. Verstuur een vriendelijke herinnering om de klant aan te zetten tot betaling.</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="margin-bottom:1rem">' +
+        '<label class="bp-label" style="display:block;margin-bottom:.4rem">Betaallink (URL) <span style="color:#dc2626">*</span></label>' +
+        '<input type="url" class="bp-input" id="reminderPayUrlInput" placeholder="https://betaal.mollie.com/..." style="width:100%">' +
+        '<p style="font-size:.78rem;color:var(--bp-muted,#6b6258);margin:.4rem 0 0">Vul dezelfde betaallink in als in de oorspronkelijke acceptatiemail.</p>' +
+      '</div>' +
+      '<div style="margin-bottom:1rem">' +
+        '<label class="bp-label" style="display:block;margin-bottom:.4rem">Persoonlijke boodschap (optioneel)</label>' +
+        '<textarea class="bp-textarea" id="reminderMsgInput" rows="2" placeholder="Bijv. We hebben je bod geaccepteerd, maar de betaling is nog niet ontvangen. Graag zo snel mogelijk betalen!" style="width:100%"></textarea>' +
+      '</div>' +
+      '<div style="display:flex;gap:.5rem;flex-wrap:wrap">' +
+        '<button class="bp-btn bp-btn-primary" id="genReminderEmailBtn"><i class="fas fa-magic"></i> Herinneringsmail genereren</button>' +
+      '</div>' +
+      '<div id="emailPreviewWrap" style="display:none;margin-top:1.25rem">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;gap:.5rem;flex-wrap:wrap">' +
+          '<p style="font-weight:600;margin:0;font-size:.875rem">E-mail preview</p>' +
+          '<div style="display:flex;gap:.4rem;flex-wrap:wrap">' +
+            '<button class="bp-btn bp-btn-success" id="copyRichBtn" style="padding:.5rem .75rem;font-size:.78rem"><i class="fas fa-copy"></i> Kopieer (geformatteerd)</button>' +
+            '<button class="bp-btn bp-btn-ghost" id="copyHtmlBtn" style="padding:.5rem .75rem;font-size:.78rem"><i class="fas fa-code"></i> Kopieer HTML</button>' +
+            '<button class="bp-btn bp-btn-ghost" id="downloadHtmlBtn" style="padding:.5rem .75rem;font-size:.78rem"><i class="fas fa-download"></i> Download .html</button>' +
+            '<button class="bp-btn bp-btn-ghost" id="mailtoBtn" style="padding:.5rem .75rem;font-size:.78rem"><i class="fas fa-envelope"></i> Open in mail</button>' +
+          '</div>' +
+        '</div>' +
+        '<div style="border:1px solid var(--bp-border,#e8dfcd);border-radius:.5rem;overflow:hidden;background:#fff">' +
+          '<iframe id="emailPreviewIframe" style="width:100%;height:480px;border:0;display:block" sandbox="allow-same-origin"></iframe>' +
+        '</div>' +
+        '<p style="font-size:.78rem;color:var(--bp-muted,#6b6258);margin:.5rem 0 0"><i class="fas fa-info-circle"></i> Klik op "Kopieer (geformatteerd)" en plak (Ctrl+V) in Gmail/Outlook — opmaak blijft behouden.</p>' +
+      '</div>';
+      openModal({
+        title: 'Herinneringsmail sturen', icon: 'fa-bell', large: true, body: body,
+        footer: '<button class="bp-btn bp-btn-ghost" data-action="cancel">Sluiten</button>',
+        onMount: (m, close) => {
+          m.querySelector('[data-action="cancel"]').addEventListener('click', close);
+          m.querySelector('#genReminderEmailBtn').addEventListener('click', () => {
+            const payUrl = (m.querySelector('#reminderPayUrlInput').value || '').trim();
+            const reminderMsg = (m.querySelector('#reminderMsgInput').value || '').trim();
+            if (!payUrl) { toast('Fout', 'Vul een betaallink in', 'error'); return; }
+            if (!/^https?:\/\/.+/.test(payUrl)) { toast('Fout', 'Ongeldige URL — begin met http:// of https://', 'error'); return; }
+
+            const html = generateReminderEmailHtml(bid, payUrl, reminderMsg);
+
+            const wrap = m.querySelector('#emailPreviewWrap');
+            wrap.style.display = '';
+            const iframe = m.querySelector('#emailPreviewIframe');
+            iframe.srcdoc = html;
+
+            m.querySelector('#copyRichBtn').addEventListener('click', () => copyRichHtml(html, reminderMsg, bid));
+            m.querySelector('#copyHtmlBtn').addEventListener('click', () => copyPlainText(html));
+            m.querySelector('#downloadHtmlBtn').addEventListener('click', () => downloadEmailHtml(html, bid));
+            m.querySelector('#mailtoBtn').addEventListener('click', () => openMailto(bid, payUrl, reminderMsg));
+
+            setTimeout(() => wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+            toast('Herinneringsmail gegenereerd', 'Klik op een knop om hem te kopiëren of te downloaden', 'success', 4000);
+          });
+        }
+      });
+    }
+
+    // ─── Generate the REMINDER email HTML ───
+    function generateReminderEmailHtml(bid, payUrl, customMsg) {
+      const amountStr = '€ ' + Number(bid.amount).toFixed(2).replace('.', ',');
+      const firstName = (bid.name || '').split(' ')[0] || 'erf';
+      const msg = customMsg || 'We hebben je bod geaccepteerd, maar we hebben nog geen betaling ontvangen. Graag vragen we je alsnog om de betaling te voltooien via de onderstaande knop. Bij vragen kun je altijd reageren op deze mail!';
+
+      return '' +
+'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">' +
+'<html xmlns="http://www.w3.org/1999/xhtml">' +
+'<head>' +
+  '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />' +
+  '<meta name="viewport" content="width=device-width, initial-scale=1.0" />' +
+  '<title>Vriendelijke herinnering — Lagenco</title>' +
+'</head>' +
+'<body style="margin:0;padding:0;background-color:#FFF8F0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',\'Inter\',Roboto,Helvetica,Arial,sans-serif;color:#2D3A2E;">' +
+
+  '<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Vriendelijke herinnering: je bod op ' + esc(bid.productTitle || 'ons product') + ' is goedgekeurd — tijd om te betalen.</div>' +
+
+  '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#FFF8F0;padding:24px 12px;">' +
+    '<tr>' +
+      '<td align="center">' +
+
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(26,22,18,0.05);">' +
+
+          // Header
+          '<tr>' +
+            '<td style="background:linear-gradient(135deg,#6BBF7E 0%,#4A9D5E 100%);padding:28px 40px;text-align:center;">' +
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">' +
+                '<tr>' +
+                  '<td style="width:40px;height:40px;background:rgba(255,255,255,0.12);border-radius:12px;text-align:center;vertical-align:middle;">' +
+                    '<span style="font-size:22px;line-height:40px;color:#FFFFFF;font-weight:700;font-family:Georgia,serif;">L</span>' +
+                  '</td>' +
+                  '<td style="padding-left:12px;vertical-align:middle;">' +
+                    '<span style="font-family:Georgia,\'Times New Roman\',serif;font-size:24px;font-weight:600;color:#FFFFFF;letter-spacing:-0.020em;">Lagenco</span>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+            '</td>' +
+          '</tr>' +
+
+          // Accent strip (warm orange)
+          '<tr><td style="background:#FFB088;height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>' +
+
+          // Body
+          '<tr>' +
+            '<td style="padding:40px;">' +
+
+              // Badge: reminder
+              '<p style="margin:0 0 16px 0;text-align:center;">' +
+                '<span style="display:inline-block;padding:6px 14px;background-color:#FFF3CC;color:#FF8B5C;border-radius:100px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">⏰ Vriendelijke herinnering</span>' +
+              '</p>' +
+
+              '<h1 style="margin:0 0 12px 0;font-family:Georgia,\'Times New Roman\',serif;font-size:28px;font-weight:600;color:#2D3A2E;text-align:center;letter-spacing:-0.025em;line-height:1.2;">' +
+                'Hoi ' + esc(firstName) + ',<br/>nog even betalen graag!' +
+              '</h1>' +
+
+              '<p style="margin:0 0 28px 0;font-size:16px;line-height:1.6;color:#6B7A6C;text-align:center;">' +
+                'We hebben je bod op <strong style="color:#2D3A2E;">' + esc(bid.productTitle || 'dit product') + '</strong> geaccepteerd, maar we hebben nog geen betaling ontvangen. ' +
+                'Maak de betaling snel af, dan sturen we je product direct op weg.' +
+              '</p>' +
+
+              // Product summary card
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#FFF8F0;border:1px solid #FFE0CC;border-radius:12px;margin-bottom:24px;">' +
+                '<tr>' +
+                  '<td style="padding:24px;text-align:center;">' +
+                    '<p style="margin:0 0 4px 0;font-size:11px;font-weight:700;color:#A5B5A7;letter-spacing:0.08em;text-transform:uppercase;">Product</p>' +
+                    '<p style="margin:0 0 16px 0;font-size:16px;font-weight:600;color:#2D3A2E;line-height:1.4;">' + esc(bid.productTitle || 'Product') + '</p>' +
+                    '<p style="margin:0 0 4px 0;font-size:11px;font-weight:700;color:#A5B5A7;letter-spacing:0.08em;text-transform:uppercase;">Te betalen bedrag</p>' +
+                    '<p style="margin:0;font-size:22px;font-weight:700;color:#FF8B5C;font-family:Georgia,serif;letter-spacing:-0.02em;">' + amountStr + '</p>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+
+              // Personal message
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:28px;">' +
+                '<tr>' +
+                  '<td style="padding:16px 20px;background-color:#FFF3CC;border-left:4px solid #FFB088;border-radius:8px;">' +
+                    '<p style="margin:0;font-size:14px;line-height:1.6;color:#FF8B5C;font-style:italic;">"' + esc(msg) + '"</p>' +
+                    '<p style="margin:8px 0 0 0;font-size:12px;color:#A5B5A7;">— Lagenco</p>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+
+              // CTA button
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">' +
+                '<tr>' +
+                  '<td align="center">' +
+                    '<a href="' + esc(payUrl) + '" target="_blank" style="display:inline-block;padding:18px 48px;background:linear-gradient(135deg,#FFB088 0%,#FF8B5C 100%);color:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',\'Inter\',Roboto,sans-serif;font-size:16px;font-weight:700;text-decoration:none;border-radius:100px;box-shadow:0 6px 20px rgba(255,139,92,0.30);letter-spacing:0.02em;">' +
+                      'Betaal nu ' + amountStr + ' →' +
+                    '</a>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+
+              '<p style="margin:0 0 28px 0;font-size:13px;color:#A5B5A7;text-align:center;">' +
+                'Werkt de knop niet? Kopieer dan deze link in je browser:<br/>' +
+                '<a href="' + esc(payUrl) + '" style="color:#FF8B5C;word-break:break-all;">' + esc(payUrl) + '</a>' +
+              '</p>' +
+
+              // Divider
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:24px;">' +
+                '<tr><td style="border-top:1px solid #FFE0CC;line-height:1px;font-size:1px;">&nbsp;</td></tr>' +
+              '</table>' +
+
+              // Help section
+              '<h2 style="margin:0 0 14px 0;font-size:15px;font-weight:700;color:#2D3A2E;letter-spacing:0.04em;text-transform:uppercase;">Vragen of hulp nodig?</h2>' +
+              '<p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#6B7A6C;">' +
+                'Liever toch afhalen? Of problemen met betalen? Reageer op deze mail of stuur een berichtje naar <a href="mailto:info@lagenco.nl" style="color:#6BBF7E;font-weight:600;">info@lagenco.nl</a> — we helpen je graag verder.' +
+              '</p>' +
+
+            '</td>' +
+          '</tr>' +
+
+          // Footer
+          '<tr>' +
+            '<td style="background-color:#FFF8F0;padding:28px 40px;border-top:1px solid #FFE0CC;">' +
+              '<p style="margin:0 0 8px 0;font-size:13px;color:#6B7A6C;text-align:center;">' +
+                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.nl" style="color:#6BBF7E;font-weight:600;">info@lagenco.nl</a>' +
+              '</p>' +
+              '<p style="margin:0 0 16px 0;font-size:12px;color:#A5B5A7;text-align:center;">' +
+                'Lagenco · Kwaliteit verdient een tweede kans' +
+              '</p>' +
+              '<p style="margin:0;font-size:11px;color:#A5B5A7;text-align:center;line-height:1.5;">' +
+                'Je ontvangt deze mail omdat je een bod hebt geplaatst op Lagenco.<br/>' +
+                '<a href="#" style="color:#A5B5A7;">Algemene voorwaarden</a> · <a href="#" style="color:#A5B5A7;">Privacybeleid</a>' +
+              '</p>' +
+            '</td>' +
+          '</tr>' +
+
+        '</table>' +
+
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;">' +
+          '<tr><td style="height:24px;line-height:24px;font-size:24px;">&nbsp;</td></tr>' +
+        '</table>' +
+
+      '</td>' +
+    '</tr>' +
+  '</table>' +
+'</body>' +
+'</html>';
+    }
+
+    // ─── Accept-bid flow: 2 choices (accept only / send payment request) ───
+    function openAcceptBidModal(bid) {
+      const body = '<div style="text-align:center;padding:.5rem 0 1rem">' +
+        '<div style="width:3.5rem;height:3.5rem;margin:0 auto .875rem;background:var(--bp-success-soft,#dde9df);border-radius:50%;display:flex;align-items:center;justify-content:center">' +
+          '<i class="fas fa-check" style="font-size:1.3rem;color:var(--bp-success,#0f3d2e)"></i>' +
+        '</div>' +
+        '<p style="font-size:.95rem;color:var(--bp-text,#1a1612);margin:0 0 .25rem">Je staat op het punt het bod van <strong>' + esc(bid.name) + '</strong> te accepteren.</p>' +
+        '<p style="font-size:.85rem;color:var(--bp-muted,#6b6258);margin:.25rem 0 0">Bedrag: <strong style="color:var(--bp-success,#0f3d2e)">€ ' + Number(bid.amount).toFixed(2) + '</strong> · ' + esc(bid.productTitle || '') + '</p>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:.625rem;margin-top:1rem">' +
+          '<button class="bp-btn bp-btn-success" data-action="pay" style="padding:.875rem 1rem;justify-content:flex-start;text-align:left">' +
+            '<i class="fas fa-paper-plane" style="margin-right:.625rem"></i>' +
+            '<span><strong>Betaalverzoek sturen</strong><br><span style="font-size:.78rem;opacity:.85">Genereer een mooie HTML e-mail met betaalknop die je direct in je mailprogramma kunt plakken</span></span>' +
+          '</button>' +
+          '<button class="bp-btn bp-btn-ghost" data-action="accept-only" style="padding:.875rem 1rem;justify-content:flex-start;text-align:left">' +
+            '<i class="fas fa-check" style="margin-right:.625rem"></i>' +
+            '<span><strong>Alleen accepteren</strong><br><span style="font-size:.78rem;opacity:.85">Markeer als geaccepteerd zonder e-mail te sturen</span></span>' +
+          '</button>' +
+        '</div>';
+      openModal({
+        title: 'Bod accepteren', icon: 'fa-check', large: true, body: body,
+        footer: '<button class="bp-btn bp-btn-ghost" data-action="cancel">Annuleren</button>',
+        onMount: (m, close) => {
+          m.querySelector('[data-action="cancel"]').addEventListener('click', close);
+          m.querySelector('[data-action="pay"]').addEventListener('click', () => {
+            close();
+            openPaymentRequestModal(bid);
+          });
+          m.querySelector('[data-action="accept-only"]').addEventListener('click', () => {
+            setBidStatus(bid.id, 'geaccepteerd');
+            toast('Bod geaccepteerd', '', 'success');
+            close();
+            navigate('biedingen');
+          });
+        }
+      });
+    }
+
+    // ─── Payment request modal: enter payment URL, generate HTML email ───
+    function openPaymentRequestModal(bid) {
+      const body = '<div style="margin-bottom:1rem">' +
+        '<label class="bp-label" style="display:block;margin-bottom:.4rem">Betaallink (URL) <span style="color:#dc2626">*</span></label>' +
+        '<input type="url" class="bp-input" id="payUrlInput" placeholder="https://betaal.mollie.com/..." style="width:100%">' +
+        '<p style="font-size:.78rem;color:var(--bp-muted,#6b6258);margin:.4rem 0 0">Plak hier de betaallink die je hebt aangemaakt bij je betaalprovider (Mollie, Stripe, etc.). Deze link komt in de e-mail als grote knop.</p>' +
+        '</div>' +
+        '<div style="margin-bottom:1rem">' +
+        '<label class="bp-label" style="display:block;margin-bottom:.4rem">Persoonlijke boodschap (optioneel)</label>' +
+        '<textarea class="bp-textarea" id="payMsgInput" rows="2" placeholder="Bijv. Bedankt voor je bod! Graag binnen 3 dagen betalen." style="width:100%"></textarea>' +
+        '</div>' +
+        '<div style="display:flex;gap:.5rem;flex-wrap:wrap">' +
+          '<button class="bp-btn bp-btn-primary" id="genEmailBtn"><i class="fas fa-magic"></i> E-mail genereren</button>' +
+        '</div>' +
+        '<div id="emailPreviewWrap" style="display:none;margin-top:1.25rem">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;gap:.5rem;flex-wrap:wrap">' +
+            '<p style="font-weight:600;margin:0;font-size:.875rem">E-mail preview</p>' +
+            '<div style="display:flex;gap:.4rem;flex-wrap:wrap">' +
+              '<button class="bp-btn bp-btn-success" id="copyRichBtn" style="padding:.5rem .75rem;font-size:.78rem"><i class="fas fa-copy"></i> Kopieer (geformatteerd)</button>' +
+              '<button class="bp-btn bp-btn-ghost" id="copyHtmlBtn" style="padding:.5rem .75rem;font-size:.78rem"><i class="fas fa-code"></i> Kopieer HTML</button>' +
+              '<button class="bp-btn bp-btn-ghost" id="downloadHtmlBtn" style="padding:.5rem .75rem;font-size:.78rem"><i class="fas fa-download"></i> Download .html</button>' +
+              '<button class="bp-btn bp-btn-ghost" id="mailtoBtn" style="padding:.5rem .75rem;font-size:.78rem"><i class="fas fa-envelope"></i> Open in mail</button>' +
+            '</div>' +
+          '</div>' +
+          '<div style="border:1px solid var(--bp-border,#e8dfcd);border-radius:.5rem;overflow:hidden;background:#fff">' +
+            '<iframe id="emailPreviewIframe" style="width:100%;height:480px;border:0;display:block" sandbox="allow-same-origin"></iframe>' +
+          '</div>' +
+          '<p style="font-size:.78rem;color:var(--bp-muted,#6b6258);margin:.5rem 0 0"><i class="fas fa-info-circle"></i> Klik op "Kopieer (geformatteerd)" en plak (Ctrl+V) in Gmail/Outlook — opmaak blijft behouden.</p>' +
+        '</div>';
+      openModal({
+        title: 'Betaalverzoek sturen', icon: 'fa-paper-plane', large: true, body: body,
+        footer:
+          '<button class="bp-btn bp-btn-ghost" data-action="cancel">Annuleren</button>' +
+          '<button class="bp-btn bp-btn-success" data-action="accept-only"><i class="fas fa-check"></i> Toch alleen accepteren</button>',
+        onMount: (m, close) => {
+          m.querySelector('[data-action="cancel"]').addEventListener('click', close);
+          m.querySelector('[data-action="accept-only"]').addEventListener('click', () => {
+            setBidStatus(bid.id, 'geaccepteerd');
+            toast('Bod geaccepteerd', '', 'success');
+            close();
+            navigate('biedingen');
+          });
+          m.querySelector('#genEmailBtn').addEventListener('click', () => {
+            const payUrl = (m.querySelector('#payUrlInput').value || '').trim();
+            const payMsg = (m.querySelector('#payMsgInput').value || '').trim();
+            if (!payUrl) { toast('Fout', 'Vul een betaallink in', 'error'); return; }
+            if (!/^https?:\/\/.+/.test(payUrl)) { toast('Fout', 'Ongeldige URL — begin met http:// of https://', 'error'); return; }
+
+            // Generate the HTML email
+            const html = generatePaymentEmailHtml(bid, payUrl, payMsg);
+            m._emailHtml = html;
+
+            // Show preview
+            const wrap = m.querySelector('#emailPreviewWrap');
+            wrap.style.display = '';
+            const iframe = m.querySelector('#emailPreviewIframe');
+            iframe.srcdoc = html;
+
+            // Wire copy/download/mailto buttons
+            m.querySelector('#copyRichBtn').addEventListener('click', () => copyRichHtml(html, payMsg, bid));
+            m.querySelector('#copyHtmlBtn').addEventListener('click', () => copyPlainText(html));
+            m.querySelector('#downloadHtmlBtn').addEventListener('click', () => downloadEmailHtml(html, bid));
+            m.querySelector('#mailtoBtn').addEventListener('click', () => openMailto(bid, payUrl, payMsg));
+
+            // Scroll to preview
+            setTimeout(() => wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+            toast('E-mail gegenereerd', 'Klik op een knop om hem te kopiëren of te downloaden', 'success', 4000);
+          });
+        }
+      });
+    }
+
+    // ─── Generate the HTML email (inline styles, table-based for max compatibility) ───
+    function generatePaymentEmailHtml(bid, payUrl, payMsg) {
+      const amountStr = '€ ' + Number(bid.amount).toFixed(2).replace('.', ',');
+      const askingStr = '€ ' + Number(bid.productPrice || 0).toFixed(2).replace('.', ',');
+      const firstName = (bid.name || '').split(' ')[0] || 'erf';
+      const personalMsg = payMsg ? payMsg : 'Bedankt voor je bod! We hebben hem goedgekeurd. Graag zo snel mogelijk betalen via de onderstaande knop, dan sturen we je product direct op weg.';
+
+      return '' +
+'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">' +
+'<html xmlns="http://www.w3.org/1999/xhtml">' +
+'<head>' +
+  '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />' +
+  '<meta name="viewport" content="width=device-width, initial-scale=1.0" />' +
+  '<title>Jouw bod is goedgekeurd — Lagenco</title>' +
+'</head>' +
+'<body style="margin:0;padding:0;background-color:#FFF8F0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',\'Inter\',Roboto,Helvetica,Arial,sans-serif;color:#2D3A2E;">' +
+  // Preheader (hidden)
+  '<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Goed nieuws! Je bod op ' + esc(bid.productTitle || 'ons product') + ' is goedgekeurd. Betaal nu via de link.</div>' +
+
+  '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#FFF8F0;padding:24px 12px;">' +
+    '<tr>' +
+      '<td align="center">' +
+  // Email container
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(26,22,18,0.05);">' +
+  // Header (logo)
+          '<tr>' +
+            '<td style="background:linear-gradient(135deg,#6BBF7E 0%,#4A9D5E 100%);padding:28px 40px;text-align:center;">' +
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">' +
+                '<tr>' +
+                  '<td align="center" style="vertical-align:middle;">' +
+                    '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">' +
+                      '<tr>' +
+                        '<td style="width:40px;height:40px;background:rgba(255,255,255,0.12);border-radius:12px;text-align:center;vertical-align:middle;">' +
+                          '<span style="font-size:22px;line-height:40px;color:#FFFFFF;font-weight:700;font-family:Georgia,serif;">L</span>' +
+                        '</td>' +
+                        '<td style="padding-left:12px;vertical-align:middle;">' +
+                          '<span style="font-family:Georgia,\'Times New Roman\',serif;font-size:24px;font-weight:600;color:#FFFFFF;letter-spacing:-0.020em;">Lagenco</span>' +
+                        '</td>' +
+                      '</tr>' +
+                    '</table>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+            '</td>' +
+          '</tr>' +
+  // Top accent strip
+          '<tr>' +
+            '<td style="background:#FFB088;height:4px;line-height:4px;font-size:4px;">&nbsp;</td>' +
+          '</tr>' +
+  // Body
+          '<tr>' +
+            '<td style="padding:40px;">' +
+  // Badge: goedgekeurd
+              '<p style="margin:0 0 16px 0;text-align:center;">' +
+                '<span style="display:inline-block;padding:6px 14px;background-color:#D5EDDA;color:#6BBF7E;border-radius:100px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">✓ Goedgekeurd</span>' +
+              '</p>' +
+  // Headline
+              '<h1 style="margin:0 0 12px 0;font-family:Georgia,\'Times New Roman\',serif;font-size:28px;font-weight:600;color:#2D3A2E;text-align:center;letter-spacing:-0.025em;line-height:1.2;">' +
+                'Hoi ' + esc(firstName) + ',<br/>je bod is goedgekeurd!' +
+              '</h1>' +
+  // Subtitle
+              '<p style="margin:0 0 28px 0;font-size:16px;line-height:1.6;color:#6B7A6C;text-align:center;">' +
+                'Goed nieuws — de verkoper heeft je bod op <strong style="color:#2D3A2E;">' + esc(bid.productTitle || 'dit product') + '</strong> geaccepteerd. ' +
+                'Maak de betaling af via de onderstaande knop en we sturen je product direct op weg.' +
+              '</p>' +
+  // Product card
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#FFF8F0;border:1px solid #FFE0CC;border-radius:12px;margin-bottom:24px;">' +
+                '<tr>' +
+                  '<td style="padding:24px;">' +
+                    '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">' +
+                      '<tr>' +
+                        '<td style="vertical-align:top;">' +
+                          '<p style="margin:0 0 4px 0;font-size:11px;font-weight:700;color:#A5B5A7;letter-spacing:0.08em;text-transform:uppercase;">Product</p>' +
+                          '<p style="margin:0 0 16px 0;font-size:16px;font-weight:600;color:#2D3A2E;line-height:1.4;">' + esc(bid.productTitle || 'Product') + '</p>' +
+
+                          '<table role="presentation" cellpadding="0" cellspacing="0" border="0">' +
+                            '<tr>' +
+                              '<td style="padding-right:24px;border-right:1px solid #FFD0B0;">' +
+                                '<p style="margin:0 0 2px 0;font-size:11px;font-weight:700;color:#A5B5A7;letter-spacing:0.08em;text-transform:uppercase;">Jouw bod</p>' +
+                                '<p style="margin:0;font-size:22px;font-weight:700;color:#6BBF7E;font-family:Georgia,serif;letter-spacing:-0.02em;">' + amountStr + '</p>' +
+                              '</td>' +
+                              '<td style="padding-left:24px;">' +
+                                '<p style="margin:0 0 2px 0;font-size:11px;font-weight:700;color:#A5B5A7;letter-spacing:0.08em;text-transform:uppercase;">Asking price</p>' +
+                                '<p style="margin:0;font-size:14px;color:#A5B5A7;text-decoration:line-through;">' + askingStr + '</p>' +
+                              '</td>' +
+                            '</tr>' +
+                          '</table>' +
+
+                        '</td>' +
+                      '</tr>' +
+                    '</table>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+  // Personal message
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:28px;">' +
+                '<tr>' +
+                  '<td style="padding:16px 20px;background-color:#FFF3CC;border-left:4px solid #FFB088;border-radius:8px;">' +
+                    '<p style="margin:0;font-size:14px;line-height:1.6;color:#FF8B5C;font-style:italic;">"' + esc(personalMsg) + '"</p>' +
+                    '<p style="margin:8px 0 0 0;font-size:12px;color:#A5B5A7;">— Lagenco</p>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+  // CTA button
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">' +
+                '<tr>' +
+                  '<td align="center">' +
+                    '<a href="' + esc(payUrl) + '" target="_blank" style="display:inline-block;padding:18px 48px;background:linear-gradient(135deg,#FFB088 0%,#FF8B5C 100%);color:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',\'Inter\',Roboto,sans-serif;font-size:16px;font-weight:700;text-decoration:none;border-radius:100px;box-shadow:0 6px 20px rgba(255,139,92,0.30);letter-spacing:0.02em;">' +
+                      'Betaal nu ' + amountStr + ' →' +
+                    '</a>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+  // Help text below button
+              '<p style="margin:0 0 28px 0;font-size:13px;color:#A5B5A7;text-align:center;">' +
+                'Werkt de knop niet? Kopieer dan deze link in je browser:<br/>' +
+                '<a href="' + esc(payUrl) + '" style="color:#FF8B5C;word-break:break-all;">' + esc(payUrl) + '</a>' +
+              '</p>' +
+  // Divider
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:24px;">' +
+                '<tr><td style="border-top:1px solid #FFE0CC;line-height:1px;font-size:1px;">&nbsp;</td></tr>' +
+              '</table>' +
+  // What is next
+              '<h2 style="margin:0 0 14px 0;font-size:15px;font-weight:700;color:#2D3A2E;letter-spacing:0.04em;text-transform:uppercase;">Wat gebeurt er nu?</h2>' +
+              '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">' +
+                '<tr>' +
+                  '<td style="vertical-align:top;padding:0 12px 12px 0;width:24px;">' +
+                    '<span style="display:inline-block;width:22px;height:22px;background-color:#D5EDDA;color:#6BBF7E;border-radius:50%;text-align:center;line-height:22px;font-size:11px;font-weight:700;">1</span>' +
+                  '</td>' +
+                  '<td style="vertical-align:top;padding-bottom:12px;">' +
+                    '<p style="margin:0;font-size:14px;line-height:1.5;color:#2D3A2E;"><strong>Betaal via de knop</strong> — liefst binnen 3 dagen</p>' +
+                  '</td>' +
+                '</tr>' +
+                '<tr>' +
+                  '<td style="vertical-align:top;padding:0 12px 12px 0;width:24px;">' +
+                    '<span style="display:inline-block;width:22px;height:22px;background-color:#D5EDDA;color:#6BBF7E;border-radius:50%;text-align:center;line-height:22px;font-size:11px;font-weight:700;">2</span>' +
+                  '</td>' +
+                  '<td style="vertical-align:top;padding-bottom:12px;">' +
+                    '<p style="margin:0;font-size:14px;line-height:1.5;color:#2D3A2E;"><strong>Wij verzenden je product</strong> — ' + esc(bid.shippingMethod || 'Verzenden') + '</p>' +
+                  '</td>' +
+                '</tr>' +
+                '<tr>' +
+                  '<td style="vertical-align:top;padding:0 12px 0 0;width:24px;">' +
+                    '<span style="display:inline-block;width:22px;height:22px;background-color:#D5EDDA;color:#6BBF7E;border-radius:50%;text-align:center;line-height:22px;font-size:11px;font-weight:700;">3</span>' +
+                  '</td>' +
+                  '<td style="vertical-align:top;">' +
+                    '<p style="margin:0;font-size:14px;line-height:1.5;color:#2D3A2E;"><strong>Track & trace</strong> — je ontvangt een e-mail met volgcode</p>' +
+                  '</td>' +
+                '</tr>' +
+              '</table>' +
+
+            '</td>' +
+          '</tr>' +
+  // Footer
+          '<tr>' +
+            '<td style="background-color:#FFF8F0;padding:28px 40px;border-top:1px solid #FFE0CC;">' +
+              '<p style="margin:0 0 8px 0;font-size:13px;color:#6B7A6C;text-align:center;">' +
+                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.nl" style="color:#6BBF7E;font-weight:600;">info@lagenco.nl</a>' +
+              '</p>' +
+              '<p style="margin:0 0 16px 0;font-size:12px;color:#A5B5A7;text-align:center;">' +
+                'Lagenco · Kwaliteit verdient een tweede kans' +
+              '</p>' +
+              '<p style="margin:0;font-size:11px;color:#A5B5A7;text-align:center;line-height:1.5;">' +
+                'Je ontvangt deze mail omdat je een bod hebt geplaatst op Lagenco.<br/>' +
+                '<a href="#" style="color:#A5B5A7;">Algemene voorwaarden</a> · <a href="#" style="color:#A5B5A7;">Privacybeleid</a>' +
+              '</p>' +
+            '</td>' +
+          '</tr>' +
+
+        '</table>' +
+  // Bottom spacer
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;">' +
+          '<tr><td style="height:24px;line-height:24px;font-size:24px;">&nbsp;</td></tr>' +
+        '</table>' +
+
+      '</td>' +
+    '</tr>' +
+  '</table>' +
+'</body>' +
+'</html>';
+    }
+
+    // ─── Copy rich HTML to clipboard (preserves formatting when pasted in Gmail/Outlook) ───
+    function copyRichHtml(html, payMsg, bid) {
+      try {
+        const blob = new Blob([html], { type: 'text/html' });
+        const textBlob = new Blob(['Beste ' + (bid.name || '') + ',\n\nJe bod op ' + (bid.productTitle || 'ons product') + ' is goedgekeurd.\nBetaal via deze link: ' + (payMsg || '') + '\n\nMet vriendelijke groet,\nLagenco'], { type: 'text/plain' });
+        if (navigator.clipboard && window.ClipboardItem) {
+          const item = new ClipboardItem({
+            'text/html': blob,
+            'text/plain': textBlob
+          });
+          navigator.clipboard.write([item]).then(() => {
+            toast('Gekopieerd!', 'Plak nu in je mail (Ctrl+V) — opmaak blijft behouden', 'success', 5000);
+          }).catch(() => fallbackCopyRich(html));
+        } else {
+          fallbackCopyRich(html);
+        }
+      } catch (e) {
+        fallbackCopyRich(html);
+      }
+    }
+
+    function fallbackCopyRich(html) {
+      // Fallback: create a hidden div, select it, copy
+      try {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        div.style.position = 'fixed';
+        div.style.left = '-9999px';
+        div.style.top = '0';
+        div.style.opacity = '0';
+        document.body.appendChild(div);
+        const range = document.createRange();
+        range.selectNodeContents(div);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        const ok = document.execCommand('copy');
+        document.body.removeChild(div);
+        if (ok) toast('Gekopieerd!', 'Plak nu in je mail (Ctrl+V) — opmaak blijft behouden', 'success', 5000);
+        else toast('Kopiëren mislukt', 'Probeer de "Kopieer HTML" knop', 'error');
+      } catch (e) {
+        toast('Kopiëren mislukt', e.message, 'error');
+      }
+    }
+
+    function copyPlainText(html) {
+      try {
+        navigator.clipboard.writeText(html).then(() => {
+          toast('HTML gekopieerd', 'Broncode staat op je klembord — plak in een HTML-editor', 'success', 4000);
+        }).catch(() => {
+          const ta = document.createElement('textarea');
+          ta.value = html;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          toast('HTML gekopieerd', 'Broncode staat op je klembord', 'success', 4000);
+        });
+      } catch (e) { toast('Kopiëren mislukt', e.message, 'error'); }
+    }
+
+    function downloadEmailHtml(html, bid) {
+      try {
+        const safeName = (bid.name || 'klant').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+        const safeProduct = (bid.productTitle || 'product').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+        const filename = 'betaalverzoek-' + safeName + '-' + safeProduct + '.html';
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast('Gedownload', filename + ' opgeslagen', 'success', 4000);
+      } catch (e) { toast('Download mislukt', e.message, 'error'); }
+    }
+
+    function openMailto(bid, payUrl, payMsg) {
+      const subject = 'Jouw bod is goedgekeurd — ' + (bid.productTitle || 'Lagenco');
+      const body = 'Beste ' + (bid.name || '') + ',\n\n' +
+        'Goed nieuws! Je bod op ' + (bid.productTitle || 'ons product') + ' is goedgekeurd.\n' +
+        'Bedrag: € ' + Number(bid.amount).toFixed(2).replace('.', ',') + '\n\n' +
+        (payMsg ? payMsg + '\n\n' : '') +
+        'Betaal via deze link:\n' + payUrl + '\n\n' +
+        'Met vriendelijke groet,\nLagenco';
+      const mailto = 'mailto:' + encodeURIComponent(bid.email || '') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      window.location.href = mailto;
+    }
+
+    function setBidStatus(id, status) {
+      try {
+        const raw = localStorage.getItem('lagencoBids');
+        const all = raw ? JSON.parse(raw) : [];
+        const b = all.find(x => x.id === id);
+        if (b) {
+          b.status = status;
+          b.updatedAt = new Date().toISOString();
+          localStorage.setItem('lagencoBids', JSON.stringify(all));
+        }
+      } catch (e) { console.warn(e); }
+    }
+    function removeBid(id) {
+      try {
+        const raw = localStorage.getItem('lagencoBids');
+        const all = raw ? JSON.parse(raw) : [];
+        const filtered = all.filter(x => x.id !== id);
+        localStorage.setItem('lagencoBids', JSON.stringify(filtered));
+      } catch (e) { console.warn(e); }
+    }
+
+    function showBidDetail(bid) {
+      const body = '<div class="bp-detail-grid">' +
+        detailRow('Bieder', esc(bid.name)) +
+        detailRow('E-mail', '<a href="mailto:' + esc(bid.email) + '">' + esc(bid.email) + '</a>') +
+        detailRow('Telefoon', bid.phone ? esc(bid.phone) : '-') +
+        detailRow('Product', esc(bid.productTitle || '-')) +
+        detailRow('Asking price', D.fmtEuro(bid.productPrice || 0)) +
+        detailRow('Bod', '<strong style="color:var(--green)">' + D.fmtEuro(bid.amount) + '</strong>') +
+        detailRow('Verschil asking/bod', D.fmtEuro(D.parseNum(bid.amount) - D.parseNum(bid.productPrice))) +
+        detailRow('Verzendmethode', esc(bid.shippingMethod || '-')) +
+        detailRow('Adres', bid.fullAddress ? esc(bid.fullAddress) : '<em class="bp-muted">Alleen afhalen</em>') +
+        detailRow('Bericht', bid.note ? esc(bid.note) : '<em class="bp-muted">Geen bericht</em>') +
+        detailRow('Geplaatst op', esc(fmtBidDateNL(bid.createdAt))) +
+        detailRow('Laatst bijgewerkt', bid.updatedAt ? esc(fmtBidDateNL(bid.updatedAt)) : '-') +
+        detailRow('Status', statusBadge(bid.status === 'in_afwachting' ? 'In afwachting' : (bid.status === 'geaccepteerd' ? 'Goedgekeurd' : 'Afgewezen'))) +
+        '</div>';
+      openModal({
+        title: 'Bod details', icon: 'fa-gavel', large: true, body: body,
+        footer:
+          '<button class="bp-btn bp-btn-ghost" data-action="close">Sluiten</button>' +
+          (bid.status === 'geaccepteerd' ? '<button class="bp-btn bp-btn-primary" data-action="reminder"><i class="fas fa-bell"></i> Herinneringsmail</button>' : '') +
+          (bid.status !== 'geaccepteerd' ? '<button class="bp-btn bp-btn-success" data-action="accept"><i class="fas fa-check"></i> Accepteren</button>' : '') +
+          (bid.status !== 'afgewezen' ? '<button class="bp-btn bp-btn-danger" data-action="reject"><i class="fas fa-times"></i> Afwijzen</button>' : ''),
+        onMount: (m, close) => {
+          m.querySelector('[data-action="close"]').addEventListener('click', close);
+          const acc = m.querySelector('[data-action="accept"]');
+          if (acc) acc.addEventListener('click', () => { close(); openAcceptBidModal(bid); });
+          const rej = m.querySelector('[data-action="reject"]');
+          if (rej) rej.addEventListener('click', () => { close(); openRejectBidModal(bid); });
+          const rem = m.querySelector('[data-action="reminder"]');
+          if (rem) rem.addEventListener('click', () => { close(); openReminderEmailModal(bid); });
+        }
+      });
+    }
+
+    function detailRow(label, value) {
+      return '<div class="bp-detail-row"><div class="bp-detail-label">' + esc(label) + '</div><div class="bp-detail-value">' + value + '</div></div>';
+    }
+
+    function fmtBidDateNL(iso) {
+      try {
+        const d = new Date(iso);
+        return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) +
+          ' · ' + d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+      } catch { return '-'; }
+    }
+
+    function renderBidList(allBids, filter, search) {
+      let list = allBids;
+      if (filter !== 'all') list = list.filter(b => (b.status || 'in_afwachting') === filter);
+      if (search) {
+        list = list.filter(b =>
+          (b.name || '').toLowerCase().includes(search) ||
+          (b.email || '').toLowerCase().includes(search) ||
+          (b.productTitle || '').toLowerCase().includes(search) ||
+          (b.city || '').toLowerCase().includes(search)
+        );
+      }
+      if (!list.length) {
+        return emptyState('fa-gavel', 'Geen biedingen', 'Er zijn nog geen biedingen geplaatst op je producten', '', null).outerHTML;
+      }
+      let h = '<div class="bp-card"><div class="bp-card-body-p0"><div class="bp-table-wrap"><table class="bp-table">' +
+        '<thead><tr><th>Datum</th><th>Product</th><th>Bieder</th><th>Contact</th><th class="num">Bod</th><th class="num">Asking</th><th>Verzend</th><th>Adres</th><th>Status</th><th class="num">Acties</th></tr></thead><tbody>';
+      list.forEach(b => {
+        const status = (b.status || 'in_afwachting');
+        const statusLabel = status === 'geaccepteerd' ? 'Geaccepteerd' : status === 'afgewezen' ? 'Afgewezen' : 'In afwachting';
+        const addrShort = b.fullAddress ? esc(b.fullAddress.length > 30 ? b.fullAddress.slice(0, 30) + '…' : b.fullAddress) : '<em class="bp-muted">Alleen afhalen</em>';
+        h += '<tr data-id="' + esc(b.id) + '">' +
+          '<td>' + esc(fmtBidDateNL(b.createdAt)) + '</td>' +
+          '<td class="strong">' + esc(b.productTitle || '-') + '</td>' +
+          '<td>' + esc(b.name) + '</td>' +
+          '<td><div>' + esc(b.email) + '</div>' + (b.phone ? '<div class="bp-muted" style="font-size:.78rem">' + esc(b.phone) + '</div>' : '') + '</td>' +
+          '<td class="num strong" style="color:var(--green)">' + D.fmtEuro(b.amount) + '</td>' +
+          '<td class="num bp-muted">' + D.fmtEuro(b.productPrice || 0) + '</td>' +
+          '<td><i class="fas ' + (b.shippingMethodKey === 'afhalen' ? 'fa-store' : 'fa-truck') + '"></i> ' + esc(b.shippingMethod || '-') + '</td>' +
+          '<td style="max-width:200px">' + addrShort + '</td>' +
+          '<td>' + statusBadge(statusLabel) + '</td>' +
+          '<td class="num"></td></tr>';
+      });
+      h += '</tbody></table></div></div></div>';
+      setTimeout(() => {
+        $$('#bidList tr[data-id]').forEach(tr => {
+          const id = tr.dataset.id;
+          const bid = bids.find(x => x.id === id);
+          if (!bid) return;
+          const wrap = document.createElement('div');
+          wrap.className = 'bp-row-actions';
+          // View
+          const vb = document.createElement('button');
+          vb.className = 'bp-row-action view'; vb.title = 'Bekijken';
+          vb.innerHTML = '<i class="fas fa-eye"></i>';
+          vb.addEventListener('click', () => showBidDetail(bid));
+          wrap.appendChild(vb);
+          // Accept (only if not yet accepted)
+          if (bid.status !== 'geaccepteerd') {
+            const ab = document.createElement('button');
+            ab.className = 'bp-row-action accept'; ab.title = 'Accepteren';
+            ab.style.color = 'var(--green)';
+            ab.innerHTML = '<i class="fas fa-check"></i>';
+            ab.addEventListener('click', () => openAcceptBidModal(bid));
+            wrap.appendChild(ab);
+          }
+          // Reject (only if not yet rejected)
+          if (bid.status !== 'afgewezen') {
+            const rb = document.createElement('button');
+            rb.className = 'bp-row-action reject'; rb.title = 'Afwijzen';
+            rb.style.color = '#dc2626';
+            rb.innerHTML = '<i class="fas fa-times"></i>';
+            rb.addEventListener('click', () => openRejectBidModal(bid));
+            wrap.appendChild(rb);
+          }
+          // Reminder (only if accepted)
+          if (bid.status === 'geaccepteerd') {
+            const rmb = document.createElement('button');
+            rmb.className = 'bp-row-action'; rmb.title = 'Herinneringsmail';
+            rmb.style.color = 'var(--bp-warn,#FFB088)';
+            rmb.innerHTML = '<i class="fas fa-bell"></i>';
+            rmb.addEventListener('click', () => openReminderEmailModal(bid));
+            wrap.appendChild(rmb);
+          }
+          // Delete
+          const db = document.createElement('button');
+          db.className = 'bp-row-action delete'; db.title = 'Verwijderen';
+          db.innerHTML = '<i class="fas fa-trash"></i>';
+          db.addEventListener('click', () => {
+            confirmModal('Verwijderen', 'Bod definitief verwijderen?', () => {
+              removeBid(id);
+              toast('Verwijderd', '', 'success');
+              navigate('biedingen');
+            });
+          });
+          wrap.appendChild(db);
+          tr.querySelector('td:last-child').appendChild(wrap);
+        });
+      }, 0);
+      return h;
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════
+  // VIEW: WHEEL SPIN COUPONS
+  // ═══════════════════════════════════════════════════════
+  view('coupons', function (root) {
+    // Lees coupons uit localStorage van de hoofdsite
+    let coupons = [];
+    try {
+      const raw = localStorage.getItem('lagencoWheelPrizes');
+      coupons = raw ? JSON.parse(raw) : [];
+    } catch (e) { coupons = []; }
+
+    // Sorteer: nieuwste eerst
+    coupons.sort((a, b) => new Date(b.wonAt) - new Date(a.wonAt));
+
+    // Stats berekenen
+    const total = coupons.length;
+    const winners = coupons.filter(c => c.status !== 'geen_prijs');
+    const used = coupons.filter(c => c.status === 'gebruikt');
+    const unused = coupons.filter(c => c.status === 'ongebruikt');
+    const noPrize = coupons.filter(c => c.status === 'geen_prijs');
+
+    let html = '<div class="bp-kpi-grid" style="margin-bottom:1rem">';
+    html += kpiCard('Totaal spins', D.fmtNum(total), 'fa-circle-notch', 'primary');
+    html += kpiCard('Prijzen gewonnen', D.fmtNum(winners.length), 'fa-trophy', 'violet');
+    html += kpiCard('Ongebruikt', D.fmtNum(unused.length), 'fa-circle', unused.length > 0 ? 'warn' : 'success');
+    html += kpiCard('Gebruikt', D.fmtNum(used.length), 'fa-check-circle', 'success');
+    html += kpiCard('Geen prijs', D.fmtNum(noPrize.length), 'fa-times-circle', 'info');
+    html += '</div>';
+
+    // Filter bar
+    html += '<div class="bp-filter-bar">' +
+      '<select class="bp-select" id="couponFilter" style="min-width:200px">' +
+        '<option value="all">Alle coupons (' + total + ')</option>' +
+        '<option value="ongebruikt">Ongebruikt (' + unused.length + ')</option>' +
+        '<option value="gebruikt">Gebruikt (' + used.length + ')</option>' +
+        '<option value="geen_prijs">Geen prijs (' + noPrize.length + ')</option>' +
+      '</select>' +
+      '<input type="text" class="bp-input" id="couponSearch" placeholder="Zoek op code, naam of e-mail…" style="flex:1;max-width:400px">' +
+      '</div>';
+
+    html += '<div id="couponList">' + renderCouponList(coupons, 'all', '') + '</div>';
+    root.innerHTML = html;
+
+    // Wire filters
+    function refilter() {
+      const f = $('#couponFilter', root).value;
+      const s = ($('#couponSearch', root).value || '').toLowerCase();
+      $('#couponList', root).innerHTML = renderCouponList(coupons, f, s);
+      // Wire actions after a small delay (setTimeout 0 in renderCouponList adds buttons)
+      setTimeout(() => wireCouponActions(), 50);
+    }
+    $('#couponFilter', root).addEventListener('change', refilter);
+    $('#couponSearch', root).addEventListener('input', refilter);
+    // Initial wire (after renderCouponList's setTimeout adds the buttons)
+    setTimeout(() => wireCouponActions(), 50);
+
+    function wireCouponActions() {
+      // Mark as used / unmark
+      $$('.coupon-mark-used', root).forEach(b => b.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = e.currentTarget.dataset.id;
+        const coupon = coupons.find(c => (c.code || c.id) === id);
+        if (!coupon) return;
+        if (coupon.status === 'ongebruikt') {
+          coupon.status = 'gebruikt';
+          coupon.usedAt = new Date().toISOString();
+          try { localStorage.setItem('lagencoWheelPrizes', JSON.stringify(coupons)); } catch (e) {}
+          toast('Coupon gemarkeerd als gebruikt', '', 'success');
+          navigate('coupons');
+        } else if (coupon.status === 'gebruikt') {
+          coupon.status = 'ongebruikt';
+          coupon.usedAt = null;
+          try { localStorage.setItem('lagencoWheelPrizes', JSON.stringify(coupons)); } catch (e) {}
+          toast('Coupon teruggezet naar ongebruikt', '', 'success');
+          navigate('coupons');
+        }
+      }));
+
+      // Delete coupon
+      $$('.coupon-delete', root).forEach(b => b.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = e.currentTarget.dataset.id;
+        confirmModal('Verwijderen', 'Deze coupon definitief verwijderen?', () => {
+          const filtered = coupons.filter(c => (c.code || c.id) !== id);
+          try { localStorage.setItem('lagencoWheelPrizes', JSON.stringify(filtered)); } catch (e) {}
+          toast('Coupon verwijderd', '', 'success');
+          navigate('coupons');
+        });
+      }));
+
+      // Copy code
+      $$('.coupon-copy', root).forEach(b => b.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const code = e.currentTarget.dataset.code;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(code).then(() => toast('Code gekopieerd', '', 'success', 2000));
+        } else {
+          toast('Code: ' + code, 'info', 4000);
+        }
+      }));
+    }
+
+    function renderCouponList(allCoupons, filter, search) {
+      let list = allCoupons;
+      if (filter !== 'all') list = list.filter(c => c.status === filter);
+      if (search) {
+        list = list.filter(c =>
+          (c.code || '').toLowerCase().includes(search) ||
+          (c.winnerName || '').toLowerCase().includes(search) ||
+          (c.winnerEmail || '').toLowerCase().includes(search) ||
+          (c.label || '').toLowerCase().includes(search)
+        );
+      }
+      if (!list.length) {
+        return emptyState('fa-circle-notch', 'Nog geen spins', 'Bezoekers kunnen spins doen zodra je een wheel spin post plaatst in de community', '', null).outerHTML;
+      }
+
+      let h = '<div class="bp-card"><div class="bp-card-body-p0"><div class="bp-table-wrap"><table class="bp-table">' +
+        '<thead><tr><th>Datum</th><th>Prijs</th><th>Code</th><th>Winnaar</th><th>Contact</th><th>Status</th><th class="num">Acties</th></tr></thead><tbody>';
+      list.forEach(c => {
+        const code = c.code || '—';
+        const codeDisplay = c.code
+          ? '<code style="background:var(--bp-bg-2);padding:.2rem .5rem;border-radius:.25rem;font-family:monospace;font-size:.82rem;font-weight:700;color:var(--bp-primary)">' + esc(code) + '</code>'
+          : '<span style="color:var(--bp-text-faint)">Geen code</span>';
+        const winnerName = c.winnerName ? esc(c.winnerName) : '<span style="color:var(--bp-text-faint)">Onbekend</span>';
+        const winnerContact = c.winnerEmail
+          ? '<a href="mailto:' + esc(c.winnerEmail) + '" style="color:var(--bp-primary);text-decoration:none">' + esc(c.winnerEmail) + '</a>'
+          : '<span style="color:var(--bp-text-faint)">—</span>';
+        const statusLabel = c.status === 'ongebruikt' ? 'Ongebruikt' : c.status === 'gebruikt' ? 'Gebruikt' : 'Geen prijs';
+        h += '<tr data-id="' + esc(c.code || c.id) + '">' +
+          '<td>' + esc(fmtCouponDate(c.wonAt)) + '</td>' +
+          '<td class="strong">' + esc(c.label || 'Onbekend') + '</td>' +
+          '<td>' + codeDisplay + '</td>' +
+          '<td>' + winnerName + '</td>' +
+          '<td>' + winnerContact + '</td>' +
+          '<td>' + statusBadge(statusLabel) + '</td>' +
+          '<td class="num"></td></tr>';
+      });
+      h += '</tbody></table></div></div></div>';
+
+      // Wire action buttons via setTimeout
+      setTimeout(() => {
+        $$('#couponList tr[data-id]').forEach(tr => {
+          const id = tr.dataset.id;
+          const coupon = coupons.find(c => (c.code || c.id) === id);
+          if (!coupon) return;
+          const wrap = document.createElement('div');
+          wrap.className = 'bp-row-actions';
+
+          // Copy code button (only if has code)
+          if (coupon.code) {
+            const cb = document.createElement('button');
+            cb.className = 'bp-row-action coupon-copy'; cb.title = 'Kopieer code';
+            cb.dataset.code = coupon.code;
+            cb.style.color = 'var(--bp-info)';
+            cb.innerHTML = '<i class="fas fa-copy"></i>';
+            wrap.appendChild(cb);
+          }
+
+          // Mark as used / unused (only for prize coupons)
+          if (coupon.status === 'ongebruikt' || coupon.status === 'gebruikt') {
+            const mb = document.createElement('button');
+            mb.className = 'bp-row-action coupon-mark-used';
+            mb.dataset.id = id;
+            mb.title = coupon.status === 'ongebruikt' ? 'Markeer als gebruikt' : 'Markeer als ongebruikt';
+            mb.style.color = coupon.status === 'ongebruikt' ? 'var(--bp-success)' : 'var(--bp-warn)';
+            mb.innerHTML = coupon.status === 'ongebruikt' ? '<i class="fas fa-check"></i>' : '<i class="fas fa-undo"></i>';
+            wrap.appendChild(mb);
+          }
+
+          // Delete button
+          const db = document.createElement('button');
+          db.className = 'bp-row-action coupon-delete'; db.title = 'Verwijderen';
+          db.dataset.id = id;
+          db.innerHTML = '<i class="fas fa-trash"></i>';
+          wrap.appendChild(db);
+
+          tr.querySelector('td:last-child').appendChild(wrap);
+        });
+      }, 0);
+      return h;
+    }
+
+    function fmtCouponDate(iso) {
+      try {
+        const d = new Date(iso);
+        return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) +
+          ' · ' + d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+      } catch { return '-'; }
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════
+  // VIEW: WHEEL SPIN INSTELLINGEN
+  // ═══════════════════════════════════════════════════════
+  view('wheelsettings', function (root) {
+    // Default wheel segments (matching website defaults)
+    const DEFAULT_SEGMENTS = [
+      { id: 'korting5', label: '€5 Korting', icon: '🎁', color: '#6BBF7E', textColor: '#fff', chance: 1, codePrefix: 'LAGENCO5-', title: 'Je hebt €5 korting gewonnen!', text: 'Gefeliciteerd! Je hebt een kortingscode van €5 gewonnen.', hasCode: true },
+      { id: 'gratisretour', label: 'Gratis Retour', icon: '📦', color: '#FFB088', textColor: '#fff', chance: 0.5, codePrefix: 'GRATISRETOUR-', title: 'Je hebt een gratis retourproduct gewonnen!', text: 'Wow! Je hebt 1 gratis retourproduct van je keuze gewonnen.', hasCode: true },
+      { id: 'gratisverzend', label: 'Gratis Verzending', icon: '🚚', color: '#FFD56B', textColor: '#2D3A2E', chance: 5, codePrefix: 'FREESHIP-', title: 'Je hebt gratis verzending gewonnen!', text: 'Leuk! Je hebt gratis verzending op je volgende bestelling gewonnen.', hasCode: true },
+      { id: 'niks', label: 'Niks', icon: '😊', color: '#C5B6E5', textColor: '#fff', chance: 93.5, codePrefix: '', title: 'Helaas, geen prijs deze keer!', text: 'Geen zorgen — je kunt het altijd nog een keer proberen!', hasCode: false }
+    ];
+
+    // Load current settings from localStorage
+    let settings = [];
+    try {
+      const raw = localStorage.getItem('lagencoWheelSettings');
+      settings = raw ? JSON.parse(raw) : null;
+    } catch (e) { settings = null; }
+    if (!settings || !settings.length) settings = JSON.parse(JSON.stringify(DEFAULT_SEGMENTS));
+
+    // Stats
+    const totalChance = settings.reduce((a, s) => a + (parseFloat(s.chance) || 0), 0);
+    const totalSpins = (function() {
+      try {
+        const prizes = JSON.parse(localStorage.getItem('lagencoWheelPrizes') || '[]');
+        return prizes.length;
+      } catch (e) { return 0; }
+    })();
+
+    let html = '<div class="bp-kpi-grid" style="margin-bottom:1rem">';
+    html += kpiCard('Totaal kansen', totalChance.toFixed(1) + '%', 'fa-percentage', totalChance === 100 ? 'success' : 'danger');
+    html += kpiCard('Totaal spins', D.fmtNum(totalSpins), 'fa-circle-notch', 'info');
+    html += kpiCard('Segmenten', D.fmtNum(settings.length), 'fa-pie-chart', 'primary');
+    html += '</div>';
+
+    if (Math.abs(totalChance - 100) > 0.1) {
+      html += '<div style="background:var(--bp-danger-soft);border:1px solid rgba(224,96,85,0.30);border-radius:.5rem;padding:.75rem 1rem;margin-bottom:1rem;display:flex;gap:.625rem;align-items:flex-start">' +
+        '<i class="fas fa-exclamation-triangle" style="color:var(--bp-danger);margin-top:.125rem"></i>' +
+        '<div><p style="margin:0;font-size:.85rem;font-weight:600;color:var(--bp-danger)">Kansen tellen niet op tot 100%</p>' +
+        '<p style="margin:.2rem 0 0;font-size:.78rem;color:var(--bp-text-muted)">Pas de kansen aan zodat ze samen exact 100% zijn. Nu: ' + totalChance.toFixed(1) + '%</p></div></div>';
+    }
+
+    // Reset section
+    html += '<div class="bp-card" style="margin-bottom:1.25rem;padding:1.25rem">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">' +
+        '<div>' +
+          '<h3 style="margin:0 0 .25rem;font-size:1rem;font-weight:700;color:var(--bp-text)"><i class="fas fa-redo" style="margin-right:.5rem;color:var(--bp-warn)"></i>Alle spins resetten</h3>' +
+          '<p style="margin:0;font-size:.82rem;color:var(--bp-text-muted)">Reset de spin-limiet voor alle bezoekers, zodat iedereen opnieuw kan draaien.</p>' +
+        '</div>' +
+        '<button class="bp-btn bp-btn-ghost" id="resetSpinsBtn" style="border-color:var(--bp-warn);color:var(--bp-warn)"><i class="fas fa-redo"></i> Reset alle spins</button>' +
+      '</div>' +
+    '</div>';
+
+    // Settings form
+    html += '<div class="bp-card" style="padding:1.5rem">';
+    html += '<h3 style="margin:0 0 1rem;font-size:1rem;font-weight:700;color:var(--bp-text)"><i class="fas fa-sliders-h" style="margin-right:.5rem;color:var(--bp-primary)"></i>Prijzen en kansen aanpassen</h3>';
+    html += '<div class="bp-form-grid">';
+
+    settings.forEach((seg, i) => {
+      const isLast = i === settings.length - 1;
+      html += '<div class="bp-field" style="' + (isLast ? 'grid-column:1/-1' : '') + '">' +
+        '<label class="bp-label">' + seg.icon + ' ' + esc(seg.label) + '</label>' +
+        '<div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">' +
+          '<div style="flex:0 0 auto;width:60px;height:40px;background:' + seg.color + ';border-radius:.375rem;display:flex;align-items:center;justify-content:center;color:' + seg.textColor + ';font-size:1.2rem">' + seg.icon + '</div>' +
+          '<input type="text" class="bp-input segment-label" data-index="' + i + '" value="' + esc(seg.label) + '" placeholder="Label" style="flex:1;min-width:120px">' +
+          '<div class="bp-input-group"><span class="bp-prefix">%</span><input type="number" class="bp-input segment-chance" data-index="' + i + '" value="' + seg.chance + '" step="0.1" min="0" max="100" placeholder="Kans %" style="width:80px"></div>' +
+          (seg.hasCode ? '<input type="text" class="bp-input segment-prefix" data-index="' + i + '" value="' + esc(seg.codePrefix) + '" placeholder="Code prefix" style="width:140px">' : '<span style="font-size:.78rem;color:var(--bp-text-faint);padding:0 .5rem">Geen code</span>') +
+        '</div>' +
+      '</div>';
+    });
+
+    html += '</div>';
+    html += '<div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1.25rem;flex-wrap:wrap">' +
+      '<button class="bp-btn bp-btn-ghost" id="resetDefaultsBtn"><i class="fas fa-undo"></i> Reset naar standaard</button>' +
+      '<button class="bp-btn bp-btn-primary" id="saveSettingsBtn"><i class="fas fa-save"></i> Opslaan</button>' +
+    '</div>';
+    html += '</div>';
+
+    root.innerHTML = html;
+
+    // Save settings
+    $('#saveSettingsBtn', root).addEventListener('click', () => {
+      const labels = $$('.segment-label', root);
+      const chances = $$('.segment-chance', root);
+      const prefixes = $$('.segment-prefix', root);
+      let prefixIdx = 0;
+      const newSettings = settings.map((seg, i) => {
+        const updated = {
+          ...seg,
+          label: labels[i] ? labels[i].value.trim() : seg.label,
+          chance: chances[i] ? parseFloat(chances[i].value) || 0 : seg.chance
+        };
+        if (seg.hasCode) {
+          updated.codePrefix = prefixes[prefixIdx] ? prefixes[prefixIdx].value.trim() : seg.codePrefix;
+          prefixIdx++;
+        }
+        return updated;
+      });
+
+      const total = newSettings.reduce((a, s) => a + (parseFloat(s.chance) || 0), 0);
+      if (Math.abs(total - 100) > 0.1) {
+        toast('Fout', 'Kansen tellen niet op tot 100% (nu: ' + total.toFixed(1) + '%)', 'error');
+        return;
+      }
+
+      try { localStorage.setItem('lagencoWheelSettings', JSON.stringify(newSettings)); } catch (e) {}
+      toast('Instellingen opgeslagen', '', 'success');
+      navigate('wheelsettings');
+    });
+
+    // Reset to defaults
+    $('#resetDefaultsBtn', root).addEventListener('click', () => {
+      confirmModal('Reset naar standaard', 'Weet je zeker dat je alle instellingen wilt resetten naar de standaardwaarden?', () => {
+        localStorage.removeItem('lagencoWheelSettings');
+        toast('Standaardinstellingen hersteld', '', 'success');
+        navigate('wheelsettings');
+      });
+    });
+
+    // Reset all spins
+    $('#resetSpinsBtn', root).addEventListener('click', () => {
+      confirmModal('Alle spins resetten', 'Weet je zeker dat je de spin-limiet voor alle bezoekers wilt resetten? Iedereen kan daarna opnieuw draaien.', () => {
+        // Generate a new reset token — visitors check this on page load
+        const newToken = 'reset_' + Date.now().toString(36);
+        try { localStorage.setItem('lagencoWheelSpinResetToken', newToken); } catch (e) {}
+        toast('Alle spins gereset!', 'Bezoekers kunnen nu opnieuw draaien', 'success', 4000);
+      });
+    });
+  });
 
   // ═══════════════════════════════════════════════════════
   // VIEW: RESEARCH
