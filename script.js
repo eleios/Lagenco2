@@ -13,7 +13,7 @@
 // Constants
 // ────────────────────────────────────────────────────────
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.net/photo-1503602642458-232111445657?w=500&q=80';
-const AUTH = { email: 'admin@lagenco.nl', password: 'lagenco123' };
+const AUTH = { email: 'admin@lagenco.eu', password: 'lagenco123' };
 const PAGE = document.body.dataset.page;
 const MAX_IMAGES = 8;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -686,11 +686,11 @@ const openProductModal = (id) => {
 
   // Contact link
   const contactBtn = q('#pmContactBtn');
-  if (contactBtn) contactBtn.href = `mailto:info@lagenco.nl?subject=${encodeURIComponent('Interesse in: ' + product.title)}`;
+  if (contactBtn) contactBtn.href = `mailto:info@lagenco.eu?subject=${encodeURIComponent('Interesse in: ' + product.title)}`;
 
   // WhatsApp share
   const waBtn = q('#pmShareWA');
-  if (waBtn) waBtn.onclick = () => window.open(`https://wa.me/?text=${encodeURIComponent(product.title + ' – ' + fmt(product.price) + ' bij Lagenco: info@lagenco.nl')}`, '_blank', 'noopener');
+  if (waBtn) waBtn.onclick = () => window.open(`https://wa.me/?text=${encodeURIComponent(product.title + ' – ' + fmt(product.price) + ' bij Lagenco: info@lagenco.eu')}`, '_blank', 'noopener');
 
   // Wishlist state in modal
   const wmBtn = q('#pmWishlist');
@@ -748,7 +748,7 @@ const updateProductStructuredData = (product) => {
     },
     "offers": {
       "@type": "Offer",
-      "url": "https://lagenco.nl/assortiment.html",
+      "url": "https://lagenco.eu/assortiment.html",
       "priceCurrency": "EUR",
       "price": product.price,
       "availability": "https://schema.org/InStock",
@@ -1183,7 +1183,7 @@ const openShareSheet = (id) => {
   const sharePanel = document.getElementById('shareModal');
   if (sharePanel) {
     document.getElementById('shareWA')?.setAttribute('href', `https://wa.me/?text=${encodeURIComponent(text)}`);
-    document.getElementById('shareFB')?.setAttribute('href', `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://lagenco.nl')}&quote=${encodeURIComponent(text)}`);
+    document.getElementById('shareFB')?.setAttribute('href', `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://lagenco.eu')}&quote=${encodeURIComponent(text)}`);
     document.getElementById('shareEM')?.setAttribute('href', `mailto:?subject=${encodeURIComponent('Bekijk dit bij Lagenco')}&body=${encodeURIComponent(text)}`);
     openModal('shareModal');
   }
@@ -1316,7 +1316,7 @@ const updateAuthUI = () => {
   const status = document.getElementById('loginStatus');
   if (status) {
     status.style.display = logged ? '' : 'none';
-    status.textContent = logged ? '✓ admin@lagenco.nl' : '';
+    status.textContent = logged ? '✓ admin@lagenco.eu' : '';
   }
   document.getElementById('adminPanel')?.classList.toggle('hidden', !logged);
   renderFeatured();

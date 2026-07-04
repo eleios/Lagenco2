@@ -108,7 +108,7 @@ De missie in één zin:
 
   1.  Klik rechtsonder op "Admin login"
   2.  Login met:
-        E-mail:    admin@lagenco.nl
+        E-mail:    admin@lagenco.eu
         Wachtwoord: lagenco123
   3.  Je ziet nu het admin-paneel onderaan de pagina
   4.  Vul productinformatie in:

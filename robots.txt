@@ -11,4 +11,4 @@ Disallow: /business-panel.css
 Disallow: /mobile-menu.js
 
 # Sitemap locatie
-Sitemap: https://lagenco.nl/sitemap.xml
+Sitemap: https://lagenco.eu/sitemap.xml

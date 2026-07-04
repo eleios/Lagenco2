@@ -295,7 +295,7 @@
   2. Alles moet er precies zo uitzien als voorheen
   3. Test alle functionaliteit:
      - Navigatie tussen pagina's
-     - Admin login (admin@lagenco.nl / lagenco123)
+     - Admin login (admin@lagenco.eu / lagenco123)
      - Product toevoegen, bewerken, verwijderen
      - Verlanglijst (hartje), vergelijken (weegschaal)
      - Zoeken en filteren op assortiment.html

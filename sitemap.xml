@@ -4,7 +4,7 @@
 
   <!-- Homepage -->
   <url>
-    <loc>https://lagenco.nl/index.html</loc>
+    <loc>https://lagenco.eu/index.html</loc>
     <lastmod>2024-07-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -12,7 +12,7 @@
 
   <!-- Assortiment -->
   <url>
-    <loc>https://lagenco.nl/assortiment.html</loc>
+    <loc>https://lagenco.eu/assortiment.html</loc>
     <lastmod>2024-07-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -20,7 +20,7 @@
 
   <!-- Reviews -->
   <url>
-    <loc>https://lagenco.nl/reviews.html</loc>
+    <loc>https://lagenco.eu/reviews.html</loc>
     <lastmod>2024-07-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -28,7 +28,7 @@
 
   <!-- Contact -->
   <url>
-    <loc>https://lagenco.nl/contact.html</loc>
+    <loc>https://lagenco.eu/contact.html</loc>
     <lastmod>2024-07-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -36,7 +36,7 @@
 
   <!-- Leer ons kennen -->
   <url>
-    <loc>https://lagenco.nl/leer-ons-kennen.html</loc>
+    <loc>https://lagenco.eu/leer-ons-kennen.html</loc>
     <lastmod>2024-07-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -44,35 +44,35 @@
 
   <!-- Juridische pagina's -->
   <url>
-    <loc>https://lagenco.nl/algemene-voorwaarden.html</loc>
+    <loc>https://lagenco.eu/algemene-voorwaarden.html</loc>
     <lastmod>2024-07-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
-    <loc>https://lagenco.nl/privacybeleid.html</loc>
+    <loc>https://lagenco.eu/privacybeleid.html</loc>
     <lastmod>2024-07-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
-    <loc>https://lagenco.nl/cookiebeleid.html</loc>
+    <loc>https://lagenco.eu/cookiebeleid.html</loc>
     <lastmod>2024-07-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
-    <loc>https://lagenco.nl/retourbeleid.html</loc>
+    <loc>https://lagenco.eu/retourbeleid.html</loc>
     <lastmod>2024-07-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
-    <loc>https://lagenco.nl/disclaimer.html</loc>
+    <loc>https://lagenco.eu/disclaimer.html</loc>
     <lastmod>2024-07-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

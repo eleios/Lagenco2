@@ -1723,7 +1723,7 @@
               '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">' +
                 '<tr>' +
                   '<td align="center">' +
-                    '<a href="https://lagenco.nl/assortiment.html" target="_blank" style="display:inline-block;padding:16px 40px;background:linear-gradient(135deg,#6BBF7E 0%,#4A9D5E 100%);color:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',\'Inter\',Roboto,sans-serif;font-size:15px;font-weight:700;text-decoration:none;border-radius:100px;box-shadow:0 6px 20px rgba(107,191,126,0.30);letter-spacing:0.02em;">' +
+                    '<a href="https://lagenco.eu/assortiment.html" target="_blank" style="display:inline-block;padding:16px 40px;background:linear-gradient(135deg,#6BBF7E 0%,#4A9D5E 100%);color:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',\'Inter\',Roboto,sans-serif;font-size:15px;font-weight:700;text-decoration:none;border-radius:100px;box-shadow:0 6px 20px rgba(107,191,126,0.30);letter-spacing:0.02em;">' +
                       'Bekijk andere producten →' +
                     '</a>' +
                   '</td>' +
@@ -1775,7 +1775,7 @@
           '<tr>' +
             '<td style="background-color:#FFF8F0;padding:28px 40px;border-top:1px solid #FFE0CC;">' +
               '<p style="margin:0 0 8px 0;font-size:13px;color:#6B7A6C;text-align:center;">' +
-                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.nl" style="color:#6BBF7E;font-weight:600;">info@lagenco.nl</a>' +
+                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.eu" style="color:#6BBF7E;font-weight:600;">info@lagenco.eu</a>' +
               '</p>' +
               '<p style="margin:0 0 16px 0;font-size:12px;color:#A5B5A7;text-align:center;">' +
                 'Lagenco · Kwaliteit verdient een tweede kans' +
@@ -1807,7 +1807,7 @@
         'Bedankt voor je bod op ' + (bid.productTitle || 'ons product') + '.\n' +
         'Bedrag: € ' + Number(bid.amount).toFixed(2).replace('.', ',') + '\n\n' +
         msg + '\n\n' +
-        'Bekijk onze andere producten op https://lagenco.nl/assortiment.html\n\n' +
+        'Bekijk onze andere producten op https://lagenco.eu/assortiment.html\n\n' +
         'Met vriendelijke groet,\nLagenco';
       const mailto = 'mailto:' + encodeURIComponent(bid.email || '') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
       window.location.href = mailto;
@@ -1988,7 +1988,7 @@
               // Help section
               '<h2 style="margin:0 0 14px 0;font-size:15px;font-weight:700;color:#2D3A2E;letter-spacing:0.04em;text-transform:uppercase;">Vragen of hulp nodig?</h2>' +
               '<p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#6B7A6C;">' +
-                'Liever toch afhalen? Of problemen met betalen? Reageer op deze mail of stuur een berichtje naar <a href="mailto:info@lagenco.nl" style="color:#6BBF7E;font-weight:600;">info@lagenco.nl</a> — we helpen je graag verder.' +
+                'Liever toch afhalen? Of problemen met betalen? Reageer op deze mail of stuur een berichtje naar <a href="mailto:info@lagenco.eu" style="color:#6BBF7E;font-weight:600;">info@lagenco.eu</a> — we helpen je graag verder.' +
               '</p>' +
 
             '</td>' +
@@ -1998,7 +1998,7 @@
           '<tr>' +
             '<td style="background-color:#FFF8F0;padding:28px 40px;border-top:1px solid #FFE0CC;">' +
               '<p style="margin:0 0 8px 0;font-size:13px;color:#6B7A6C;text-align:center;">' +
-                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.nl" style="color:#6BBF7E;font-weight:600;">info@lagenco.nl</a>' +
+                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.eu" style="color:#6BBF7E;font-weight:600;">info@lagenco.eu</a>' +
               '</p>' +
               '<p style="margin:0 0 16px 0;font-size:12px;color:#A5B5A7;text-align:center;">' +
                 'Lagenco · Kwaliteit verdient een tweede kans' +
@@ -2290,7 +2290,7 @@
           '<tr>' +
             '<td style="background-color:#FFF8F0;padding:28px 40px;border-top:1px solid #FFE0CC;">' +
               '<p style="margin:0 0 8px 0;font-size:13px;color:#6B7A6C;text-align:center;">' +
-                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.nl" style="color:#6BBF7E;font-weight:600;">info@lagenco.nl</a>' +
+                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.eu" style="color:#6BBF7E;font-weight:600;">info@lagenco.eu</a>' +
               '</p>' +
               '<p style="margin:0 0 16px 0;font-size:12px;color:#A5B5A7;text-align:center;">' +
                 'Lagenco · Kwaliteit verdient een tweede kans' +
