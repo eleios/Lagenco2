@@ -595,10 +595,7 @@ const initFilters = () => {
 const deleteProduct = (id) => {
   const products = getProducts().filter(p => p.id !== id);
   saveProducts(products);
-  // Sync naar Supabase
-  if (window.LagencoDB && window.LagencoDB.isConfigured) {
-    window.LagencoDB.deleteProduct(id);
-  }
+  if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.deleteProduct(id); }
   // also clean wishlist/recent/compare
   saveWishlist(getWishlist().filter(x => x !== id));
   saveRecent(getRecent().filter(x => x !== id));
@@ -836,10 +833,7 @@ const addBid = (bid) => {
   bid.status = bid.status || 'in_afwachting';
   bids.push(bid);
   saveBids(bids);
-  // Sync naar Supabase
-  if (window.LagencoDB && window.LagencoDB.isConfigured) {
-    window.LagencoDB.saveBid(bid);
-  }
+  if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveBid(bid); }
   return bid;
 };
 
@@ -1658,12 +1652,7 @@ const initAddProduct = () => {
       return;
     }
 
-    // Sync naar Supabase (zodat alle bezoekers het product zien)
-    if (window.LagencoDB && window.LagencoDB.isConfigured) {
-      window.LagencoDB.saveProduct(product);
-      console.log('📦 Product gesynced naar Supabase:', product.title);
-    }
-
+    if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveProduct(product); }
     renderFeatured();
     if (PAGE === 'assortiment') renderAssortment();
     form.reset();
@@ -1716,7 +1705,6 @@ const initEditProduct = () => {
 
     const products = getProducts().map(p => p.id === id ? { ...p, title, description: desc, price, oldPrice: oldPr, badge, condition } : p);
     saveProducts(products);
-    // Sync naar Supabase
     if (window.LagencoDB && window.LagencoDB.isConfigured) {
       const updated = products.find(p => p.id === id);
       if (updated) window.LagencoDB.saveProduct(updated);
@@ -2680,10 +2668,7 @@ const addCommunityPost = (post) => {
   post.comments = post.comments || [];
   posts.unshift(post);
   saveCommunityPosts(posts);
-  // Sync naar Supabase
-  if (window.LagencoDB && window.LagencoDB.isConfigured) {
-    window.LagencoDB.savePost(post);
-  }
+  if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.savePost(post); }
   return post;
 };
 
@@ -2696,10 +2681,7 @@ const addCommunityComment = (postId, comment) => {
     post.comments = post.comments || [];
     post.comments.push(comment);
     saveCommunityPosts(posts);
-    // Sync naar Supabase
-    if (window.LagencoDB && window.LagencoDB.isConfigured) {
-      window.LagencoDB.saveComment(postId, comment);
-    }
+    if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveComment(postId, comment); }
     return comment;
   }
   return null;
@@ -3680,40 +3662,24 @@ const init = () => {
   initCardTilt();
   initCounters();
 
-  // ═══ SUPABASE SYNC ═══
-  // Haal alle data op van Supabase en update de pagina
+  // ═══ GOOGLE SHEETS SYNC ═══
   if (window.LagencoDB && window.LagencoDB.isConfigured) {
-    window.LagencoDB.syncAll().then(() => {
-      // Re-render alle secties met de nieuwe data
-      if (PAGE === 'index') {
-        renderFeatured();
-        renderLiveBids();
-        renderCommunityPosts();
-      }
-      if (PAGE === 'assortiment') {
-        renderAssortment();
-      }
+    window.LagencoDB.syncAll().then(function() {
+      if (PAGE === 'index') { renderFeatured(); renderLiveBids(); renderCommunityPosts(); }
+      if (PAGE === 'assortiment') renderAssortment();
       updateWishlistCounter();
       updateCompareCounter();
     });
-
-    // Realtime: update pagina wanneer data verandert
-    window.LagencoDB.subscribeRealtime({
-      onProductsChange: () => {
+    window.LagencoDB.startPolling({
+      onProductsChange: function() {
         if (PAGE === 'index') { renderFeatured(); renderLiveBids(); }
         if (PAGE === 'assortiment') renderAssortment();
       },
-      onBidsChange: () => {
+      onBidsChange: function() {
         if (PAGE === 'index') renderLiveBids();
-        updateWishlistCounter();
       },
-      onPostsChange: () => {
+      onPostsChange: function() {
         if (PAGE === 'index') renderCommunityPosts();
-      },
-      onCouponsChange: () => {},
-      onSettingsChange: () => {},
-      onTokenChange: () => {
-        checkSpinReset();
       }
     });
   }
