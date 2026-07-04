@@ -1,0 +1,66 @@
+═══════════════════════════════════════════════════════════
+   LAGENCO — HANDELSADMINISTRATIE INTEGRATIE
+   Business Panel geïntegreerd in de website
+═══════════════════════════════════════════════════════════
+
+INHOUD
+──────
+Deze map bevat de complete Lagenco-website met daarin
+geïntegreerd het Business Panel (Handelsadministratie).
+
+NIEUWE BESTANDEN
+────────────────
+• admin-button.js          — Floating "Admin Modus" knop (4.3KB, defer)
+• business-panel.html      — Hoofdpagina Business Panel
+• business-panel.css       — Premium dashboard styling (alleen BP)
+• business-panel.js        — Dashboard logica (alleen BP)
+• business-panel-data.js   — Data model + seed uit spreadsheet (alleen BP)
+
+GEWIJZIGDE BESTANDEN
+────────────────────
+• script.js                — Eén regel aangepast: dispatch 'lagenco:auth-change'
+                            event bij login/logout (zodat de knop direct reageert)
+• Alle *.html (11 stuks)   — Eén regel toegevoegd voor </body>:
+                            <script src="admin-button.js" defer></script>
+
+HOE HET WERKT
+─────────────
+1. Gebruiker logt in via de bestaande login (admin@lagenco.eu / lagenco123)
+2. Na login verschijnt rechtsonder een vaste knop "Admin Modus"
+3. Klik op de knop → opent business-panel.html
+4. Het dashboard bevat ALLE functionaliteiten uit de Google Spreadsheet:
+   - Dashboard met KPI's en grafieken
+   - Producten (met winst/marge/ROM berekening)
+   - Voorraad (met magazijnbeheer, +/- knoppen)
+   - Inkoop (multi-regel orders)
+   - Verkoop (met automatische winstberekening)
+   - Catalogus (samengevoegd overzicht)
+   - Klanten
+   - Tracking (PostNL links)
+   - Marktplaats advertenties
+   - Research (nieuwe producten)
+   - Werknemers / Uitkeringen
+   - Rapporten (met charts)
+   - Instellingen (export/import/reset)
+
+PRESTATIES
+──────────
+• Homepage laadt maar 4.3KB extra (admin-button.js, defer)
+• Business Panel assets worden NIET geladen op andere pagina's
+• Chart.js wordt alleen geladen op het Business Panel
+• Bestaande website-styling en functionaliteit 100% behouden
+
+DATA
+────
+Alle data wordt opgeslagen in localStorage (browser).
+• Exporteer naar JSON via Instellingen → Exporteer
+• Importeer via Instellingen → Importeer
+• Reset naar seed-data via Instellingen → Reset
+
+INLOGGEN
+────────
+E-mail:    admin@lagenco.eu
+Wachtwoord: lagenco123
+(zelfde als bestaande website)
+
+═══════════════════════════════════════════════════════════
