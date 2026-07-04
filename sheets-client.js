@@ -1,325 +1,207 @@
 /* ═══════════════════════════════════════════════════════
-   LAGENCO — Google Sheets Database Sync
+   LAGENCO — Google Sheets Database Sync (V2)
    ═══════════════════════════════════════════════════════
 
-   HOE WERKT DIT?
-   1. Maak een Google Sheet aan met tabbladen voor elk datatype
-   2. Publiceer de sheet als "Web App" (via Google Apps Script)
-   3. Vul hieronder de URL in
-   4. De website leest producten uit de sheet en toont ze aan alle bezoekers
-
-   SETUP STAPPEN:
-   1. Ga naar https://sheets.google.com en maak een nieuwe spreadsheet
-   2. Noem de tabbladen: "Producten", "Biedingen", "Community", "Coupons"
-   3. Ga naar Extensions → Apps Script
-   4. Plak de code uit google-apps-script.js (in de zip)
-   5. Klik Deploy → New deployment → Web app
-   6. Execute as: Me
-   7. Who has access: Anyone
-   8. Kopieer de URL en vul hieronder in
+   SETUP:
+   1. Maak een Google Spreadsheet
+   2. Ga naar Extensions → Apps Script
+   3. Plak de code uit google-apps-script.js
+   4. Deploy → New deployment → Web app
+   5. Execute as: Me | Who has access: Anyone
+   6. Kopieer de URL en vul hieronder in
    ═══════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  // ═══ CONFIG — Vul hier je Google Apps Script Web App URL in ═══
-  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbztEXdwaqZrOsxHmQovhJEYwEBdkTN9oYaXmPnUIx_B37U7DaRh4Fvo1wh10Dt_5bQ/exec';
+  console.log('📋 Lagenco Sheets Client loaded...');
 
-  const isConfigured = SHEETS_URL !== 'https://script.google.com/macros/s/AKfycbztEXdwaqZrOsxHmQovhJEYwEBdkTN9oYaXmPnUIx_B37U7DaRh4Fvo1wh10Dt_5bQ/exec' &&
-                       SHEETS_URL.startsWith('https://');
+  // ═══ CONFIG — Vul hier je URL in ═══
+  const SHEETS_URL = 'VUL_HIER_JE_GOOGLE_APPS_SCRIPT_URL_IN';
+
+  const isConfigured = SHEETS_URL.startsWith('https://script.google.com') ||
+                       SHEETS_URL.startsWith('https://script.googleusercontent.com');
+
+  console.log('📋 Sheets configured:', isConfigured);
+  console.log('📋 Sheets URL:', SHEETS_URL.substring(0, 50) + '...');
 
   const DB = {
     isConfigured: isConfigured,
     url: SHEETS_URL,
 
-    // ═══ Producten ophalen ═══
+    // ═══ GET request helper ═══
+    async _get(action) {
+      try {
+        const url = SHEETS_URL + '?action=' + action;
+        console.log('📋 GET:', action);
+        const response = await fetch(url, { method: 'GET' });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        console.log('📋 GET ' + action + ' OK:', Object.keys(data));
+        return data;
+      } catch (e) {
+        console.warn('📋 GET ' + action + ' failed:', e.message);
+        return null;
+      }
+    },
+
+    // ═══ POST request helper (text/plain om CORS te voorkomen) ═══
+    async _post(payload) {
+      try {
+        console.log('📋 POST:', payload.action);
+        const response = await fetch(SHEETS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        console.log('📋 POST ' + payload.action + ' OK');
+        return data;
+      } catch (e) {
+        console.warn('📋 POST ' + payload.action + ' failed:', e.message);
+        return null;
+      }
+    },
+
+    // ═══ PRODUCTEN ═══
     async fetchProducts() {
       if (!isConfigured) return null;
-      try {
-        const response = await fetch(SHEETS_URL + '?action=getProducts');
-        const data = await response.json();
-        if (data && data.products) {
-          localStorage.setItem('lagencoProducts', JSON.stringify(data.products));
-          return data.products;
-        }
-        return null;
-      } catch (e) {
-        console.warn('Sheets fetchProducts error:', e);
-        return null;
+      const data = await this._get('getProducts');
+      if (data && data.products) {
+        localStorage.setItem('lagencoProducts', JSON.stringify(data.products));
+        return data.products;
       }
+      return null;
     },
 
-    // ═══ Product opslaan ═══
     async saveProduct(product) {
       if (!isConfigured) return;
-      try {
-        await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'saveProduct', product: product })
-        });
-      } catch (e) {
-        console.warn('Sheets saveProduct error:', e);
-      }
+      await this._post({ action: 'saveProduct', product: product });
     },
 
-    // ═══ Product verwijderen ═══
     async deleteProduct(id) {
       if (!isConfigured) return;
-      try {
-        await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'deleteProduct', id: id })
-        });
-      } catch (e) {
-        console.warn('Sheets deleteProduct error:', e);
-      }
+      await this._post({ action: 'deleteProduct', id: id });
     },
 
-    // ═══ Biedingen ophalen ═══
+    // ═══ BIEDINGEN ═══
     async fetchBids() {
       if (!isConfigured) return null;
-      try {
-        const response = await fetch(SHEETS_URL + '?action=getBids');
-        const data = await response.json();
-        if (data && data.bids) {
-          localStorage.setItem('lagencoBids', JSON.stringify(data.bids));
-          return data.bids;
-        }
-        return null;
-      } catch (e) {
-        console.warn('Sheets fetchBids error:', e);
-        return null;
+      const data = await this._get('getBids');
+      if (data && data.bids) {
+        localStorage.setItem('lagencoBids', JSON.stringify(data.bids));
+        return data.bids;
       }
+      return null;
     },
 
-    // ═══ Bod opslaan ═══
     async saveBid(bid) {
       if (!isConfigured) return;
-      try {
-        await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'saveBid', bid: bid })
-        });
-      } catch (e) {
-        console.warn('Sheets saveBid error:', e);
-      }
+      await this._post({ action: 'saveBid', bid: bid });
     },
 
-    // ═══ Bod status updaten ═══
     async updateBidStatus(id, status) {
       if (!isConfigured) return;
-      try {
-        await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'updateBidStatus', id: id, status: status })
-        });
-      } catch (e) {
-        console.warn('Sheets updateBidStatus error:', e);
-      }
+      await this._post({ action: 'updateBidStatus', id: id, status: status });
     },
 
-    // ═══ Bod verwijderen ═══
     async deleteBid(id) {
       if (!isConfigured) return;
-      try {
-        await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'deleteBid', id: id })
-        });
-      } catch (e) {
-        console.warn('Sheets deleteBid error:', e);
-      }
+      await this._post({ action: 'deleteBid', id: id });
     },
 
-    // ═══ Community posts ophalen ═══
+    // ═══ COMMUNITY ═══
     async fetchPosts() {
       if (!isConfigured) return null;
-      try {
-        const response = await fetch(SHEETS_URL + '?action=getPosts');
-        const data = await response.json();
-        if (data && data.posts) {
-          localStorage.setItem('lagencoCommunityPosts', JSON.stringify(data.posts));
-          return data.posts;
-        }
-        return null;
-      } catch (e) {
-        console.warn('Sheets fetchPosts error:', e);
-        return null;
+      const data = await this._get('getPosts');
+      if (data && data.posts) {
+        localStorage.setItem('lagencoCommunityPosts', JSON.stringify(data.posts));
+        return data.posts;
       }
+      return null;
     },
 
-    // ═══ Community post opslaan ═══
     async savePost(post) {
       if (!isConfigured) return;
-      try {
-        await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'savePost', post: post })
-        });
-      } catch (e) {
-        console.warn('Sheets savePost error:', e);
-      }
+      await this._post({ action: 'savePost', post: post });
     },
 
-    // ═══ Community post verwijderen ═══
     async deletePost(id) {
       if (!isConfigured) return;
-      try {
-        await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'deletePost', id: id })
-        });
-      } catch (e) {
-        console.warn('Sheets deletePost error:', e);
-      }
+      await this._post({ action: 'deletePost', id: id });
     },
 
-    // ═══ Reactie opslaan ═══
     async saveComment(postId, comment) {
       if (!isConfigured) return;
-      try {
-        await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'saveComment', postId: postId, comment: comment })
-        });
-      } catch (e) {
-        console.warn('Sheets saveComment error:', e);
-      }
+      await this._post({ action: 'saveComment', postId: postId, comment: comment });
     },
 
-    // ═══ Reactie verwijderen ═══
-    async deleteComment(postId, commentId) {
+    async deleteComment(commentId) {
       if (!isConfigured) return;
-      try {
-        await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'deleteComment', commentId: commentId })
-        });
-      } catch (e) {
-        console.warn('Sheets deleteComment error:', e);
-      }
+      await this._post({ action: 'deleteComment', commentId: commentId });
     },
 
-    // ═══ Coupons ophalen ═══
+    // ═══ COUPONS ═══
     async fetchCoupons() {
       if (!isConfigured) return null;
-      try {
-        const response = await fetch(SHEETS_URL + '?action=getCoupons');
-        const data = await response.json();
-        if (data && data.coupons) {
-          localStorage.setItem('lagencoWheelPrizes', JSON.stringify(data.coupons));
-          return data.coupons;
-        }
-        return null;
-      } catch (e) {
-        console.warn('Sheets fetchCoupons error:', e);
-        return null;
+      const data = await this._get('getCoupons');
+      if (data && data.coupons) {
+        localStorage.setItem('lagencoWheelPrizes', JSON.stringify(data.coupons));
+        return data.coupons;
       }
+      return null;
     },
 
-    // ═══ Coupon opslaan ═══
     async saveCoupon(coupon) {
       if (!isConfigured) return;
-      try {
-        await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'saveCoupon', coupon: coupon })
-        });
-      } catch (e) {
-        console.warn('Sheets saveCoupon error:', e);
-      }
+      await this._post({ action: 'saveCoupon', coupon: coupon });
     },
 
-    // ═══ Coupon status updaten ═══
     async updateCouponStatus(code, status) {
       if (!isConfigured) return;
-      try {
-        await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'updateCouponStatus', code: code, status: status })
-        });
-      } catch (e) {
-        console.warn('Sheets updateCouponStatus error:', e);
-      }
+      await this._post({ action: 'updateCouponStatus', code: code, status: status });
     },
 
-    // ═══ Wheel settings ophalen ═══
+    // ═══ WHEEL SETTINGS ═══
     async fetchWheelSettings() {
       if (!isConfigured) return null;
-      try {
-        const response = await fetch(SHEETS_URL + '?action=getWheelSettings');
-        const data = await response.json();
-        if (data && data.settings) {
-          localStorage.setItem('lagencoWheelSettings', JSON.stringify(data.settings));
-          return data.settings;
-        }
-        return null;
-      } catch (e) {
-        console.warn('Sheets fetchWheelSettings error:', e);
-        return null;
+      const data = await this._get('getWheelSettings');
+      if (data && data.settings) {
+        localStorage.setItem('lagencoWheelSettings', JSON.stringify(data.settings));
+        return data.settings;
       }
+      return null;
     },
 
-    // ═══ Wheel settings opslaan ═══
     async saveWheelSettings(settings) {
       if (!isConfigured) return;
-      try {
-        await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'saveWheelSettings', settings: settings })
-        });
-      } catch (e) {
-        console.warn('Sheets saveWheelSettings error:', e);
-      }
+      await this._post({ action: 'saveWheelSettings', settings: settings });
     },
 
-    // ═══ Reset token ophalen ═══
+    // ═══ RESET TOKEN ═══
     async fetchResetToken() {
       if (!isConfigured) return null;
-      try {
-        const response = await fetch(SHEETS_URL + '?action=getResetToken');
-        const data = await response.json();
-        if (data && data.token) {
-          localStorage.setItem('lagencoWheelSpinResetToken', data.token);
-          return data.token;
-        }
-        return null;
-      } catch (e) {
-        console.warn('Sheets fetchResetToken error:', e);
-        return null;
+      const data = await this._get('getResetToken');
+      if (data && data.token) {
+        localStorage.setItem('lagencoWheelSpinResetToken', data.token);
+        return data.token;
       }
+      return null;
     },
 
-    // ═══ Reset token opslaan ═══
     async saveResetToken(token) {
       if (!isConfigured) return;
-      try {
-        await fetch(SHEETS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'saveResetToken', token: token })
-        });
-      } catch (e) {
-        console.warn('Sheets saveResetToken error:', e);
-      }
+      await this._post({ action: 'saveResetToken', token: token });
     },
 
-    // ═══ Alles synchroniseren ═══
+    // ═══ ALLES SYNCEN ═══
     async syncAll() {
-      if (!isConfigured) return;
-      console.log('🔄 Syncing from Google Sheets...');
+      if (!isConfigured) {
+        console.log('📋 Sheets not configured — skipping sync');
+        return;
+      }
+      console.log('📋 Syncing from Google Sheets...');
       await Promise.all([
         this.fetchProducts(),
         this.fetchBids(),
@@ -328,46 +210,38 @@
         this.fetchWheelSettings(),
         this.fetchResetToken()
       ]);
-      console.log('✅ Sync complete');
+      console.log('📋 Sync complete!');
     },
 
-    // ═══ Polling — check elke 30 seconden voor updates ═══
+    // ═══ POLLING — check elke 30s ═══
     startPolling(callbacks) {
       if (!isConfigured) return;
-      console.log('👂 Starting Google Sheets polling (every 30s)...');
-      
+      console.log('📋 Starting polling (every 30s)...');
       setInterval(async () => {
-        const changed = {};
-        
-        // Check products
         const oldProducts = localStorage.getItem('lagencoProducts') || '[]';
-        const newProducts = await this.fetchProducts();
-        if (newProducts && JSON.stringify(newProducts) !== oldProducts) {
-          changed.products = true;
-        }
-        
-        // Check bids
         const oldBids = localStorage.getItem('lagencoBids') || '[]';
-        const newBids = await this.fetchBids();
-        if (newBids && JSON.stringify(newBids) !== oldBids) {
-          changed.bids = true;
-        }
-        
-        // Check posts
         const oldPosts = localStorage.getItem('lagencoCommunityPosts') || '[]';
+
+        const newProducts = await this.fetchProducts();
+        const newBids = await this.fetchBids();
         const newPosts = await this.fetchPosts();
-        if (newPosts && JSON.stringify(newPosts) !== oldPosts) {
-          changed.posts = true;
+
+        if (newProducts && JSON.stringify(newProducts) !== oldProducts) {
+          console.log('📋 Products changed!');
+          if (callbacks.onProductsChange) callbacks.onProductsChange();
         }
-        
-        // Call callbacks
-        if (changed.products && callbacks.onProductsChange) callbacks.onProductsChange();
-        if (changed.bids && callbacks.onBidsChange) callbacks.onBidsChange();
-        if (changed.posts && callbacks.onPostsChange) callbacks.onPostsChange();
-        
-      }, 30000); // 30 seconden
+        if (newBids && JSON.stringify(newBids) !== oldBids) {
+          console.log('📋 Bids changed!');
+          if (callbacks.onBidsChange) callbacks.onBidsChange();
+        }
+        if (newPosts && JSON.stringify(newPosts) !== oldPosts) {
+          console.log('📋 Posts changed!');
+          if (callbacks.onPostsChange) callbacks.onPostsChange();
+        }
+      }, 30000);
     }
   };
 
   window.LagencoDB = DB;
+  console.log('📋 LagencoDB ready. Configured:', isConfigured);
 })();

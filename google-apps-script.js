@@ -16,7 +16,14 @@
    ═══════════════════════════════════════════════════════ */
 
 function doGet(e) {
-  var action = e.parameter.action;
+  // e is undefined als je in de editor op "Run" klikt — dat is normaal
+  // Je hoeft deze code NIET te runnen in de editor
+  // Je moet hem DEPLOYEN als Web App (Deploy → New deployment → Web app)
+  var action = (e && e.parameter) ? e.parameter.action : null;
+  
+  if (!action) {
+    return json({ status: 'ok', message: 'Lagenco API is running. Voeg ?action=getProducts toe aan de URL om data op te halen.' });
+  }
   
   if (action === 'getProducts') {
     return json(getProducts());
@@ -41,7 +48,17 @@ function doGet(e) {
 }
 
 function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
+  // Google Apps Script ontvangt POST als text/plain (om CORS te voorkomen)
+  if (!e || !e.postData) {
+    return json({ status: 'error', message: 'No data received' });
+  }
+  var rawBody = e.postData.contents;
+  var data;
+  try {
+    data = JSON.parse(rawBody);
+  } catch (err) {
+    return json({ status: 'error', message: 'Invalid JSON: ' + err.message });
+  }
   var action = data.action;
   
   if (action === 'saveProduct') {
