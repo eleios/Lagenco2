@@ -1,0 +1,14 @@
+# Lagenco — Robots.txt
+# Laat zoekmachines alle pagina's crawlen
+
+User-agent: *
+Allow: /
+Disallow: /business-panel.html
+Disallow: /admin-button.js
+Disallow: /business-panel.js
+Disallow: /business-panel-data.js
+Disallow: /business-panel.css
+Disallow: /mobile-menu.js
+
+# Sitemap locatie
+Sitemap: https://lagenco.nl/sitemap.xml

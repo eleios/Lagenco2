@@ -709,7 +709,71 @@ const openProductModal = (id) => {
     bidBtn.onclick = () => openBidModal(id);
   }
 
+  // Update dynamic structured data (JSON-LD) for this product
+  updateProductStructuredData(product);
+
   openModal('productModal');
+};
+
+// ═══════════════════════════════════════════════════════
+// STRUCTURED DATA (JSON-LD) — dynamische product data voor Google
+// ═══════════════════════════════════════════════════════
+const updateProductStructuredData = (product) => {
+  if (!product) return;
+
+  // Verwijder bestaande product structured data
+  const existing = document.getElementById('product-jsonld');
+  if (existing) existing.remove();
+
+  // Conditie grade bepalen
+  const conditionMap = {
+    5: 'https://schema.org/NewCondition',
+    4: 'https://schema.org/UsedCondition',
+    3: 'https://schema.org/UsedCondition',
+    2: 'https://schema.org/DamagedCondition',
+    0: 'https://schema.org/UsedCondition'
+  };
+  const conditionUrl = conditionMap[parseInt(product.condition) || 0];
+
+  // Bouw structured data object
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.title,
+    "description": product.description || '',
+    "image": getImg(product) !== PLACEHOLDER_IMAGE ? [getImg(product)] : undefined,
+    "brand": {
+      "@type": "Brand",
+      "name": "Lagenco"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": "https://lagenco.nl/assortiment.html",
+      "priceCurrency": "EUR",
+      "price": product.price,
+      "availability": "https://schema.org/InStock",
+      "itemCondition": conditionUrl,
+      "seller": {
+        "@type": "Organization",
+        "name": "Lagenco"
+      }
+    }
+  };
+
+  // Voeg oude prijs toe als er korting is
+  if (product.oldPrice && product.oldPrice > product.price) {
+    structuredData.offers.originalPrice = product.oldPrice;
+  }
+
+  // Voeg rating toe als er reviews zijn
+  // (kan later uitgebreid worden met echte reviews)
+
+  // Inject in head
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.id = 'product-jsonld';
+  script.textContent = JSON.stringify(structuredData);
+  document.head.appendChild(script);
 };
 
 const renderRelated = (product) => {
