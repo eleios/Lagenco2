@@ -17,7 +17,7 @@
   console.log('📋 Lagenco Sheets Client loaded...');
 
   // ═══ CONFIG — Vul hier je URL in ═══
-  const SHEETS_URL = 'VUL_HIER_JE_GOOGLE_APPS_SCRIPT_URL_IN';
+  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbztEXdwaqZrOsxHmQovhJEYwEBdkTN9oYaXmPnUIx_B37U7DaRh4Fvo1wh10Dt_5bQ/exec';
 
   const isConfigured = SHEETS_URL.startsWith('https://script.google.com') ||
                        SHEETS_URL.startsWith('https://script.googleusercontent.com');
