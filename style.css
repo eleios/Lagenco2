@@ -5363,6 +5363,13 @@ footer .footer-link:hover {
    ═══════════════════════════════════════════════════════ */
 
 /* ── Mobiele navigatie: hamburger menu ── */
+/* ═══════════════════════════════════════════════════════
+   MOBILE MENU — standaard verborgen op desktop
+   ═══════════════════════════════════════════════════════ */
+.mobile-menu-toggle { display: none; }
+.mobile-nav-overlay { display: none; }
+.mobile-nav-panel { display: none; }
+
 @media (max-width: 768px) {
   /* Verberg desktop nav links */
   .nav-links-desktop { display: none !important; }
@@ -5386,6 +5393,7 @@ footer .footer-link:hover {
 
   /* Mobiel menu overlay */
   .mobile-nav-overlay {
+    display: block;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(45, 58, 46, 0.5);
@@ -5401,6 +5409,7 @@ footer .footer-link:hover {
     pointer-events: auto;
   }
   .mobile-nav-panel {
+    display: flex;
     position: fixed;
     top: 0; right: 0;
     width: 80%; max-width: 320px;
@@ -5409,7 +5418,6 @@ footer .footer-link:hover {
     z-index: 151;
     transform: translateX(100%);
     transition: transform .3s var(--ease-spring);
-    display: flex;
     flex-direction: column;
     padding: 1.5rem;
     overflow-y: auto;
