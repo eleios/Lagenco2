@@ -595,6 +595,10 @@ const initFilters = () => {
 const deleteProduct = (id) => {
   const products = getProducts().filter(p => p.id !== id);
   saveProducts(products);
+  // Sync naar Supabase
+  if (window.LagencoDB && window.LagencoDB.isConfigured) {
+    window.LagencoDB.deleteProduct(id);
+  }
   // also clean wishlist/recent/compare
   saveWishlist(getWishlist().filter(x => x !== id));
   saveRecent(getRecent().filter(x => x !== id));
@@ -1654,6 +1658,12 @@ const initAddProduct = () => {
       return;
     }
 
+    // Sync naar Supabase (zodat alle bezoekers het product zien)
+    if (window.LagencoDB && window.LagencoDB.isConfigured) {
+      window.LagencoDB.saveProduct(product);
+      console.log('📦 Product gesynced naar Supabase:', product.title);
+    }
+
     renderFeatured();
     if (PAGE === 'assortiment') renderAssortment();
     form.reset();
@@ -1706,6 +1716,11 @@ const initEditProduct = () => {
 
     const products = getProducts().map(p => p.id === id ? { ...p, title, description: desc, price, oldPrice: oldPr, badge, condition } : p);
     saveProducts(products);
+    // Sync naar Supabase
+    if (window.LagencoDB && window.LagencoDB.isConfigured) {
+      const updated = products.find(p => p.id === id);
+      if (updated) window.LagencoDB.saveProduct(updated);
+    }
     renderFeatured();
     if (PAGE === 'assortiment') renderAssortment();
     closeModal('editModal');

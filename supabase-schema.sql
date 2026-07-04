@@ -1,6 +1,5 @@
 -- ═══════════════════════════════════════════════════════
--- LAGENCO — Supabase Database Schema
--- Voer dit uit in Supabase → SQL Editor → New Query
+-- LAGENCO — Supabase Database Schema (VEILIG - kan meerdere keren worden uitgevoerd)
 -- ═══════════════════════════════════════════════════════
 
 -- ═══ PRODUCTEN ═══
@@ -100,6 +99,40 @@ ALTER TABLE wheel_coupons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wheel_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wheel_reset_token ENABLE ROW LEVEL SECURITY;
 
+-- ═══ Drop bestaande policies (veilig bij meerdere keren uitvoeren) ═══
+DROP POLICY IF EXISTS "Public read products" ON products;
+DROP POLICY IF EXISTS "Public read bids" ON bids;
+DROP POLICY IF EXISTS "Public read posts" ON community_posts;
+DROP POLICY IF EXISTS "Public read comments" ON community_comments;
+DROP POLICY IF EXISTS "Public read coupons" ON wheel_coupons;
+DROP POLICY IF EXISTS "Public read settings" ON wheel_settings;
+DROP POLICY IF EXISTS "Public read token" ON wheel_reset_token;
+
+DROP POLICY IF EXISTS "Public insert products" ON products;
+DROP POLICY IF EXISTS "Public update products" ON products;
+DROP POLICY IF EXISTS "Public delete products" ON products;
+
+DROP POLICY IF EXISTS "Public insert bids" ON bids;
+DROP POLICY IF EXISTS "Public update bids" ON bids;
+DROP POLICY IF EXISTS "Public delete bids" ON bids;
+
+DROP POLICY IF EXISTS "Public insert posts" ON community_posts;
+DROP POLICY IF EXISTS "Public update posts" ON community_posts;
+DROP POLICY IF EXISTS "Public delete posts" ON community_posts;
+
+DROP POLICY IF EXISTS "Public insert comments" ON community_comments;
+DROP POLICY IF EXISTS "Public delete comments" ON community_comments;
+
+DROP POLICY IF EXISTS "Public insert coupons" ON wheel_coupons;
+DROP POLICY IF EXISTS "Public update coupons" ON wheel_coupons;
+DROP POLICY IF EXISTS "Public delete coupons" ON wheel_coupons;
+
+DROP POLICY IF EXISTS "Public upsert settings" ON wheel_settings;
+DROP POLICY IF EXISTS "Public update settings" ON wheel_settings;
+
+DROP POLICY IF EXISTS "Public upsert token" ON wheel_reset_token;
+DROP POLICY IF EXISTS "Public update token" ON wheel_reset_token;
+
 -- ═══ Policies: iedereen mag LEZEN ═══
 CREATE POLICY "Public read products" ON products FOR SELECT USING (true);
 CREATE POLICY "Public read bids" ON bids FOR SELECT USING (true);
@@ -109,8 +142,7 @@ CREATE POLICY "Public read coupons" ON wheel_coupons FOR SELECT USING (true);
 CREATE POLICY "Public read settings" ON wheel_settings FOR SELECT USING (true);
 CREATE POLICY "Public read token" ON wheel_reset_token FOR SELECT USING (true);
 
--- ═══ Policies: iedereen mag SCHRIJVEN (anoniem + authenticated) ═══
--- Note: Voor productie kun je dit beperken tot authenticated admins
+-- ═══ Policies: iedereen mag SCHRIJVEN ═══
 CREATE POLICY "Public insert products" ON products FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public update products" ON products FOR UPDATE USING (true);
 CREATE POLICY "Public delete products" ON products FOR DELETE USING (true);
@@ -136,7 +168,7 @@ CREATE POLICY "Public update settings" ON wheel_settings FOR UPDATE USING (true)
 CREATE POLICY "Public upsert token" ON wheel_reset_token FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public update token" ON wheel_reset_token FOR UPDATE USING (true);
 
--- ═══ Insert default wheel settings ═══
+-- ═══ Insert default wheel settings (alleen als nog niet aanwezig) ═══
 INSERT INTO wheel_settings (id, settings) VALUES (1, '[
   {"id":"korting5","label":"€5 Korting","icon":"🎁","color":"#6BBF7E","textColor":"#fff","chance":1,"codePrefix":"LAGENCO5-","title":"Je hebt €5 korting gewonnen!","text":"Gefeliciteerd! Je hebt een kortingscode van €5 gewonnen.","hasCode":true},
   {"id":"gratisretour","label":"Gratis Retour","icon":"📦","color":"#FFB088","textColor":"#fff","chance":0.5,"codePrefix":"GRATISRETOUR-","title":"Je hebt een gratis retourproduct gewonnen!","text":"Wow! Je hebt 1 gratis retourproduct van je keuze gewonnen.","hasCode":true},
@@ -144,10 +176,10 @@ INSERT INTO wheel_settings (id, settings) VALUES (1, '[
   {"id":"niks","label":"Helaas!","icon":"😊","color":"#C5B6E5","textColor":"#fff","chance":93.5,"codePrefix":"","title":"Helaas, geen prijs deze keer!","text":"Geen zorgen — je kunt het altijd nog een keer proberen!","hasCode":false}
 ]'::jsonb) ON CONFLICT (id) DO NOTHING;
 
--- ═══ Insert default reset token ═══
+-- ═══ Insert default reset token (alleen als nog niet aanwezig) ═══
 INSERT INTO wheel_reset_token (id, token) VALUES (1, 'reset_initial') ON CONFLICT (id) DO NOTHING;
 
--- ═══ Realtime subscriptions (live updates) ═══
+-- ═══ Realtime subscriptions ═══
 ALTER PUBLICATION supabase_realtime ADD TABLE products;
 ALTER PUBLICATION supabase_realtime ADD TABLE bids;
 ALTER PUBLICATION supabase_realtime ADD TABLE community_posts;

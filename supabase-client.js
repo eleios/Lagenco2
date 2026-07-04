@@ -26,9 +26,9 @@
   const SUPABASE_URL = 'https://cjamegkxiuazyaqadgqn.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqYW1lZ2t4aXVhenlhcWFkZ3FuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxOTczODcsImV4cCI6MjA5ODc3MzM4N30.fQvSkCg94sxYYYRNtXHF2vWgGaMC3BKGNTpAnbJholk';
 
-  // Check if Supabase is configured
-  const isConfigured = SUPABASE_URL !== 'https://cjamegkxiuazyaqadgqn.supabase.co' &&
-                       SUPABASE_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqYW1lZ2t4aXVhenlhcWFkZ3FuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxOTczODcsImV4cCI6MjA5ODc3MzM4N30.fQvSkCg94sxYYYRNtXHF2vWgGaMC3BKGNTpAnbJholk' &&
+  // Check if Supabase is configured (always true now that keys are filled in)
+  const isConfigured = SUPABASE_URL.startsWith('https://') &&
+                       SUPABASE_KEY.length > 20 &&
                        typeof window.supabase !== 'undefined';
 
   let sb = null;
