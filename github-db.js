@@ -9,7 +9,7 @@
   console.log('🐙 Lagenco GitHub DB loaded...');
 
   // ═══ CONFIG ═══
-  const GITHUB_TOKEN = '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';
+  const GITHUB_TOKEN = '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';
   const GITHUB_REPO = 'eleios/lagenco2';
   const GITHUB_BRANCH = 'main';
   const DATA_FILE = 'data/database.json';
