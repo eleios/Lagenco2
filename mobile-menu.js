@@ -19,8 +19,7 @@
     hamburger.className = 'mobile-menu-toggle';
     hamburger.setAttribute('aria-label', 'Menu openen');
     hamburger.innerHTML = '<i class="fas fa-bars"></i>';
-    // Hidden by default — checkScreenSize() will show it on mobile
-    hamburger.style.display = 'none';
+    hamburger.style.cssText = 'display:none';
 
     // Insert hamburger into nav (before login button)
     var navActions = nav.querySelector('.flex.items-center.gap-2');
@@ -81,10 +80,6 @@
     document.body.appendChild(overlay);
     document.body.appendChild(panel);
 
-    // Force hide on desktop (in case CSS hasn't loaded yet)
-    overlay.style.display = 'none';
-    panel.style.display = 'none';
-
     // Toggle menu
     function openMenu() {
       overlay.classList.add('open');
@@ -122,18 +117,9 @@
     function checkScreenSize() {
       if (window.innerWidth <= 768) {
         hamburger.style.display = 'flex';
-        // Mobile: overlay/panel are controlled by CSS (display:block/flex in media query)
-        overlay.style.display = '';
-        panel.style.display = '';
       } else {
         hamburger.style.display = 'none';
-        // Desktop: force hide overlay + panel
-        overlay.style.display = 'none';
-        panel.style.display = 'none';
-        // Also remove open classes just in case
-        overlay.classList.remove('open');
-        panel.classList.remove('open');
-        document.body.style.overflow = '';
+        closeMenu();
       }
     }
     checkScreenSize();

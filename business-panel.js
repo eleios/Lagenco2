@@ -492,6 +492,7 @@
         confirmModal('Verwijderen', 'Dit product van de website verwijderen?', () => {
           const filtered = products.filter(p => p.id !== id);
           try { localStorage.setItem('lagencoProducts', JSON.stringify(filtered)); } catch (e) {}
+          if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.deleteProduct(id); }
           toast('Product verwijderd', '', 'success');
           navigate('websiteproducten');
         });
@@ -614,6 +615,7 @@
             product.condition = condition;
 
             try { localStorage.setItem('lagencoProducts', JSON.stringify(products)); } catch (e) {}
+            if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveProduct(product); }
             toast('Product bijgewerkt!', '', 'success');
             close();
             navigate('websiteproducten');
@@ -2634,12 +2636,14 @@
           coupon.status = 'gebruikt';
           coupon.usedAt = new Date().toISOString();
           try { localStorage.setItem('lagencoWheelPrizes', JSON.stringify(coupons)); } catch (e) {}
+          if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.updateCouponStatus(coupon.code, 'gebruikt'); }
           toast('Coupon gemarkeerd als gebruikt', '', 'success');
           navigate('coupons');
         } else if (coupon.status === 'gebruikt') {
           coupon.status = 'ongebruikt';
           coupon.usedAt = null;
           try { localStorage.setItem('lagencoWheelPrizes', JSON.stringify(coupons)); } catch (e) {}
+          if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.updateCouponStatus(coupon.code, 'ongebruikt'); }
           toast('Coupon teruggezet naar ongebruikt', '', 'success');
           navigate('coupons');
         }
@@ -2653,6 +2657,7 @@
         confirmModal('Verwijderen', 'Deze coupon definitief verwijderen?', () => {
           const filtered = coupons.filter(c => (c.code || c.id) !== id);
           try { localStorage.setItem('lagencoWheelPrizes', JSON.stringify(filtered)); } catch (e) {}
+          if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.deleteCoupon(coupon.code); }
           toast('Coupon verwijderd', '', 'success');
           navigate('coupons');
         });
@@ -2867,6 +2872,7 @@
       }
 
       try { localStorage.setItem('lagencoWheelSettings', JSON.stringify(newSettings)); } catch (e) {}
+      if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveWheelSettings(newSettings); }
       toast('Instellingen opgeslagen', '', 'success');
       navigate('wheelsettings');
     });
@@ -2875,6 +2881,7 @@
     $('#resetDefaultsBtn', root).addEventListener('click', () => {
       confirmModal('Reset naar standaard', 'Weet je zeker dat je alle instellingen wilt resetten naar de standaardwaarden?', () => {
         localStorage.removeItem('lagencoWheelSettings');
+        if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveWheelSettings(null); }
         toast('Standaardinstellingen hersteld', '', 'success');
         navigate('wheelsettings');
       });
@@ -2886,6 +2893,7 @@
         // Generate a new reset token — visitors check this on page load
         const newToken = 'reset_' + Date.now().toString(36);
         try { localStorage.setItem('lagencoWheelSpinResetToken', newToken); } catch (e) {}
+        if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveResetToken(newToken); }
         toast('Alle spins gereset!', 'Bezoekers kunnen nu opnieuw draaien', 'success', 4000);
       });
     });
@@ -3237,13 +3245,37 @@
     }, 300);
     // Wire all navigation and buttons
     wireApp();
+    
+    // ═══ GITHUB DB SYNC — haal laatste data op bij dashboard load ═══
+    if (window.LagencoDB && window.LagencoDB.isConfigured) {
+      console.log('🐙 Dashboard: syncing from GitHub...');
+      window.LagencoDB.syncAll().then(function() {
+        console.log('🐙 Dashboard: sync complete, re-rendering...');
+        routeFromHash();
+      });
+      // Polling: check elke 30s voor updates van andere gebruikers
+      window.LagencoDB.startPolling({
+        onProductsChange: function() { 
+          var h = window.location.hash.replace('#', '');
+          if (h === 'websiteproducten' || h === 'dashboard') navigate(h); 
+        },
+        onBidsChange: function() { 
+          var h = window.location.hash.replace('#', '');
+          if (h === 'biedingen') navigate(h); 
+        },
+        onPostsChange: function() {}
+      });
+    }
+    
     // Route to default view
     function routeFromHash() {
       const h = window.location.hash.replace('#', '');
       if (h && VIEWS[h]) navigate(h);
       else navigate('dashboard');
     }
-    routeFromHash();
+    if (!(window.LagencoDB && window.LagencoDB.isConfigured)) {
+      routeFromHash();
+    }
   }
 
   // Wait for DOM

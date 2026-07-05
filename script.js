@@ -3318,17 +3318,20 @@ const showWheelResult = (winner) => {
     // Sla de coupon op met status 'ongebruikt'
     try {
       const prizes = storage.get('lagencoWheelPrizes', []);
-      prizes.push({
+      const coupon = {
         code,
         type: winner.id,
         label: winner.label,
         wonAt: new Date().toISOString(),
-        status: 'ongebruikt',  // ongebruikt | gebruikt
+        status: 'ongebruikt',
         usedAt: null,
         winnerName: '',
         winnerEmail: ''
-      });
+      };
+      prizes.push(coupon);
       storage.set('lagencoWheelPrizes', prizes);
+      // Sync naar GitHub
+      if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveCoupon(coupon); }
     } catch (e) {}
 
     // Toon het resultaat met naam/email veld EN de code
@@ -3383,7 +3386,7 @@ const showWheelResult = (winner) => {
     // GEEN PRIJS — toon gewoon het resultaat, sla op als 'geen prijs'
     try {
       const prizes = storage.get('lagencoWheelPrizes', []);
-      prizes.push({
+      const coupon = {
         code: null,
         type: winner.id,
         label: winner.label,
@@ -3392,8 +3395,11 @@ const showWheelResult = (winner) => {
         usedAt: null,
         winnerName: '',
         winnerEmail: ''
-      });
+      };
+      prizes.push(coupon);
       storage.set('lagencoWheelPrizes', prizes);
+      // Sync naar GitHub
+      if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveCoupon(coupon); }
     } catch (e) {}
 
     if (result) {
@@ -3661,7 +3667,7 @@ const init = () => {
   initCardTilt();
   initCounters();
 
-  // ═══ GOOGLE SHEETS SYNC ═══
+  // ═══ GITHUB DB SYNC ═══
   if (window.LagencoDB && window.LagencoDB.isConfigured) {
     window.LagencoDB.syncAll().then(function() {
       if (PAGE === 'index') { renderFeatured(); renderLiveBids(); renderCommunityPosts(); }
