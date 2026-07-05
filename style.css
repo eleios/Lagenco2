@@ -5131,3 +5131,120 @@ footer .footer-link:hover {
   border-color: var(--peach-deep) !important;
   transform: translateY(-1px) scale(1.05);
 }
+
+/* ═══════════════════════════════════════════════════════
+   V11 NOTIFICATION STACK + BUYER PROTECTION
+   ═══════════════════════════════════════════════════════ */
+
+/* Buyer protection box */
+.buyer-protection-box {
+  background: linear-gradient(135deg, var(--green-light) 0%, var(--blue-soft) 100%);
+  border: 1.5px solid var(--green-light);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: .875rem;
+  transition: all .25s var(--ease-spring);
+  cursor: pointer;
+}
+.buyer-protection-box:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--green-mid);
+}
+.buyer-protection-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green), var(--green-mid));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(107,191,126,0.30);
+}
+.buyer-protection-content { flex: 1; min-width: 0; }
+.buyer-protection-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+.buyer-protection-title i {
+  color: var(--green-mid);
+  font-size: .75rem;
+}
+.buyer-protection-link {
+  font-family: 'Poppins', sans-serif;
+  font-size: .72rem;
+  color: var(--green-mid);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  margin: .15rem 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: .2rem;
+}
+.buyer-protection-link i {
+  font-size: .55rem;
+  transition: transform .2s;
+}
+.buyer-protection-box:hover .buyer-protection-link i {
+  transform: translateX(3px);
+}
+
+/* Buyer protection modal */
+.buyer-protection-info { padding: 1rem 0; }
+.buyer-protection-info-item {
+  display: flex;
+  gap: .875rem;
+  align-items: flex-start;
+  padding: .875rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.buyer-protection-info-item:last-child { border-bottom: none; }
+.buyer-protection-info-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--green-light);
+  color: var(--green-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .9rem;
+  flex-shrink: 0;
+}
+.buyer-protection-info-text h4 {
+  font-family: 'Poppins', sans-serif;
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 .25rem;
+}
+.buyer-protection-info-text p {
+  font-size: .82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+  font-family: 'Nunito', sans-serif;
+}
+
+/* Notification stack responsive */
+@media (max-width: 640px) {
+  #notificationStack {
+    left: .5rem !important;
+    right: .5rem !important;
+    bottom: .5rem !important;
+    max-width: none !important;
+    gap: .5rem !important;
+  }
+}

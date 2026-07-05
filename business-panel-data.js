@@ -47,8 +47,18 @@
   function parseNum(v) {
     if (typeof v === 'number') return v;
     if (!v) return 0;
-    const s = String(v).trim().replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
-    const n = parseFloat(s);
+    // Verwijder alles behalve cijfers, komma's en punten
+    var s = String(v).trim().replace(/[^\d,.-]/g, '');
+    // Als er zowel komma als punt in zitten (bv "1.234,56"), verwijder punt en vervang komma door punt
+    if (s.indexOf(',') > -1 && s.indexOf('.') > -1) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    }
+    // Als er alleen een komma in zit (bv "32,99"), vervang komma door punt
+    else if (s.indexOf(',') > -1) {
+      s = s.replace(',', '.');
+    }
+    // Als er alleen punten in zitten (bv "1.234" of "32.99"), laat staan
+    var n = parseFloat(s);
     return isNaN(n) ? 0 : n;
   }
   function fmtEuro(v) {

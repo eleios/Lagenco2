@@ -3321,6 +3321,12 @@ const initWheelSpin = () => {
 // Expose for inline onclick
 window.openWheelSpin = openWheelSpin;
 
+// Open kopersbescherming info modal
+const openBuyerProtectionModal = () => {
+  openModal('buyerProtectionModal');
+};
+window.openBuyerProtectionModal = openBuyerProtectionModal;
+
 // ═══════════════════════════════════════════════════════
 // LIVE BOD NOTIFICATIE — toon popup na 15s met laatste bod (1x per bezoeker)
 // ═══════════════════════════════════════════════════════
@@ -3505,6 +3511,41 @@ const showWheelSpinNotification = () => {
 
   // Pause auto-dismiss on hover
   notif.addEventListener('mouseenter', () => clearTimeout(dismissTimer));
+};
+
+
+// ═══════════════════════════════════════════════════════
+// NOTIFICATION STACK — meerdere notificaties stapelen
+// ═══════════════════════════════════════════════════════
+const getNotificationStack = () => {
+  let stack = document.getElementById('notificationStack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.id = 'notificationStack';
+    stack.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:95;display:flex;flex-direction:column-reverse;gap:.75rem;pointer-events:none;max-width:360px;';
+    document.body.appendChild(stack);
+  }
+  return stack;
+};
+const addToNotificationStack = (notif) => {
+  const stack = getNotificationStack();
+  notif.style.position = 'relative';
+  notif.style.bottom = 'auto';
+  notif.style.right = 'auto';
+  notif.style.opacity = '1';
+  notif.style.transform = 'translateX(120%)';
+  notif.style.transition = 'transform .5s cubic-bezier(0.34,1.56,0.64,1)';
+  stack.appendChild(notif);
+  setTimeout(() => { notif.style.transform = 'translateX(0)'; }, 50);
+};
+const removeFromNotificationStack = (notif, delay = 500) => {
+  notif.style.transform = 'translateX(120%)';
+  notif.style.opacity = '0';
+  setTimeout(() => {
+    notif.remove();
+    const stack = document.getElementById('notificationStack');
+    if (stack && stack.children.length === 0) stack.remove();
+  }, delay);
 };
 
 const init = () => {

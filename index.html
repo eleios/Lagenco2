@@ -305,9 +305,16 @@
             <i class="fas fa-gavel"></i> Doe een bod
           </button>
 
-          <a id="pmContactBtn" href="mailto:info@lagenco.nl" class="btn btn-green" style="justify-content:center;padding:1rem;text-decoration:none;margin-top:auto">
-            <i class="fas fa-envelope"></i> Neem contact op
-          </a>
+          <!-- Kopersbescherming box (vervangt 'Neem contact op') -->
+          <div class="buyer-protection-box" id="pmBuyerProtection" style="margin-top:auto" onclick="openBuyerProtectionModal()">
+            <div class="buyer-protection-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="buyer-protection-content">
+              <p class="buyer-protection-title"><i class="fas fa-check-circle"></i> Kopersbescherming inbegrepen</p>
+              <p class="buyer-protection-link">Lees meer over kopersbescherming <i class="fas fa-arrow-right"></i></p>
+            </div>
+          </div>
           <a href="assortiment.html" class="btn btn-ghost" style="justify-content:center;padding:.875rem;text-decoration:none">
             <i class="fas fa-arrow-left text-xs"></i> Bekijk volledig assortiment
           </a>
@@ -362,6 +369,66 @@
           <p id="wheelResultCode" class="wheel-result-code hidden"></p>
           <button class="btn btn-ghost" style="margin-top:1rem;padding:.75rem 1.5rem" onclick="closeModal('wheelSpinModal')">Sluiten</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ KOPERBESCHERMING MODAL ═══ -->
+  <div id="buyerProtectionModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="bpModalTitle">
+    <div class="modal-panel" style="max-width:560px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1.5rem;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:.875rem;flex:1;min-width:0">
+          <div style="width:2.75rem;height:2.75rem;background:linear-gradient(135deg,var(--green),var(--green-mid));border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(107,191,126,.30)">
+            <i class="fas fa-shield-alt" style="color:white"></i>
+          </div>
+          <div style="min-width:0">
+            <h2 id="bpModalTitle" style="font-family:'Poppins',sans-serif;font-size:1.35rem;font-weight:800;color:var(--text);margin:0;letter-spacing:-.020em;line-height:1.2">Kopersbescherming</h2>
+            <p style="font-size:.8rem;color:var(--text-muted);margin:.25rem 0 0;font-family:'Nunito',sans-serif">Jouw veiligheid is onze prioriteit</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" aria-label="Sluiten">&times;</button>
+      </div>
+      <div style="padding:1.5rem">
+        <div class="buyer-protection-info">
+          <div class="buyer-protection-info-item">
+            <div class="buyer-protection-info-icon"><i class="fas fa-undo"></i></div>
+            <div class="buyer-protection-info-text">
+              <h4>14 dagen herroepingsrecht</h4>
+              <p>Je kunt het product binnen 14 dagen na ontvangst retourneren zonder opgaaf van reden. Het aankoopbedrag wordt teruggestort.</p>
+            </div>
+          </div>
+          <div class="buyer-protection-info-item">
+            <div class="buyer-protection-info-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="buyer-protection-info-text">
+              <h4>Kwaliteitsgarantie</h4>
+              <p>Elk product is gecontroleerd en getest door Lagenco. Komt het product niet overeen met de beschrijving? Dan lossen wij dit direct op.</p>
+            </div>
+          </div>
+          <div class="buyer-protection-info-item">
+            <div class="buyer-protection-info-icon"><i class="fas fa-shield-alt"></i></div>
+            <div class="buyer-protection-info-text">
+              <h4>Veilige betaling</h4>
+              <p>Betaal veilig via iDEAL, Bancontact of creditcard. Jouw betaalgegevens worden versleuteld verwerkt.</p>
+            </div>
+          </div>
+          <div class="buyer-protection-info-item">
+            <div class="buyer-protection-info-icon"><i class="fas fa-truck"></i></div>
+            <div class="buyer-protection-info-text">
+              <h4>Verzekerd verzonden</h4>
+              <p>Alle bestellingen worden verzekerd verzonden. Gaat er iets mis onderweg? Dan sturen wij een vervanging of betalen het bedrag terug.</p>
+            </div>
+          </div>
+          <div class="buyer-protection-info-item">
+            <div class="buyer-protection-info-icon"><i class="fas fa-headset"></i></div>
+            <div class="buyer-protection-info-text">
+              <h4>Persoonlijke support</h4>
+              <p>Vragen of problemen? Neem contact op via info@lagenco.eu en wij helpen je binnen 24 uur verder.</p>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-green" style="width:100%;justify-content:center;padding:.875rem;margin-top:1.25rem" onclick="closeModal('buyerProtectionModal')">
+          <i class="fas fa-check"></i> Ik begrijp het
+        </button>
       </div>
     </div>
   </div>

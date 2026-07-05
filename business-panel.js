@@ -2444,6 +2444,7 @@
           coupon.status = 'ongebruikt';
           coupon.usedAt = null;
           try { localStorage.setItem('lagencoWheelPrizes', JSON.stringify(coupons)); } catch (e) {}
+          if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.updateCouponStatus(coupon.code, 'ongebruikt'); }
           toast('Coupon teruggezet naar ongebruikt', '', 'success');
           navigate('coupons');
         }
