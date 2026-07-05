@@ -49,6 +49,13 @@
   const DB = {
     isConfigured: !!db,
 
+    // ═══ Helper: Firebase object → array ═══
+    _toArray(obj) {
+      if (!obj) return [];
+      if (Array.isArray(obj)) return obj;
+      return Object.values(obj);
+    },
+
     // ═══ Alle data ophalen ═══
     async syncAll() {
       if (!db) return;
@@ -57,18 +64,28 @@
         const snapshot = await db.ref('/').once('value');
         const data = snapshot.val() || {};
 
-        if (data.products) localStorage.setItem('lagencoProducts', JSON.stringify(data.products));
-        if (data.bids) localStorage.setItem('lagencoBids', JSON.stringify(data.bids));
-        if (data.posts) localStorage.setItem('lagencoCommunityPosts', JSON.stringify(data.posts));
-        if (data.coupons) localStorage.setItem('lagencoWheelPrizes', JSON.stringify(data.coupons));
+        // Converteer Firebase objects naar arrays
+        const products = this._toArray(data.products);
+        const bids = this._toArray(data.bids);
+        const posts = this._toArray(data.posts);
+        const coupons = this._toArray(data.coupons);
+
+        if (products.length) localStorage.setItem('lagencoProducts', JSON.stringify(products));
+        else localStorage.removeItem('lagencoProducts');
+        if (bids.length) localStorage.setItem('lagencoBids', JSON.stringify(bids));
+        else localStorage.removeItem('lagencoBids');
+        if (posts.length) localStorage.setItem('lagencoCommunityPosts', JSON.stringify(posts));
+        else localStorage.removeItem('lagencoCommunityPosts');
+        if (coupons.length) localStorage.setItem('lagencoWheelPrizes', JSON.stringify(coupons));
+        else localStorage.removeItem('lagencoWheelPrizes');
         if (data.wheelSettings) localStorage.setItem('lagencoWheelSettings', JSON.stringify(data.wheelSettings));
         if (data.resetToken) localStorage.setItem('lagencoWheelSpinResetToken', data.resetToken);
 
         console.log('🔥 Sync complete!', {
-          products: (data.products || []).length,
-          bids: (data.bids || []).length,
-          posts: (data.posts || []).length,
-          coupons: (data.coupons || []).length
+          products: products.length,
+          bids: bids.length,
+          posts: posts.length,
+          coupons: coupons.length
         });
       } catch (e) {
         console.warn('🔥 Sync error:', e.message);
@@ -208,12 +225,13 @@
         snapshot.forEach(function(child) {
           products.push(child.val());
         });
-        localStorage.setItem('lagencoProducts', JSON.stringify(products));
+        if (products.length) localStorage.setItem('lagencoProducts', JSON.stringify(products));
+        else localStorage.removeItem('lagencoProducts');
         if (!listeners.productsFirst) {
           listeners.productsFirst = true;
-          return; // Skip first load (already handled by syncAll)
+          return;
         }
-        console.log('🔥 Products changed (real-time)!');
+        console.log('🔥 Products changed (real-time)!', products.length);
         if (callbacks.onProductsChange) callbacks.onProductsChange();
       });
 
@@ -223,12 +241,13 @@
         snapshot.forEach(function(child) {
           bids.push(child.val());
         });
-        localStorage.setItem('lagencoBids', JSON.stringify(bids));
+        if (bids.length) localStorage.setItem('lagencoBids', JSON.stringify(bids));
+        else localStorage.removeItem('lagencoBids');
         if (!listeners.bidsFirst) {
           listeners.bidsFirst = true;
           return;
         }
-        console.log('🔥 Bids changed (real-time)!');
+        console.log('🔥 Bids changed (real-time)!', bids.length);
         if (callbacks.onBidsChange) callbacks.onBidsChange();
       });
 
@@ -238,12 +257,13 @@
         snapshot.forEach(function(child) {
           posts.push(child.val());
         });
-        localStorage.setItem('lagencoCommunityPosts', JSON.stringify(posts));
+        if (posts.length) localStorage.setItem('lagencoCommunityPosts', JSON.stringify(posts));
+        else localStorage.removeItem('lagencoCommunityPosts');
         if (!listeners.postsFirst) {
           listeners.postsFirst = true;
           return;
         }
-        console.log('🔥 Posts changed (real-time)!');
+        console.log('🔥 Posts changed (real-time)!', posts.length);
         if (callbacks.onPostsChange) callbacks.onPostsChange();
       });
     }
