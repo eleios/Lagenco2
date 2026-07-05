@@ -33,7 +33,10 @@
   </noscript>
 
   <!-- ═══ Main script (defer — fetches in parallel, runs after DOM parse) ═══ -->
-    <script src="github-db.js?v=8" defer></script>
+    <!-- ═══ FIREBASE (real-time database) ═══ -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="github-db.js?v=9" defer></script>
   <script src="script.js" defer></script>
 
 </head>

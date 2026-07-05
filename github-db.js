@@ -1,169 +1,254 @@
 /* ═══════════════════════════════════════════════════════
-   LAGENCO — JSONBin.io Database (werkt overal, geen CORS)
+   LAGENCO — Firebase Realtime Database
+   Onbeperkt, real-time, gratis tot 1GB
+   ═══════════════════════════════════════════════════════
+
+   SETUP:
+   1. Ga naar https://console.firebase.google.com
+   2. Maak nieuw project: "lagenco"
+   3. Add app → Web app → registreer
+   4. Kopieer de config (apiKey, authDomain, etc.)
+   5. Vul hieronder in
+   6. Database → Realtime Database → Regels → zet op:
+      { "rules": { ".read": true, ".write": true } }
    ═══════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('📦 Lagenco DB loaded...');
+  console.log('🔥 Lagenco Firebase DB loaded...');
 
-  const BIN_URL = 'https://api.jsonbin.io/v3/b/6a4a5280f5f4af5e29624f2b';
-  const API_KEY = '$2a$10$EhTnqR7HBpMRljzhLxnOOOoL5juZgZOCkAJg5kMlcExkyU7ao5BDu';
+  // ═══ CONFIG ═══
+  const firebaseConfig = {
+    apiKey: "AIzaSyChPDa7a0wP9AwdBMUwxTFvOG45MO31l3g",
+    authDomain: "lagenco-9c79e.firebaseapp.com",
+    databaseURL: "https://lagenco-9c79e-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "lagenco-9c79e",
+    storageBucket: "lagenco-9c79e.firebasestorage.app",
+    messagingSenderId: "743324926023",
+    appId: "1:743324926023:web:f8f7092f05d243ed467162"
+  };
 
-  let cache = { database: null };
-  let lastFetch = 0;
-  const CACHE_TTL = 5000; // 5s
+  const isConfigured = firebaseConfig.apiKey !== 'VUL_API_KEY_IN' && typeof firebase !== 'undefined';
+
+  let db = null;
+  let listeners = {};
+
+  if (isConfigured) {
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+      console.log('🔥 Firebase connected!');
+    } catch (e) {
+      console.warn('🔥 Firebase init error:', e.message);
+    }
+  } else {
+    console.log('🔥 Firebase not configured — using localStorage only');
+  }
 
   const DB = {
-    isConfigured: true,
+    isConfigured: !!db,
 
-    async _read() {
-      if (Date.now() - lastFetch < CACHE_TTL && cache.database) return cache.database;
-      try {
-        console.log('📦 Reading from JSONBin...');
-        const res = await fetch(BIN_URL + '/latest', {
-          headers: { 'X-Master-Key': API_KEY }
-        });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        const db = data.record || data;
-        cache.database = db;
-        lastFetch = Date.now();
-        console.log('📦 Loaded:', { products: (db.products||[]).length, bids: (db.bids||[]).length, posts: (db.posts||[]).length, coupons: (db.coupons||[]).length });
-        return db;
-      } catch (e) {
-        console.warn('📦 Read error:', e.message);
-        return null;
-      }
-    },
-
-    async _write(data) {
-      try {
-        console.log('📦 Writing to JSONBin...');
-        const res = await fetch(BIN_URL, {
-          method: 'PUT',
-          headers: { 'X-Master-Key': API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        cache.database = data;
-        lastFetch = Date.now();
-        console.log('📦 Saved!');
-      } catch (e) {
-        console.warn('📦 Write error:', e.message);
-      }
-    },
-
+    // ═══ Alle data ophalen ═══
     async syncAll() {
-      console.log('📦 Syncing...');
-      const db = await this._read();
-      if (!db) { console.warn('📦 Sync failed'); return; }
-      if (db.products) localStorage.setItem('lagencoProducts', JSON.stringify(db.products));
-      if (db.bids) localStorage.setItem('lagencoBids', JSON.stringify(db.bids));
-      if (db.posts) localStorage.setItem('lagencoCommunityPosts', JSON.stringify(db.posts));
-      if (db.coupons) localStorage.setItem('lagencoWheelPrizes', JSON.stringify(db.coupons));
-      if (db.wheelSettings) localStorage.setItem('lagencoWheelSettings', JSON.stringify(db.wheelSettings));
-      if (db.resetToken) localStorage.setItem('lagencoWheelSpinResetToken', db.resetToken);
-      console.log('📦 Sync complete!');
+      if (!db) return;
+      console.log('🔥 Syncing from Firebase...');
+      try {
+        const snapshot = await db.ref('/').once('value');
+        const data = snapshot.val() || {};
+
+        if (data.products) localStorage.setItem('lagencoProducts', JSON.stringify(data.products));
+        if (data.bids) localStorage.setItem('lagencoBids', JSON.stringify(data.bids));
+        if (data.posts) localStorage.setItem('lagencoCommunityPosts', JSON.stringify(data.posts));
+        if (data.coupons) localStorage.setItem('lagencoWheelPrizes', JSON.stringify(data.coupons));
+        if (data.wheelSettings) localStorage.setItem('lagencoWheelSettings', JSON.stringify(data.wheelSettings));
+        if (data.resetToken) localStorage.setItem('lagencoWheelSpinResetToken', data.resetToken);
+
+        console.log('🔥 Sync complete!', {
+          products: (data.products || []).length,
+          bids: (data.bids || []).length,
+          posts: (data.posts || []).length,
+          coupons: (data.coupons || []).length
+        });
+      } catch (e) {
+        console.warn('🔥 Sync error:', e.message);
+      }
     },
 
+    // ═══ Producten ═══
     async saveProduct(product) {
-      const db = await this._read(); if (!db) return;
-      db.products = db.products || [];
-      const i = db.products.findIndex(p => p.id === product.id);
-      if (i >= 0) db.products[i] = product; else db.products.push(product);
-      await this._write(db);
+      if (!db) return;
+      try {
+        await db.ref('products/' + product.id).set(product);
+        console.log('🔥 Product saved:', product.title);
+      } catch (e) { console.warn('🔥 SaveProduct error:', e.message); }
     },
+
     async deleteProduct(id) {
-      const db = await this._read(); if (!db) return;
-      db.products = (db.products || []).filter(p => p.id !== id);
-      await this._write(db);
+      if (!db) return;
+      try {
+        await db.ref('products/' + id).remove();
+        console.log('🔥 Product deleted:', id);
+      } catch (e) { console.warn('🔥 DeleteProduct error:', e.message); }
     },
 
+    // ═══ Biedingen ═══
     async saveBid(bid) {
-      const db = await this._read(); if (!db) return;
-      db.bids = db.bids || []; db.bids.push(bid);
-      await this._write(db);
+      if (!db) return;
+      try {
+        await db.ref('bids/' + bid.id).set(bid);
+        console.log('🔥 Bid saved:', bid.name);
+      } catch (e) { console.warn('🔥 SaveBid error:', e.message); }
     },
+
     async updateBidStatus(id, status) {
-      const db = await this._read(); if (!db) return;
-      const b = (db.bids || []).find(x => x.id === id);
-      if (b) { b.status = status; b.updatedAt = new Date().toISOString(); await this._write(db); }
+      if (!db) return;
+      try {
+        await db.ref('bids/' + id).update({ status: status, updatedAt: new Date().toISOString() });
+        console.log('🔥 Bid updated:', id, status);
+      } catch (e) { console.warn('🔥 UpdateBid error:', e.message); }
     },
+
     async deleteBid(id) {
-      const db = await this._read(); if (!db) return;
-      db.bids = (db.bids || []).filter(x => x.id !== id);
-      await this._write(db);
+      if (!db) return;
+      try {
+        await db.ref('bids/' + id).remove();
+        console.log('🔥 Bid deleted:', id);
+      } catch (e) { console.warn('🔥 DeleteBid error:', e.message); }
     },
 
+    // ═══ Community Posts ═══
     async savePost(post) {
-      const db = await this._read(); if (!db) return;
-      db.posts = db.posts || [];
-      const i = db.posts.findIndex(p => p.id === post.id);
-      if (i >= 0) db.posts[i] = post; else db.posts.unshift(post);
-      await this._write(db);
+      if (!db) return;
+      try {
+        await db.ref('posts/' + post.id).set(post);
+        console.log('🔥 Post saved:', post.title);
+      } catch (e) { console.warn('🔥 SavePost error:', e.message); }
     },
+
     async deletePost(id) {
-      const db = await this._read(); if (!db) return;
-      db.posts = (db.posts || []).filter(p => p.id !== id);
-      await this._write(db);
+      if (!db) return;
+      try {
+        await db.ref('posts/' + id).remove();
+        console.log('🔥 Post deleted:', id);
+      } catch (e) { console.warn('🔥 DeletePost error:', e.message); }
     },
+
     async saveComment(postId, comment) {
-      const db = await this._read(); if (!db) return;
-      db.posts = db.posts || [];
-      const post = db.posts.find(p => p.id === postId);
-      if (post) { post.comments = post.comments || []; post.comments.push(comment); await this._write(db); }
+      if (!db) return;
+      try {
+        await db.ref('posts/' + postId + '/comments/' + comment.id).set(comment);
+        console.log('🔥 Comment saved');
+      } catch (e) { console.warn('🔥 SaveComment error:', e.message); }
     },
+
     async deleteComment(postId, commentId) {
-      const db = await this._read(); if (!db) return;
-      db.posts = db.posts || [];
-      const post = db.posts.find(p => p.id === postId);
-      if (post && post.comments) { post.comments = post.comments.filter(c => c.id !== commentId); await this._write(db); }
+      if (!db) return;
+      try {
+        await db.ref('posts/' + postId + '/comments/' + commentId).remove();
+        console.log('🔥 Comment deleted');
+      } catch (e) { console.warn('🔥 DeleteComment error:', e.message); }
     },
 
+    // ═══ Coupons ═══
     async saveCoupon(coupon) {
-      const db = await this._read(); if (!db) return;
-      db.coupons = db.coupons || []; db.coupons.push(coupon);
-      await this._write(db);
+      if (!db) return;
+      try {
+        var key = coupon.code || ('noprize_' + Date.now());
+        await db.ref('coupons/' + key).set(coupon);
+        console.log('🔥 Coupon saved');
+      } catch (e) { console.warn('🔥 SaveCoupon error:', e.message); }
     },
+
     async updateCouponStatus(code, status) {
-      const db = await this._read(); if (!db) return;
-      const c = (db.coupons || []).find(x => x.code === code);
-      if (c) { c.status = status; c.usedAt = status === 'gebruikt' ? new Date().toISOString() : null; await this._write(db); }
+      if (!db) return;
+      try {
+        await db.ref('coupons/' + code).update({
+          status: status,
+          usedAt: status === 'gebruikt' ? new Date().toISOString() : null
+        });
+        console.log('🔥 Coupon updated:', code, status);
+      } catch (e) { console.warn('🔥 UpdateCoupon error:', e.message); }
     },
+
     async deleteCoupon(code) {
-      const db = await this._read(); if (!db) return;
-      db.coupons = (db.coupons || []).filter(c => c.code !== code);
-      await this._write(db);
+      if (!db) return;
+      try {
+        await db.ref('coupons/' + code).remove();
+        console.log('🔥 Coupon deleted:', code);
+      } catch (e) { console.warn('🔥 DeleteCoupon error:', e.message); }
     },
 
+    // ═══ Wheel Settings ═══
     async saveWheelSettings(settings) {
-      const db = await this._read(); if (!db) return;
-      db.wheelSettings = settings;
-      await this._write(db);
-    },
-    async saveResetToken(token) {
-      const db = await this._read(); if (!db) return;
-      db.resetToken = token;
-      await this._write(db);
+      if (!db) return;
+      try {
+        await db.ref('wheelSettings').set(settings);
+        console.log('🔥 Wheel settings saved');
+      } catch (e) { console.warn('🔥 SaveWheelSettings error:', e.message); }
     },
 
-    startPolling(cb) {
-      console.log('📦 Polling (30s)...');
-      setInterval(async () => {
-        const oP = localStorage.getItem('lagencoProducts') || '[]';
-        const oB = localStorage.getItem('lagencoBids') || '[]';
-        const oPo = localStorage.getItem('lagencoCommunityPosts') || '[]';
-        cache.database = null;
-        const db = await this._read();
-        if (!db) return;
-        if (JSON.stringify(db.products||[]) !== oP) { localStorage.setItem('lagencoProducts', JSON.stringify(db.products||[])); if (cb.onProductsChange) cb.onProductsChange(); }
-        if (JSON.stringify(db.bids||[]) !== oB) { localStorage.setItem('lagencoBids', JSON.stringify(db.bids||[])); if (cb.onBidsChange) cb.onBidsChange(); }
-        if (JSON.stringify(db.posts||[]) !== oPo) { localStorage.setItem('lagencoCommunityPosts', JSON.stringify(db.posts||[])); if (cb.onPostsChange) cb.onPostsChange(); }
-      }, 30000);
+    // ═══ Reset Token ═══
+    async saveResetToken(token) {
+      if (!db) return;
+      try {
+        await db.ref('resetToken').set(token);
+        console.log('🔥 Reset token saved');
+      } catch (e) { console.warn('🔥 SaveResetToken error:', e.message); }
+    },
+
+    // ═══ Real-time listeners (geen polling nodig!) ═══
+    startPolling(callbacks) {
+      if (!db) return;
+      console.log('🔥 Starting real-time listeners...');
+
+      // Products — real-time updates
+      db.ref('products').on('value', function(snapshot) {
+        var products = [];
+        snapshot.forEach(function(child) {
+          products.push(child.val());
+        });
+        localStorage.setItem('lagencoProducts', JSON.stringify(products));
+        if (!listeners.productsFirst) {
+          listeners.productsFirst = true;
+          return; // Skip first load (already handled by syncAll)
+        }
+        console.log('🔥 Products changed (real-time)!');
+        if (callbacks.onProductsChange) callbacks.onProductsChange();
+      });
+
+      // Bids — real-time updates
+      db.ref('bids').on('value', function(snapshot) {
+        var bids = [];
+        snapshot.forEach(function(child) {
+          bids.push(child.val());
+        });
+        localStorage.setItem('lagencoBids', JSON.stringify(bids));
+        if (!listeners.bidsFirst) {
+          listeners.bidsFirst = true;
+          return;
+        }
+        console.log('🔥 Bids changed (real-time)!');
+        if (callbacks.onBidsChange) callbacks.onBidsChange();
+      });
+
+      // Posts — real-time updates
+      db.ref('posts').on('value', function(snapshot) {
+        var posts = [];
+        snapshot.forEach(function(child) {
+          posts.push(child.val());
+        });
+        localStorage.setItem('lagencoCommunityPosts', JSON.stringify(posts));
+        if (!listeners.postsFirst) {
+          listeners.postsFirst = true;
+          return;
+        }
+        console.log('🔥 Posts changed (real-time)!');
+        if (callbacks.onPostsChange) callbacks.onPostsChange();
+      });
     }
   };
 
   window.LagencoDB = DB;
-  console.log('📦 LagencoDB ready');
+  console.log('🔥 LagencoDB ready. Configured:', !!db);
 })();
