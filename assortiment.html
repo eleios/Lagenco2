@@ -36,8 +36,8 @@
     <!-- ═══ FIREBASE (real-time database) ═══ -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-  <script src="github-db.js?v=9" defer></script>
-  <script src="script.js" defer></script>
+  <script src="github-db.js?v=10" defer></script>
+  <script src="script.js?v=10" defer></script>
 
 </head>
 <body data-page="assortiment" class="page-enter">
@@ -155,6 +155,15 @@
           <input id="editPrice" type="number" class="login-input" placeholder="Prijs (€)" required min="0">
           <input id="editOldPrice" type="number" class="login-input" placeholder="Oude prijs (€)" min="0">
         </div>
+        <label style="display:flex;flex-direction:column;gap:.4rem">
+          <span style="font-size:.78rem;font-weight:700;color:var(--text);font-family:'Sora',sans-serif;letter-spacing:.04em;text-transform:uppercase">Product Condition Grade</span>
+          <select id="editConditionGrade" class="login-input">
+            <option value="excellent">⭐⭐⭐⭐⭐ Excellent — Als nieuw</option>
+            <option value="goed">⭐⭐⭐⭐ Goed — Lichte gebruikssporen</option>
+            <option value="redelijk">⭐⭐⭐ Redelijk — Zichtbare slijtage</option>
+            <option value="beschadigd">⭐⭐ Beschadigd — Cosmetische schade</option>
+          </select>
+        </label>
         <input id="editBadge" type="text" class="login-input" placeholder="Badge">
         <button type="submit" class="btn btn-green" style="justify-content:center;padding:.875rem">Opslaan</button>
       </form>
@@ -201,6 +210,7 @@
             <span id="pmStatus" class="badge badge-new"></span>
             <span id="pmDiscount" class="badge badge-sale" style="display:none"></span>
           </div>
+          <div id="pmConditionGrade" style="margin-top:.6rem"></div>
         </div>
         <button class="modal-close-btn" aria-label="Sluiten">&times;</button>
       </div>

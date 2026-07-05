@@ -19,35 +19,70 @@ const MAX_IMAGES = 8;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 // ────────────────────────────────────────────────────────
-// Storage helpers
+// Storage helpers — Firebase is de enige source-of-truth.
+// In-memory cache wordt gevuld door LagencoDB.startPolling()
+// (real-time listeners). Visitor-specifieke data (wishlist,
+// compare, recent) leeft onder /visitors/{visitorId}/{key}.
+// Auth-state zit in sessionStorage (geen localStorage).
 // ────────────────────────────────────────────────────────
 const storage = {
   get: (key, fallback = null) => {
-    try { const v = localStorage.getItem(key); return v !== null ? JSON.parse(v) : fallback; }
-    catch { return fallback; }
+    // Legacy localStorage reads — returns fallback because we no
+    // longer persist anything in localStorage. Real reads happen
+    // through the dedicated getters below.
+    return fallback;
   },
   set: (key, value) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch (e) {
-      // QuotaExceededError or SecurityError — surface to caller
-      console.warn('localStorage.setItem failed:', e);
-      throw e;
-    }
+    // No-op — all persistence goes through LagencoDB (Firebase).
+    return true;
   }
 };
 
-const getProducts    = ()        => storage.get('lagencoProducts', []);
-const saveProducts   = products  => storage.set('lagencoProducts', products);
-const isLoggedIn     = ()        => storage.get('lagencoLoggedIn', false);
-const setLoggedIn    = v         => { storage.set('lagencoLoggedIn', v); try { window.dispatchEvent(new CustomEvent('lagenco:auth-change', { detail: { logged: v } })); } catch(e){} };
-const getWishlist    = ()        => storage.get('lagencoWishlist', []);
-const saveWishlist   = list      => storage.set('lagencoWishlist', list);
-const getCompare     = ()        => storage.get('lagencoCompare', []);
-const saveCompare    = list      => storage.set('lagencoCompare', list);
-const getRecent      = ()        => storage.get('lagencoRecent', []);
-const saveRecent     = list      => storage.set('lagencoRecent', list);
+// ── Producten (website) ──
+const getProducts    = ()        => (window.LagencoDB ? window.LagencoDB.getProducts() : []);
+const saveProducts   = products  => {
+  // Batch-save: write every product to Firebase individually.
+  // Used by cleanup flows that filter the entire list.
+  if (window.LagencoDB && window.LagencoDB.isConfigured) {
+    products.forEach(p => { window.LagencoDB.saveProduct(p); });
+  }
+};
+
+// ── Auth state (sessionStorage, NOT localStorage, NOT Firebase) ──
+const isLoggedIn     = ()        => (window.LagencoDB ? window.LagencoDB.getAuth() : false);
+const setLoggedIn    = v         => {
+  if (window.LagencoDB) window.LagencoDB.setAuth(v);
+  try { window.dispatchEvent(new CustomEvent('lagenco:auth-change', { detail: { logged: v } })); } catch(e){}
+};
+
+// ── Visitor data (wishlist / compare / recent) — Firebase ──
+const getWishlist    = ()        => { const v = window.LagencoDB ? window.LagencoDB.getVisitor('wishlist') : null; return Array.isArray(v) ? v : []; };
+const saveWishlist   = list      => { if (window.LagencoDB) window.LagencoDB.setVisitor('wishlist', list); };
+const getCompare     = ()        => { const v = window.LagencoDB ? window.LagencoDB.getVisitor('compare') : null; return Array.isArray(v) ? v : []; };
+const saveCompare    = list      => { if (window.LagencoDB) window.LagencoDB.setVisitor('compare', list); };
+const getRecent      = ()        => { const v = window.LagencoDB ? window.LagencoDB.getVisitor('recent') : null; return Array.isArray(v) ? v : []; };
+const saveRecent     = list      => { if (window.LagencoDB) window.LagencoDB.setVisitor('recent', list); };
+
+// ── Condition grades (Back Market style) ──
+const CONDITION_GRADES = [
+  { value: 'excellent',  stars: 5, label: 'Excellent',  desc: 'Als nieuw' },
+  { value: 'goed',       stars: 4, label: 'Goed',       desc: 'Lichte gebruikssporen' },
+  { value: 'redelijk',   stars: 3, label: 'Redelijk',   desc: 'Zichtbare slijtage' },
+  { value: 'beschadigd', stars: 2, label: 'Beschadigd',  desc: 'Functioneel, met cosmetische schade' }
+];
+const getConditionGrade = (value) => CONDITION_GRADES.find(g => g.value === value) || CONDITION_GRADES[0];
+const renderConditionStars = (value, opts = {}) => {
+  const g = getConditionGrade(value);
+  const size = opts.size || '.85rem';
+  const showLabel = opts.showLabel !== false;
+  const stars = Array.from({ length: 5 }, (_, i) =>
+    `<i class="fa${i < g.stars ? 's' : 'r'} fa-star" style="color:${i < g.stars ? '#f59e0b' : '#d1d5db'};font-size:${size}"></i>`
+  ).join('');
+  return `<span class="condition-grade" data-grade="${g.value}" style="display:inline-flex;align-items:center;gap:.4rem">
+    <span class="condition-stars" style="display:inline-flex;gap:.1rem;line-height:1">${stars}</span>
+    ${showLabel ? `<span class="condition-label" style="font-weight:700;color:var(--text);font-size:.8rem">${g.label}</span>` : ''}
+  </span>`;
+};
 
 // ────────────────────────────────────────────────────────
 // Toast notifications (improved with aria-live)
@@ -334,6 +369,7 @@ const buildCarouselCard = (product, admin = false) => {
     </div>
     <div class="p-5">
       <h3 class="font-semibold text-lg mb-1" style="color:var(--text)">${escapeHtml(product.title)}</h3>
+      <div class="mb-2">${renderConditionStars(product.conditionGrade, { size: '.75rem', showLabel: true })}</div>
       <p class="text-sm mb-3" style="color:var(--text-muted)">${escapeHtml(product.description)}</p>
       <div class="flex items-center justify-between gap-2 flex-wrap">
         <div>
@@ -377,6 +413,7 @@ const buildGridCard = (product, admin = false) => {
     </div>
     <div class="p-6 flex flex-col" style="flex:1">
       <h3 class="text-xl font-semibold mb-2" style="color:var(--text)">${escapeHtml(product.title)}</h3>
+      <div class="mb-2">${renderConditionStars(product.conditionGrade, { size: '.8rem', showLabel: true })}</div>
       <p class="text-sm mb-4" style="color:var(--text-muted);flex:1">${escapeHtml(product.description)}</p>
       <div class="flex items-center justify-between gap-3 flex-wrap mt-auto">
         <div>
@@ -575,8 +612,6 @@ const initFilters = () => {
 // Delete product
 // ────────────────────────────────────────────────────────
 const deleteProduct = (id) => {
-  const products = getProducts().filter(p => p.id !== id);
-  saveProducts(products);
   if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.deleteProduct(id); }
   // also clean wishlist/recent/compare
   saveWishlist(getWishlist().filter(x => x !== id));
@@ -642,6 +677,22 @@ const openProductModal = (id) => {
   const disc = discountPct(product);
   const discEl = q('#pmDiscount');
   if (discEl) { discEl.textContent = disc ? `-${disc}%` : ''; discEl.style.display = disc ? '' : 'none'; }
+
+  // Product Condition Grade (Back Market style)
+  const condEl = q('#pmConditionGrade');
+  if (condEl) {
+    const g = getConditionGrade(product.conditionGrade);
+    condEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+        <span style="display:inline-flex;gap:.15rem;line-height:1">
+          ${Array.from({ length: 5 }, (_, i) =>
+            `<i class="fa${i < g.stars ? 's' : 'r'} fa-star" style="color:${i < g.stars ? '#f59e0b' : '#d1d5db'};font-size:1.05rem"></i>`
+          ).join('')}
+        </span>
+        <span style="font-weight:800;color:var(--text);font-size:1rem;font-family:'Sora',sans-serif">${g.label}</span>
+        <span style="color:var(--text-muted);font-size:.85rem">— ${g.desc}</span>
+      </div>`;
+  }
 
   // Gallery
   const gallery = q('#pmGallery');
@@ -726,33 +777,34 @@ const renderRecent = () => {
 // ────────────────────────────────────────────────────────
 // BID SYSTEM — place bids on products (marktplaats-style)
 // ────────────────────────────────────────────────────────
-const getBids = ()        => storage.get('lagencoBids', []);
-const saveBids = (bids)   => storage.set('lagencoBids', bids);
+const getBids = ()        => (window.LagencoDB ? window.LagencoDB.getBids() : []);
+const saveBids = (bids)   => {
+  // No-op for batch saves — individual bid mutations go through LagencoDB.saveBid / deleteBid.
+  // Kept for backwards-compat with code that re-saves the full list.
+  if (window.LagencoDB && window.LagencoDB.isConfigured) {
+    bids.forEach(b => { window.LagencoDB.saveBid(b); });
+  }
+};
 const getBidsForProduct = (productId) => getBids().filter(b => b.productId === productId).sort((a, b) => b.amount - a.amount);
 
 const addBid = (bid) => {
-  const bids = getBids();
   bid.id = 'bid_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   bid.createdAt = new Date().toISOString();
   bid.status = bid.status || 'in_afwachting'; // in_afwachting | geaccepteerd | afgewezen
-  bids.push(bid);
-  saveBids(bids);
   if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveBid(bid); }
   return bid;
 };
 
 const updateBidStatus = (bidId, status) => {
-  const bids = getBids();
-  const bid = bids.find(b => b.id === bidId);
-  if (bid) {
-    bid.status = status;
-    bid.updatedAt = new Date().toISOString();
-    saveBids(bids);
+  if (window.LagencoDB && window.LagencoDB.isConfigured) {
+    window.LagencoDB.updateBidStatus(bidId, status);
   }
 };
 
 const deleteBid = (bidId) => {
-  saveBids(getBids().filter(b => b.id !== bidId));
+  if (window.LagencoDB && window.LagencoDB.isConfigured) {
+    window.LagencoDB.deleteBid(bidId);
+  }
 };
 
 // Format bid status for display
@@ -1527,33 +1579,24 @@ const initAddProduct = () => {
 
     // Use uploaded images, or fall back to URL field, or placeholder
     const images = uploadedImages.length ? uploadedImages.slice() : [PLACEHOLDER_IMAGE];
+    const conditionGrade = document.getElementById('productConditionGrade')?.value || 'goed';
     const product = {
       id: `p-${Date.now()}`,
       title, description: desc,
       price, oldPrice: (oldPr && oldPr > 0) ? oldPr : null,
-      badge, image: images[0], images,
+      badge, conditionGrade,
+      image: images[0], images,
       createdAt: Date.now()
     };
 
-    const products = getProducts();
-    products.push(product);
-
-    // Robust save with quota handling
-    try {
-      saveProducts(products);
-    } catch (err) {
-      console.error('Save failed:', err);
-      toast('Opslag vol — verwijder oude producten of gebruik kleinere afbeeldingen', 'error');
+    // Save directly to Firebase (source-of-truth).
+    if (window.LagencoDB && window.LagencoDB.isConfigured) {
+      window.LagencoDB.saveProduct(product);
+    } else {
+      toast('Firebase niet geconfigureerd — kan product niet opslaan.', 'error');
       return;
     }
 
-    // Verify it actually persisted (catches silent QuotaExceeded errors)
-    if (getProducts().findIndex(p => p.id === product.id) === -1) {
-      toast('Opslag vol — kan product niet opslaan. Verwijder oude producten of gebruik kleinere afbeeldingen.', 'error');
-      return;
-    }
-
-    if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveProduct(product); }
     renderFeatured();
     if (PAGE === 'assortiment') renderAssortment();
     form.reset();
@@ -1582,6 +1625,8 @@ const openEditModal = (id) => {
   document.getElementById('editPrice').value          = product.price;
   document.getElementById('editOldPrice').value       = product.oldPrice || '';
   document.getElementById('editBadge').value          = product.badge || '';
+  const cgEl = document.getElementById('editConditionGrade');
+  if (cgEl) cgEl.value = product.conditionGrade || 'goed';
 
   openModal('editModal');
 };
@@ -1598,13 +1643,14 @@ const initEditProduct = () => {
     const price = Number(document.getElementById('editPrice')?.value);
     const oldPr = Number(document.getElementById('editOldPrice')?.value) || null;
     const badge = document.getElementById('editBadge')?.value.trim() || 'Uitgelicht';
+    const conditionGrade = document.getElementById('editConditionGrade')?.value || 'goed';
     if (!title || !price) { toast('Vul naam en prijs in', 'warn'); return; }
 
-    const products = getProducts().map(p => p.id === id ? { ...p, title, description: desc, price, oldPrice: oldPr, badge } : p);
-    saveProducts(products);
+    const existing = getProducts().find(p => p.id === id);
+    if (!existing) { toast('Product niet gevonden', 'error'); return; }
+    const updated = { ...existing, title, description: desc, price, oldPrice: oldPr, badge, conditionGrade };
     if (window.LagencoDB && window.LagencoDB.isConfigured) {
-      const updated = products.find(p => p.id === id);
-      if (updated) window.LagencoDB.saveProduct(updated);
+      window.LagencoDB.saveProduct(updated);
     }
     renderFeatured();
     if (PAGE === 'assortiment') renderAssortment();
@@ -1957,24 +2003,30 @@ const isOldDemoProduct = (p) => {
 };
 
 const cleanupOldDemoProducts = () => {
-  if (storage.get('lagencoCleanedV1', false)) return;
+  // Once-only cleanup of legacy demo products. The "has this run" flag
+  // is stored per-visitor in Firebase (visitor data), so it still runs
+  // exactly once per visitor across all their devices.
+  if (window.LagencoDB && window.LagencoDB.getVisitor('cleanedV1')) return;
   const products = getProducts();
   if (products.length === 0) {
-    storage.set('lagencoCleanedV1', true);
+    if (window.LagencoDB) window.LagencoDB.setVisitor('cleanedV1', true);
     return;
   }
   const filtered = products.filter(p => !isOldDemoProduct(p));
-  const removedCount = products.length - filtered.length;
+  const removedIds = products.filter(p => isOldDemoProduct(p)).map(p => p.id);
+  const removedCount = removedIds.length;
   if (removedCount > 0) {
-    saveProducts(filtered);
+    // Delete each removed product from Firebase
+    if (window.LagencoDB && window.LagencoDB.isConfigured) {
+      removedIds.forEach(id => { window.LagencoDB.deleteProduct(id); });
+    }
     // Also clean references in wishlist/recent/compare
-    const removedIds = products.filter(p => isOldDemoProduct(p)).map(p => p.id);
     saveWishlist(getWishlist().filter(id => !removedIds.includes(id)));
     saveRecent(getRecent().filter(id => !removedIds.includes(id)));
     saveCompare(getCompare().filter(id => !removedIds.includes(id)));
     console.info(`[Lagenco] ${removedCount} oud demo-product(en) verwijderd.`);
   }
-  storage.set('lagencoCleanedV1', true);
+  if (window.LagencoDB) window.LagencoDB.setVisitor('cleanedV1', true);
 };
 
 // ────────────────────────────────────────────────────────
@@ -2555,44 +2607,52 @@ const renderLiveBids = () => {
 // ═══════════════════════════════════════════════════════
 // COMMUNITY POSTS — admin posts + user reactions
 // ═══════════════════════════════════════════════════════
-const getCommunityPosts = ()  => storage.get('lagencoCommunityPosts', []);
-const saveCommunityPosts = (posts) => storage.set('lagencoCommunityPosts', posts);
+const getCommunityPosts = ()  => (window.LagencoDB ? window.LagencoDB.getPosts() : []);
+const saveCommunityPosts = (posts) => {
+  // Batch re-save — used by cleanup flows. Writes each post individually.
+  if (window.LagencoDB && window.LagencoDB.isConfigured) {
+    posts.forEach(p => { window.LagencoDB.savePost(p); });
+  }
+};
 
 const addCommunityPost = (post) => {
-  const posts = getCommunityPosts();
   post.id = 'post_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   post.createdAt = new Date().toISOString();
   post.comments = post.comments || [];
-  posts.unshift(post); // newest first
-  saveCommunityPosts(posts);
+  if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.savePost(post); }
   return post;
 };
 
 const addCommunityComment = (postId, comment) => {
-  const posts = getCommunityPosts();
-  const post = posts.find(p => p.id === postId);
+  const post = getCommunityPosts().find(p => p.id === postId);
   if (post) {
     comment.id = 'cmt_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     comment.createdAt = new Date().toISOString();
     post.comments = post.comments || [];
     post.comments.push(comment);
-    saveCommunityPosts(posts);
-    if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveComment(postId, comment); }
+    if (window.LagencoDB && window.LagencoDB.isConfigured) {
+      window.LagencoDB.savePost(post); // re-save full post so comments array stays in sync
+      window.LagencoDB.saveComment(postId, comment);
+    }
     return comment;
   }
   return null;
 };
 
 const deleteCommunityPost = (postId) => {
-  saveCommunityPosts(getCommunityPosts().filter(p => p.id !== postId));
+  if (window.LagencoDB && window.LagencoDB.isConfigured) {
+    window.LagencoDB.deletePost(postId);
+  }
 };
 
 const deleteCommunityComment = (postId, commentId) => {
-  const posts = getCommunityPosts();
-  const post = posts.find(p => p.id === postId);
+  const post = getCommunityPosts().find(p => p.id === postId);
   if (post) {
     post.comments = (post.comments || []).filter(c => c.id !== commentId);
-    saveCommunityPosts(posts);
+    if (window.LagencoDB && window.LagencoDB.isConfigured) {
+      window.LagencoDB.savePost(post); // re-save full post so the comments array is updated
+      window.LagencoDB.deleteComment(postId, commentId);
+    }
   }
 };
 
@@ -3017,13 +3077,12 @@ const DEFAULT_WHEEL_SEGMENTS = [
   }
 ];
 
-// Load wheel settings from localStorage (admin can adjust via dashboard)
+// Load wheel settings from Firebase (admin can adjust via dashboard)
 const getWheelSegments = () => {
   try {
-    const raw = localStorage.getItem('lagencoWheelSettings');
-    if (raw) {
-      const settings = JSON.parse(raw);
-      if (settings && settings.length) {
+    if (window.LagencoDB) {
+      const settings = window.LagencoDB.getWheelSettings();
+      if (settings && Array.isArray(settings) && settings.length) {
         // Convert percentage (1-100) to decimal (0-1) and add 'short' field
         return settings.map(s => ({
           ...s,
@@ -3037,9 +3096,10 @@ const getWheelSegments = () => {
 };
 
 // Check if spins have been reset (via dashboard reset token)
+// Reset token lives in Firebase; visitor's last-seen token in sessionStorage.
 const checkSpinReset = () => {
   try {
-    const currentToken = localStorage.getItem('lagencoWheelSpinResetToken');
+    const currentToken = window.LagencoDB ? window.LagencoDB.getResetToken() : null;
     const visitorToken = sessionStorage.getItem('lagencoWheelSpinResetToken');
     if (currentToken && currentToken !== visitorToken) {
       // Token changed → reset visitor's spin flag
@@ -3212,10 +3272,9 @@ const showWheelResult = (winner) => {
     // WINNER — toon naam/email formulier + gegenereerde code
     const code = generatePrizeCode(winner.codePrefix);
 
-    // Sla de coupon op met status 'ongebruikt'
+    // Sla de coupon op met status 'ongebruikt' — direct in Firebase
     try {
-      const prizes = storage.get('lagencoWheelPrizes', []);
-      prizes.push({
+      const coupon = {
         code,
         type: winner.id,
         label: winner.label,
@@ -3224,8 +3283,8 @@ const showWheelResult = (winner) => {
         usedAt: null,
         winnerName: '',
         winnerEmail: ''
-      });
-      storage.set('lagencoWheelPrizes', prizes);
+      };
+      if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveCoupon(coupon); }
     } catch (e) {}
 
     // Toon het resultaat met naam/email veld EN de code
@@ -3260,14 +3319,13 @@ const showWheelResult = (winner) => {
           const name = (nameInput?.value || '').trim();
           const email = (emailInput?.value || '').trim();
 
-          // Update the stored coupon with name + email
+          // Update the stored coupon with name + email — direct in Firebase
           try {
-            const prizes = storage.get('lagencoWheelPrizes', []);
-            const coupon = prizes.find(p => p.code === code);
+            const coupon = window.LagencoDB ? window.LagencoDB.getCoupons().find(p => p.code === code) : null;
             if (coupon) {
               coupon.winnerName = name;
               coupon.winnerEmail = email;
-              storage.set('lagencoWheelPrizes', prizes);
+              if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveCoupon(coupon); }
             }
           } catch (e) {}
 
@@ -3279,8 +3337,7 @@ const showWheelResult = (winner) => {
   } else {
     // GEEN PRIJS — toon gewoon het resultaat, sla op als 'geen prijs'
     try {
-      const prizes = storage.get('lagencoWheelPrizes', []);
-      prizes.push({
+      const coupon = {
         code: null,
         type: winner.id,
         label: winner.label,
@@ -3289,8 +3346,8 @@ const showWheelResult = (winner) => {
         usedAt: null,
         winnerName: '',
         winnerEmail: ''
-      });
-      storage.set('lagencoWheelPrizes', prizes);
+      };
+      if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveCoupon(coupon); }
     } catch (e) {}
 
     if (result) {

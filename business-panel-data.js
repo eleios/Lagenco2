@@ -1,45 +1,15 @@
 /* ═══════════════════════════════════════════════════════
-   LAGENCO BUSINESS PANEL — Data Layer
-   - localStorage persistence (same approach as main website)
-   - Seed data extracted from the original Handelsadministratie spreadsheet
-   - CRUD helpers, computed metrics, import/export
-   - Does NOT depend on the main website script.js
+   LAGENCO BUSINESS PANEL — Data Layer (v2)
+   • Firebase Realtime Database is de enige source-of-truth
+   • Geen localStorage meer — alle data leeft in Firebase
+   • Sync API: leest van in-memory cache (gevuld door real-time listeners)
+   • Async writes: fire-and-forget naar Firebase (optimistic updates)
+   • Seed data wordt éénmalig naar Firebase gepusht indien leeg
    ═══════════════════════════════════════════════════════ */
 (function (window) {
   'use strict';
 
-  // ────────────────────────────────────────────────────────
-  // Storage helpers
-  // ────────────────────────────────────────────────────────
-  const NS = 'lagencoBP_'; // namespaced keys
-  const VERSION = 1;
-
-  function read(key, fallback) {
-    try {
-      const raw = localStorage.getItem(NS + key);
-      if (raw === null) return fallback;
-      return JSON.parse(raw);
-    } catch (e) {
-      console.warn('[BP] read failed for', key, e);
-      return fallback;
-    }
-  }
-  function write(key, value) {
-    try {
-      localStorage.setItem(NS + key, JSON.stringify(value));
-      return true;
-    } catch (e) {
-      console.warn('[BP] write failed for', key, e);
-      return false;
-    }
-  }
-  function uid(prefix) {
-    return (prefix || 'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  }
-  function nowISO() { return new Date().toISOString(); }
-  function todayNL() {
-    return new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
-  }
+  const VERSION = 2;
 
   // ────────────────────────────────────────────────────────
   // Number parsing (Dutch format: 32,99)
@@ -47,17 +17,12 @@
   function parseNum(v) {
     if (typeof v === 'number') return v;
     if (!v) return 0;
-    // Verwijder alles behalve cijfers, komma's en punten
     var s = String(v).trim().replace(/[^\d,.-]/g, '');
-    // Als er zowel komma als punt in zitten (bv "1.234,56"), verwijder punt en vervang komma door punt
     if (s.indexOf(',') > -1 && s.indexOf('.') > -1) {
       s = s.replace(/\./g, '').replace(',', '.');
-    }
-    // Als er alleen een komma in zit (bv "32,99"), vervang komma door punt
-    else if (s.indexOf(',') > -1) {
+    } else if (s.indexOf(',') > -1) {
       s = s.replace(',', '.');
     }
-    // Als er alleen punten in zitten (bv "1.234" of "32.99"), laat staan
     var n = parseFloat(s);
     return isNaN(n) ? 0 : n;
   }
@@ -77,9 +42,16 @@
     const n = Number(v) || 0;
     return n.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
   }
+  function uid(prefix) {
+    return (prefix || 'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+  function nowISO() { return new Date().toISOString(); }
+  function todayNL() {
+    return new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
 
   // ────────────────────────────────────────────────────────
-  // Seed data — extracted from the original Handelsadministratie spreadsheet
+  // Seed data — used ONLY when Firebase is empty (one-time)
   // ────────────────────────────────────────────────────────
   const SEED = {
     meta: {
@@ -172,32 +144,79 @@
     catalogus: [] // computed dynamically from producten + voorraad + verkoop
   };
 
+  const SEED_COLLECTIONS = Object.keys(SEED);
+
   // ────────────────────────────────────────────────────────
-  // Initialize / migrate
+  // Initialize — push seed to Firebase if bp/ is empty
   // ────────────────────────────────────────────────────────
-  function init() {
-    const currentVersion = read('version', 0);
-    if (currentVersion < VERSION) {
-      // Seed all data
-      Object.keys(SEED).forEach(function (k) {
-        write(k, SEED[k]);
-      });
-      write('version', VERSION);
-      console.log('[BP] Data seeded with version', VERSION);
-    }
+  let initialized = false;
+  const initCallbacks = [];
+  function onInit(cb) {
+    if (initialized) cb();
+    else initCallbacks.push(cb);
   }
+
+  async function init() {
+    if (initialized) return;
+    if (!window.LagencoDB || !window.LagencoDB.isConfigured) {
+      console.warn('[BP] LagencoDB not configured — running with empty cache');
+      initialized = true;
+      initCallbacks.forEach(cb => { try { cb(); } catch (e) {} });
+      return;
+    }
+
+    // Wait for LagencoDB.syncAll to populate cache
+    if (typeof window.LagencoDB.syncAll === 'function') {
+      try { await window.LagencoDB.syncAll(); } catch (e) { console.warn('[BP] syncAll failed', e); }
+    }
+
+    // Seed if Firebase bp/ is empty
+    try {
+      const fb = window.LagencoDB._cache.bp;
+      const hasData = SEED_COLLECTIONS.some(k => {
+        const v = fb[k];
+        return v && (Array.isArray(v) ? v.length > 0 : Object.keys(v).length > 0);
+      });
+      if (!hasData) {
+        console.log('[BP] Seeding Firebase bp/ with initial data...');
+        // Push each collection to Firebase
+        for (const k of SEED_COLLECTIONS) {
+          await window.LagencoDB.bpSave(k, SEED[k]);
+        }
+        console.log('[BP] Seed complete');
+      }
+    } catch (e) {
+      console.warn('[BP] Seed failed', e);
+    }
+
+    initialized = true;
+    initCallbacks.forEach(cb => { try { cb(); } catch (e) {} });
+  }
+
   function reset() {
-    Object.keys(SEED).forEach(function (k) {
-      write(k, SEED[k]);
+    if (!window.LagencoDB || !window.LagencoDB.isConfigured) return;
+    SEED_COLLECTIONS.forEach(k => {
+      window.LagencoDB.bpSave(k, SEED[k]);
     });
-    write('version', VERSION);
   }
 
   // ────────────────────────────────────────────────────────
-  // Generic collection CRUD
+  // Generic collection CRUD — sync API backed by LagencoDB cache
   // ────────────────────────────────────────────────────────
-  function list(collection) { return read(collection, []); }
-  function save(collection, items) { return write(collection, items); }
+  function list(collection) {
+    if (window.LagencoDB) {
+      const v = window.LagencoDB.bpList(collection);
+      if (v && (Array.isArray(v) ? v.length > 0 : Object.keys(v).length > 0)) return v;
+    }
+    // Fallback to SEED if cache is empty (e.g., Firebase not yet synced)
+    return SEED[collection] ? (Array.isArray(SEED[collection]) ? SEED[collection].slice() : SEED[collection]) : [];
+  }
+  function save(collection, items) {
+    if (window.LagencoDB && window.LagencoDB.isConfigured) {
+      window.LagencoDB.bpSave(collection, items);
+    }
+    return true;
+  }
   function get(collection, id) {
     return list(collection).find(function (x) { return x.id === id; });
   }
@@ -223,7 +242,7 @@
   }
 
   // ────────────────────────────────────────────────────────
-  // Computed metrics
+  // Computed metrics (unchanged from v1)
   // ────────────────────────────────────────────────────────
   function computeProductMetrics(p) {
     const cost = parseNum(p.costPrice);
@@ -288,7 +307,6 @@
   }
 
   function salesOverTime() {
-    // group by date (yyyy-mm)
     const verkoop = list('verkoop');
     const map = {};
     verkoop.forEach(function (s) {
@@ -355,7 +373,7 @@
   // Import / Export
   // ────────────────────────────────────────────────────────
   function exportAll() {
-    const data = { meta: read('meta', SEED.meta), version: VERSION, exportedAt: nowISO() };
+    const data = { meta: list('meta'), version: VERSION, exportedAt: nowISO() };
     ['producten', 'voorraad', 'inkoop', 'verkoop', 'klanten', 'tracking', 'marktplaats', 'research', 'werknemers'].forEach(function (k) {
       data[k] = list(k);
     });
@@ -365,10 +383,9 @@
     if (!data || typeof data !== 'object') return false;
     try {
       ['producten', 'voorraad', 'inkoop', 'verkoop', 'klanten', 'tracking', 'marktplaats', 'research', 'werknemers'].forEach(function (k) {
-        if (Array.isArray(data[k])) write(k, data[k]);
+        if (Array.isArray(data[k])) save(k, data[k]);
       });
-      if (data.meta) write('meta', data.meta);
-      write('version', data.version || VERSION);
+      if (data.meta) save('meta', data.meta);
       return true;
     } catch (e) {
       console.warn('[BP] import failed', e);
@@ -381,6 +398,7 @@
   // ────────────────────────────────────────────────────────
   window.BPData = {
     init: init,
+    onInit: onInit,
     reset: reset,
     list: list,
     save: save,
@@ -404,6 +422,6 @@
     SEED: SEED
   };
 
-  // Auto-init on load
+  // Auto-init (async, fires callbacks when ready)
   init();
 })(window);

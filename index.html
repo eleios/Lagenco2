@@ -40,8 +40,8 @@
     <!-- ═══ FIREBASE (real-time database) ═══ -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-  <script src="github-db.js?v=9" defer></script>
-  <script src="script.js" defer></script>
+  <script src="github-db.js?v=10" defer></script>
+  <script src="script.js?v=10" defer></script>
 
 </head>
 <body data-page="index" class="page-enter">
@@ -171,6 +171,15 @@
           <input id="editPrice" type="number" class="login-input" placeholder="Prijs (€)" required min="0">
           <input id="editOldPrice" type="number" class="login-input" placeholder="Oude prijs (€)" min="0">
         </div>
+        <label style="display:flex;flex-direction:column;gap:.4rem">
+          <span style="font-size:.78rem;font-weight:700;color:var(--text);font-family:'Sora',sans-serif;letter-spacing:.04em;text-transform:uppercase">Product Condition Grade</span>
+          <select id="editConditionGrade" class="login-input">
+            <option value="excellent">⭐⭐⭐⭐⭐ Excellent — Als nieuw</option>
+            <option value="goed">⭐⭐⭐⭐ Goed — Lichte gebruikssporen</option>
+            <option value="redelijk">⭐⭐⭐ Redelijk — Zichtbare slijtage</option>
+            <option value="beschadigd">⭐⭐ Beschadigd — Cosmetische schade</option>
+          </select>
+        </label>
         <input id="editBadge" type="text" class="login-input" placeholder="Badge (bijv. Retourproduct)">
         <button type="submit" class="btn btn-green" style="justify-content:center;padding:.95rem">Opslaan</button>
       </form>
@@ -239,6 +248,7 @@
             <span id="pmStatus" class="badge badge-new"></span>
             <span id="pmDiscount" class="badge badge-sale" style="display:none"></span>
           </div>
+          <div id="pmConditionGrade" style="margin-top:.6rem"></div>
         </div>
         <button class="modal-close-btn" aria-label="Sluiten">&times;</button>
       </div>
@@ -921,7 +931,7 @@
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1.75rem">
         <div>
           <h3 style="font-family:'Fraunces',serif;font-size:1.625rem;font-weight:600;color:var(--text);margin-bottom:.3rem;letter-spacing:-.020em">Admin: Producten beheren</h3>
-          <p style="font-size:.875rem;color:var(--text-muted)">Producten worden lokaal opgeslagen in uw browser.</p>
+          <p style="font-size:.875rem;color:var(--text-muted)">Producten worden opgeslagen in Firebase en direct gesynchroniseerd met de hele website.</p>
         </div>
         <span style="display:inline-flex;align-items:center;gap:.5rem;padding:.45rem 1.05rem;background:var(--green-light);color:var(--green);border-radius:100px;font-size:.78rem;font-weight:700;font-family:'Sora',sans-serif"><i class="fas fa-shield-alt"></i> Admin-modus actief</span>
       </div>
@@ -938,6 +948,15 @@
           <input id="productDescription" type="text" class="login-input" placeholder="Beschrijving *" required>
           <input id="productPrice" type="number" class="login-input" placeholder="Prijs (€) *" required min="0" step="0.01">
           <input id="productOldPrice" type="number" class="login-input" placeholder="Oude prijs (€) — optioneel" min="0" step="0.01">
+          <label style="display:flex;flex-direction:column;gap:.4rem;grid-column:1/-1">
+            <span style="font-size:.78rem;font-weight:700;color:var(--text);font-family:'Sora',sans-serif;letter-spacing:.04em;text-transform:uppercase">Product Condition Grade *</span>
+            <select id="productConditionGrade" class="login-input">
+              <option value="excellent">⭐⭐⭐⭐⭐ Excellent — Als nieuw</option>
+              <option value="goed" selected>⭐⭐⭐⭐ Goed — Lichte gebruikssporen</option>
+              <option value="redelijk">⭐⭐⭐ Redelijk — Zichtbare slijtage</option>
+              <option value="beschadigd">⭐⭐ Beschadigd — Cosmetische schade</option>
+            </select>
+          </label>
           <input id="productBadge" type="text" class="login-input" placeholder="Badge (bijv. Retourproduct, Nieuw, Tweedehands)" style="grid-column:1/-1">
           <div style="grid-column:1/-1;display:flex;gap:.5rem;flex-wrap:wrap">
             <input id="productImageURL" type="url" class="login-input" placeholder="Afbeeldings-URL toevoegen (optioneel)" style="flex:1;min-width:200px">

@@ -14,34 +14,23 @@
   // Auth gate — uses the inline auth from business-panel.html
   // (window.__bpAuth) so login logic is centralized and
   // independent of this file's load timing.
+  // Auth state lives in sessionStorage (NOT localStorage) — cleared on tab close.
   // ────────────────────────────────────────────────────────
   const LOGIN_KEY = 'lagencoLoggedIn';
   function isLoggedIn() {
     if (window.__bpAuth && typeof window.__bpAuth.isLoggedIn === 'function') {
       return window.__bpAuth.isLoggedIn();
     }
-    // Fallback (in case inline script hasn't loaded yet)
-    try {
-      const raw = localStorage.getItem(LOGIN_KEY);
-      if (raw === null || raw === undefined) return false;
-      try {
-        const parsed = JSON.parse(raw);
-        if (parsed === true || parsed === 1) return true;
-        if (parsed === false || parsed === 0 || parsed === null) return false;
-      } catch (e) {}
-      const s = String(raw).trim().toLowerCase();
-      return s === 'true' || s === '1' || s === 'yes' || s === 'ingelogd';
-    } catch (e) { return false; }
+    // Fallback (in case inline script hasn't loaded yet) — read from LagencoDB
+    if (window.LagencoDB && typeof window.LagencoDB.getAuth === 'function') {
+      return window.LagencoDB.getAuth();
+    }
+    return false;
   }
   // Live re-check: if the login state changes while the panel is open
   // (e.g. user logs out in another tab), react immediately.
-  window.addEventListener('storage', function (e) {
-    if (e.key === LOGIN_KEY) {
-      if (!isLoggedIn()) {
-        window.location.href = 'index.html';
-      }
-    }
-  });
+  // Auth state is in sessionStorage now (no storage event fires for that),
+  // but we still listen for the custom lagenco:auth-change event.
   window.addEventListener('lagenco:auth-change', function (e) {
     if (e.detail && e.detail.logged === false) {
       window.location.href = 'index.html';
@@ -138,22 +127,23 @@
   let currentSearch = '';
 
   const VIEW_META = {
-    dashboard:    { title: 'Dashboard',         sub: 'Overzicht van je handelsadministratie' },
-    producten:    { title: 'Producten',          sub: 'Beheer je productcatalogus en prijzen' },
-    voorraad:     { title: 'Voorraad',           sub: 'Voorraadniveaus en magazijnbeheer' },
-    inkoop:       { title: 'Inkoop',             sub: 'Inkooporders en leveranciers' },
-    verkoop:      { title: 'Verkoop',            sub: 'Verkooplog en winstberekening' },
-    catalogus:    { title: 'Catalogus',          sub: 'Gecombineerd productoverzicht met stats' },
-    klanten:      { title: 'Klanten',            sub: 'Klantendatabase en orderhistorie' },
-    tracking:     { title: 'Tracking',           sub: 'Zendingen volgen en status beheren' },
-    marktplaats:  { title: 'Marktplaats',        sub: 'Actieve advertenties en verkopen' },
-    biedingen:    { title: 'Biedingen',          sub: 'Biedingen van klanten op je producten' },
-    coupons:      { title: 'Wheel Spin Coupons',  sub: 'Gewonnen kortingscodes en coupon status' },
-    wheelsettings:{ title: 'Wheel Spin Instellingen', sub: 'Prijzen, kansen en spins beheren' },
-    research:     { title: 'Research',           sub: 'Onderzoek nieuwe producten om in te kopen' },
-    werknemers:   { title: 'Werknemers',         sub: 'Uitkeringen en werknemersbetalingen' },
-    rapporten:    { title: 'Rapporten',          sub: 'Inzichten en bedrijfsanalytics' },
-    instellingen: { title: 'Instellingen',       sub: 'Data beheer en configuratie' }
+    dashboard:        { title: 'Dashboard',         sub: 'Overzicht van je handelsadministratie' },
+    websiteproducten: { title: 'Website Producten', sub: 'Beheer alle producten die op de website staan (naam, prijs, beschrijving, conditiegrade) — real-time sync via Firebase' },
+    producten:        { title: 'Producten',          sub: 'Beheer je productcatalogus en prijzen' },
+    voorraad:         { title: 'Voorraad',           sub: 'Voorraadniveaus en magazijnbeheer' },
+    inkoop:           { title: 'Inkoop',             sub: 'Inkooporders en leveranciers' },
+    verkoop:          { title: 'Verkoop',            sub: 'Verkooplog en winstberekening' },
+    catalogus:        { title: 'Catalogus',          sub: 'Gecombineerd productoverzicht met stats' },
+    klanten:          { title: 'Klanten',            sub: 'Klantendatabase en orderhistorie' },
+    tracking:         { title: 'Tracking',           sub: 'Zendingen volgen en status beheren' },
+    marktplaats:      { title: 'Marktplaats',        sub: 'Actieve advertenties en verkopen' },
+    biedingen:        { title: 'Biedingen',          sub: 'Biedingen van klanten op je producten' },
+    coupons:          { title: 'Wheel Spin Coupons',  sub: 'Gewonnen kortingscodes en coupon status' },
+    wheelsettings:    { title: 'Wheel Spin Instellingen', sub: 'Prijzen, kansen en spins beheren' },
+    research:         { title: 'Research',           sub: 'Onderzoek nieuwe producten om in te kopen' },
+    werknemers:       { title: 'Werknemers',         sub: 'Uitkeringen en werknemersbetalingen' },
+    rapporten:        { title: 'Rapporten',          sub: 'Inzichten en bedrijfsanalytics' },
+    instellingen:     { title: 'Instellingen',       sub: 'Data beheer en configuratie' }
   };
 
   function navigate(name) {
@@ -425,6 +415,248 @@
       }
     };
   }
+
+  // ═══════════════════════════════════════════════════════
+  // VIEW: WEBSITE PRODUCTEN
+  // Beheert de producten die op de publieke website staan
+  // (/products/{id} in Firebase — real-time sync)
+  // ═══════════════════════════════════════════════════════
+  view('websiteproducten', function (root) {
+    if (!window.LagencoDB || !window.LagencoDB.isConfigured) {
+      root.innerHTML = '<div class="bp-card"><div class="bp-card-body">' +
+        '<div class="bp-empty"><div class="bp-empty-icon"><i class="fas fa-exclamation-triangle"></i></div>' +
+        '<div class="bp-empty-title">Firebase niet geconfigureerd</div>' +
+        '<div class="bp-empty-sub">Vul de Firebase config in github-db.js in om website producten te beheren.</div>' +
+        '</div></div></div>';
+      return;
+    }
+
+    const products = window.LagencoDB.getProducts();
+
+    function gradeStars(value) {
+      const grades = {
+        excellent:  { stars: 5, label: 'Excellent',  desc: 'Als nieuw' },
+        goed:       { stars: 4, label: 'Goed',       desc: 'Lichte gebruikssporen' },
+        redelijk:   { stars: 3, label: 'Redelijk',   desc: 'Zichtbare slijtage' },
+        beschadigd: { stars: 2, label: 'Beschadigd',  desc: 'Cosmetische schade' }
+      };
+      const g = grades[value] || grades.goed;
+      let s = '';
+      for (let i = 0; i < 5; i++) {
+        s += '<i class="fa' + (i < g.stars ? 's' : 'r') + ' fa-star" style="color:' + (i < g.stars ? '#f59e0b' : '#d1d5db') + ';font-size:.85rem"></i>';
+      }
+      return '<span style="display:inline-flex;align-items:center;gap:.4rem">' +
+        '<span style="display:inline-flex;gap:.1rem">' + s + '</span>' +
+        '<span style="font-weight:700;color:var(--bp-text);font-size:.8rem">' + g.label + '</span>' +
+        '</span>';
+    }
+
+    let html = '<div class="bp-filter-bar">' +
+      '<div class="bp-search-inline"><i class="fas fa-search"></i><input type="text" id="wpSearch" placeholder="Zoek website product…"></div>' +
+      '<select class="bp-filter-select" id="wpGrade">' +
+        '<option value="">Alle condities</option>' +
+        '<option value="excellent">⭐⭐⭐⭐⭐ Excellent</option>' +
+        '<option value="goed">⭐⭐⭐⭐ Goed</option>' +
+        '<option value="redelijk">⭐⭐⭐ Redelijk</option>' +
+        '<option value="beschadigd">⭐⭐ Beschadigd</option>' +
+      '</select>' +
+      '<button class="bp-btn bp-btn-primary" id="wpAdd"><i class="fas fa-plus"></i> Nieuw product</button>' +
+      '</div>';
+
+    html += '<div class="bp-card" style="margin-bottom:1rem;background:linear-gradient(135deg,#ecfdf5,#f0fdfa);border:1px solid #a7f3d0">' +
+      '<div class="bp-card-body" style="display:flex;align-items:center;gap:.875rem;padding:1rem 1.25rem">' +
+        '<div style="width:2.5rem;height:2.5rem;background:var(--bp-success);border-radius:.625rem;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0"><i class="fas fa-fire"></i></div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-weight:700;color:#065f46;font-size:.95rem;font-family:Sora,sans-serif">Real-time synchronisatie actief</div>' +
+          '<div style="color:#047857;font-size:.825rem;margin-top:.15rem">Wijzigingen worden direct opgeslagen in Firebase en zichtbaar voor alle bezoekers van de website.</div>' +
+        '</div>' +
+      '</div></div>';
+
+    html += '<div id="wpList">';
+    html += renderWebsiteProductList(products);
+    html += '</div>';
+
+    root.innerHTML = html;
+
+    $('#wpAdd', root).addEventListener('click', () => editWebsiteProduct());
+    $('#wpSearch', root).addEventListener('input', () => filterWP());
+    $('#wpGrade', root).addEventListener('change', () => filterWP());
+
+    function filterWP() {
+      const q = ($('#wpSearch', root).value || '').toLowerCase();
+      const g = $('#wpGrade', root).value;
+      const filtered = window.LagencoDB.getProducts().filter(p => {
+        if (g && p.conditionGrade !== g) return false;
+        if (q && !(p.title || '').toLowerCase().includes(q) && !(p.description || '').toLowerCase().includes(q)) return false;
+        return true;
+      });
+      $('#wpList', root).innerHTML = renderWebsiteProductList(filtered);
+      wireWPActions();
+    }
+    wireWPActions();
+
+    function wireWPActions() {
+      $$('.bp-row-action.edit', root).forEach(b => b.addEventListener('click', e => {
+        const id = e.currentTarget.closest('tr').dataset.id;
+        const p = window.LagencoDB.getProduct(id);
+        if (p) editWebsiteProduct(p);
+      }));
+      $$('.bp-row-action.delete', root).forEach(b => b.addEventListener('click', e => {
+        const id = e.currentTarget.closest('tr').dataset.id;
+        const p = window.LagencoDB.getProduct(id);
+        if (!p) return;
+        confirmModal('Website product verwijderen',
+          'Weet je zeker dat je "' + (p.title || 'dit product') + '" van de website wilt verwijderen? Dit verwijdert het product uit Firebase en het verdwijnt direct van de website.',
+          () => {
+            window.LagencoDB.deleteProduct(id).then(() => {
+              toast('Verwijderd', (p.title || 'Product') + ' is verwijderd van de website', 'success');
+              navigate('websiteproducten');
+            });
+          });
+      }));
+      $$('.bp-row-action.view', root).forEach(b => b.addEventListener('click', e => {
+        const id = e.currentTarget.closest('tr').dataset.id;
+        const p = window.LagencoDB.getProduct(id);
+        if (!p) return;
+        const img = (p.images && p.images[0]) || p.image || '';
+        openModal({
+          title: p.title || 'Product', icon: 'fa-eye',
+          body: '<div style="text-align:center">' +
+                (img ? '<img src="' + esc(img) + '" alt="" style="max-width:100%;max-height:300px;border-radius:.5rem;margin-bottom:1rem">' : '') +
+                '<div style="margin-bottom:.75rem">' + gradeStars(p.conditionGrade) + '</div>' +
+                '<p style="color:var(--bp-muted);line-height:1.6;margin-bottom:.75rem">' + esc(p.description || '') + '</p>' +
+                '<p style="font-size:1.5rem;font-weight:800;color:var(--bp-success)">€ ' + esc(String(Number(p.price || 0).toFixed(2))) + '</p>' +
+                (p.oldPrice ? '<p style="text-decoration:line-through;color:var(--bp-muted)">€ ' + esc(String(Number(p.oldPrice).toFixed(2))) + '</p>' : '') +
+                '</div>'
+        });
+      }));
+    }
+
+    function renderWebsiteProductList(items) {
+      if (!items || items.length === 0) {
+        return '<div class="bp-card"><div class="bp-card-body">' +
+          emptyState('fa-globe', 'Geen website producten',
+            'Er staan nog geen producten op de website. Voeg je eerste product toe om te beginnen.',
+            'Product toevoegen', () => editWebsiteProduct()).outerHTML +
+          '</div></div>';
+      }
+      let html = '<div class="bp-card"><div class="bp-card-body-p0"><div class="bp-table-wrap"><table class="bp-table">' +
+        '<thead><tr><th>Product</th><th>Beschrijving</th><th>Conditie</th><th class="num">Prijs</th><th class="num">Acties</th></tr></thead><tbody>';
+      items.forEach(p => {
+        const img = (p.images && p.images[0]) || p.image || '';
+        html += '<tr data-id="' + esc(p.id) + '">' +
+          '<td class="strong">' +
+            '<div style="display:flex;align-items:center;gap:.75rem">' +
+              (img ? '<img src="' + esc(img) + '" alt="" style="width:2.5rem;height:2.5rem;object-fit:cover;border-radius:.375rem;border:1px solid var(--bp-border)">' : '<div style="width:2.5rem;height:2.5rem;background:var(--bp-bg-2);border-radius:.375rem;display:flex;align-items:center;justify-content:center;color:var(--bp-muted)"><i class="fas fa-image"></i></div>') +
+              '<div style="min-width:0">' +
+                '<div style="font-weight:700;color:var(--bp-text)">' + esc(p.title || '(naamloos)') + '</div>' +
+                '<div style="font-size:.75rem;color:var(--bp-muted)">' + esc(p.badge || 'Uitgelicht') + '</div>' +
+              '</div>' +
+            '</div>' +
+          '</td>' +
+          '<td style="max-width:300px"><div style="color:var(--bp-muted);font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc((p.description || '').slice(0, 80)) + (p.description && p.description.length > 80 ? '…' : '') + '</div></td>' +
+          '<td>' + gradeStars(p.conditionGrade) + '</td>' +
+          '<td class="num"><strong>€ ' + esc(String(Number(p.price || 0).toFixed(2))) + '</strong>' +
+            (p.oldPrice ? '<div style="text-decoration:line-through;color:var(--bp-muted);font-size:.75rem">€ ' + esc(String(Number(p.oldPrice).toFixed(2))) + '</div>' : '') +
+          '</td>' +
+          '<td class="num"></td></tr>';
+      });
+      html += '</tbody></table></div></div></div>';
+
+      setTimeout(() => {
+        $$('#wpList tr[data-id]').forEach(tr => {
+          const id = tr.dataset.id;
+          const cell = tr.querySelector('td:last-child');
+          cell.appendChild(actionBtns(
+            () => editWebsiteProduct(window.LagencoDB.getProduct(id)),
+            () => {
+              const p = window.LagencoDB.getProduct(id);
+              if (!p) return;
+              confirmModal('Website product verwijderen',
+                'Weet je zeker dat je "' + (p.title || 'dit product') + '" van de website wilt verwijderen?',
+                () => {
+                  window.LagencoDB.deleteProduct(id).then(() => {
+                    toast('Verwijderd', (p.title || 'Product') + ' is verwijderd van de website', 'success');
+                    navigate('websiteproducten');
+                  });
+                });
+            },
+            () => {
+              const p = window.LagencoDB.getProduct(id);
+              if (!p) return;
+              const img = (p.images && p.images[0]) || p.image || '';
+              openModal({
+                title: p.title || 'Product', icon: 'fa-eye',
+                body: '<div style="text-align:center">' +
+                      (img ? '<img src="' + esc(img) + '" alt="" style="max-width:100%;max-height:300px;border-radius:.5rem;margin-bottom:1rem">' : '') +
+                      '<div style="margin-bottom:.75rem">' + gradeStars(p.conditionGrade) + '</div>' +
+                      '<p style="color:var(--bp-muted);line-height:1.6;margin-bottom:.75rem">' + esc(p.description || '') + '</p>' +
+                      '<p style="font-size:1.5rem;font-weight:800;color:var(--bp-success)">€ ' + esc(String(Number(p.price || 0).toFixed(2))) + '</p>' +
+                      '</div>'
+              });
+            }
+          ));
+        });
+      }, 0);
+      return html;
+    }
+
+    function editWebsiteProduct(p) {
+      const isNew = !p;
+      const fields = [
+        { key: 'title', label: 'Productnaam', required: true, placeholder: 'bv. Sennheiser E604 Instrumentmicrofoon', full: true },
+        { key: 'price', label: 'Verkoopprijs', type: 'euro', placeholder: '0,00', required: true },
+        { key: 'oldPrice', label: 'Oude prijs (optioneel)', type: 'euro', placeholder: '0,00' },
+        { key: 'conditionGrade', label: 'Product Condition Grade', type: 'select', required: true, options: [
+            { value: 'excellent',  label: '⭐⭐⭐⭐⭐ Excellent — Als nieuw' },
+            { value: 'goed',       label: '⭐⭐⭐⭐ Goed — Lichte gebruikssporen' },
+            { value: 'redelijk',   label: '⭐⭐⭐ Redelijk — Zichtbare slijtage' },
+            { value: 'beschadigd', label: '⭐⭐ Beschadigd — Cosmetische schade' }
+          ], default: 'goed' },
+        { key: 'badge', label: 'Badge (optioneel)', placeholder: 'bv. Nieuw, Retourproduct, Tweedehands', full: true },
+        { key: 'description', label: 'Productbeschrijving', type: 'textarea', placeholder: 'Uitgebreide beschrijving van het product…', full: true }
+      ];
+      formModal(isNew ? 'Nieuw website product' : 'Website product bewerken', 'fa-globe', fields, (data, close) => {
+        if (!data.title) { toast('Fout', 'Productnaam is verplicht', 'error'); return; }
+        if (!data.price || data.price <= 0) { toast('Fout', 'Vul een geldige verkoopprijs in (groter dan 0)', 'error'); return; }
+
+        if (isNew) {
+          const newProduct = {
+            id: 'p-' + Date.now(),
+            title: data.title,
+            description: data.description || '',
+            price: Number(data.price),
+            oldPrice: data.oldPrice ? Number(data.oldPrice) : null,
+            badge: data.badge || 'Uitgelicht',
+            conditionGrade: data.conditionGrade || 'goed',
+            image: 'https://images.unsplash.net/photo-1503602642458-232111445657?w=500&q=80',
+            images: ['https://images.unsplash.net/photo-1503602642458-232111445657?w=500&q=80'],
+            createdAt: Date.now()
+          };
+          window.LagencoDB.saveProduct(newProduct).then(() => {
+            toast('Toegevoegd', data.title + ' is toegevoegd aan de website', 'success');
+            close();
+            navigate('websiteproducten');
+          });
+        } else {
+          const updated = Object.assign({}, p, {
+            title: data.title,
+            description: data.description || '',
+            price: Number(data.price),
+            oldPrice: data.oldPrice ? Number(data.oldPrice) : null,
+            badge: data.badge || 'Uitgelicht',
+            conditionGrade: data.conditionGrade || 'goed',
+            updatedAt: Date.now()
+          });
+          window.LagencoDB.saveProduct(updated).then(() => {
+            toast('Opgeslagen', data.title + ' is bijgewerkt op de website', 'success');
+            close();
+            navigate('websiteproducten');
+          });
+        }
+      }, p || {});
+    }
+  });
 
   // ═══════════════════════════════════════════════════════
   // VIEW: PRODUCTEN
@@ -1266,12 +1498,8 @@
   // VIEW: BIEDINGEN (bids from customers)
   // ═══════════════════════════════════════════════════════
   view('biedingen', function (root) {
-    // Read bids from main website storage (lagencoBids key)
-    let bids = [];
-    try {
-      const raw = localStorage.getItem('lagencoBids');
-      bids = raw ? JSON.parse(raw) : [];
-    } catch (e) { bids = []; }
+    // Read bids from Firebase (via LagencoDB cache)
+    let bids = (window.LagencoDB && window.LagencoDB.isConfigured) ? window.LagencoDB.getBids() : [];
 
     // Sort: newest first
     bids.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -2210,24 +2438,14 @@
     }
 
     function setBidStatus(id, status) {
-      try {
-        const raw = localStorage.getItem('lagencoBids');
-        const all = raw ? JSON.parse(raw) : [];
-        const b = all.find(x => x.id === id);
-        if (b) {
-          b.status = status;
-          b.updatedAt = new Date().toISOString();
-          localStorage.setItem('lagencoBids', JSON.stringify(all));
-        }
-      } catch (e) { console.warn(e); }
+      if (window.LagencoDB && window.LagencoDB.isConfigured) {
+        window.LagencoDB.updateBidStatus(id, status);
+      }
     }
     function removeBid(id) {
-      try {
-        const raw = localStorage.getItem('lagencoBids');
-        const all = raw ? JSON.parse(raw) : [];
-        const filtered = all.filter(x => x.id !== id);
-        localStorage.setItem('lagencoBids', JSON.stringify(filtered));
-      } catch (e) { console.warn(e); }
+      if (window.LagencoDB && window.LagencoDB.isConfigured) {
+        window.LagencoDB.deleteBid(id);
+      }
     }
 
     function showBidDetail(bid) {
@@ -2373,12 +2591,8 @@
   // VIEW: WHEEL SPIN COUPONS
   // ═══════════════════════════════════════════════════════
   view('coupons', function (root) {
-    // Lees coupons uit localStorage van de hoofdsite
-    let coupons = [];
-    try {
-      const raw = localStorage.getItem('lagencoWheelPrizes');
-      coupons = raw ? JSON.parse(raw) : [];
-    } catch (e) { coupons = []; }
+    // Lees coupons uit Firebase (via LagencoDB cache)
+    let coupons = (window.LagencoDB && window.LagencoDB.isConfigured) ? window.LagencoDB.getCoupons() : [];
 
     // Sorteer: nieuwste eerst
     coupons.sort((a, b) => new Date(b.wonAt) - new Date(a.wonAt));
@@ -2436,14 +2650,12 @@
         if (coupon.status === 'ongebruikt') {
           coupon.status = 'gebruikt';
           coupon.usedAt = new Date().toISOString();
-          try { localStorage.setItem('lagencoWheelPrizes', JSON.stringify(coupons)); } catch (e) {}
           if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.updateCouponStatus(coupon.code, 'gebruikt'); }
           toast('Coupon gemarkeerd als gebruikt', '', 'success');
           navigate('coupons');
         } else if (coupon.status === 'gebruikt') {
           coupon.status = 'ongebruikt';
           coupon.usedAt = null;
-          try { localStorage.setItem('lagencoWheelPrizes', JSON.stringify(coupons)); } catch (e) {}
           if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.updateCouponStatus(coupon.code, 'ongebruikt'); }
           toast('Coupon teruggezet naar ongebruikt', '', 'success');
           navigate('coupons');
@@ -2455,10 +2667,9 @@
         e.preventDefault();
         e.stopPropagation();
         const id = e.currentTarget.dataset.id;
+        const coupon = coupons.find(c => (c.code || c.id) === id);
         confirmModal('Verwijderen', 'Deze coupon definitief verwijderen?', () => {
-          const filtered = coupons.filter(c => (c.code || c.id) !== id);
-          try { localStorage.setItem('lagencoWheelPrizes', JSON.stringify(filtered)); } catch (e) {}
-          if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.deleteCoupon(coupon.code); }
+          if (window.LagencoDB && window.LagencoDB.isConfigured && coupon) { window.LagencoDB.deleteCoupon(coupon.code); }
           toast('Coupon verwijderd', '', 'success');
           navigate('coupons');
         });
@@ -2579,19 +2790,15 @@
       { id: 'niks', label: 'Niks', icon: '😊', color: '#C5B6E5', textColor: '#fff', chance: 93.5, codePrefix: '', title: 'Helaas, geen prijs deze keer!', text: 'Geen zorgen — je kunt het altijd nog een keer proberen!', hasCode: false }
     ];
 
-    // Load current settings from localStorage
-    let settings = [];
-    try {
-      const raw = localStorage.getItem('lagencoWheelSettings');
-      settings = raw ? JSON.parse(raw) : null;
-    } catch (e) { settings = null; }
+    // Load current settings from Firebase (via LagencoDB cache)
+    let settings = (window.LagencoDB && window.LagencoDB.isConfigured) ? window.LagencoDB.getWheelSettings() : null;
     if (!settings || !settings.length) settings = JSON.parse(JSON.stringify(DEFAULT_SEGMENTS));
 
     // Stats
     const totalChance = settings.reduce((a, s) => a + (parseFloat(s.chance) || 0), 0);
     const totalSpins = (function() {
       try {
-        const prizes = JSON.parse(localStorage.getItem('lagencoWheelPrizes') || '[]');
+        const prizes = (window.LagencoDB && window.LagencoDB.isConfigured) ? window.LagencoDB.getCoupons() : [];
         return prizes.length;
       } catch (e) { return 0; }
     })();
@@ -2672,7 +2879,6 @@
         return;
       }
 
-      try { localStorage.setItem('lagencoWheelSettings', JSON.stringify(newSettings)); } catch (e) {}
       if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveWheelSettings(newSettings); }
       toast('Instellingen opgeslagen', '', 'success');
       navigate('wheelsettings');
@@ -2681,7 +2887,6 @@
     // Reset to defaults
     $('#resetDefaultsBtn', root).addEventListener('click', () => {
       confirmModal('Reset naar standaard', 'Weet je zeker dat je alle instellingen wilt resetten naar de standaardwaarden?', () => {
-        localStorage.removeItem('lagencoWheelSettings');
         if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveWheelSettings(null); }
         toast('Standaardinstellingen hersteld', '', 'success');
         navigate('wheelsettings');
@@ -2693,7 +2898,6 @@
       confirmModal('Alle spins resetten', 'Weet je zeker dat je de spin-limiet voor alle bezoekers wilt resetten? Iedereen kan daarna opnieuw draaien.', () => {
         // Generate a new reset token — visitors check this on page load
         const newToken = 'reset_' + Date.now().toString(36);
-        try { localStorage.setItem('lagencoWheelSpinResetToken', newToken); } catch (e) {}
         if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveResetToken(newToken); }
         toast('Alle spins gereset!', 'Bezoekers kunnen nu opnieuw draaien', 'success', 4000);
       });
@@ -2916,7 +3120,7 @@
       '</div></div>';
     html += '<div class="bp-card"><div class="bp-card-head"><div class="bp-card-title"><i class="fas fa-info-circle"></i> Over</div></div><div class="bp-card-body bp-stack">' +
       '<div class="bp-list-item"><div class="bp-list-icon" style="background:var(--bp-primary-soft);color:var(--bp-primary)"><i class="fas fa-chart-line"></i></div><div><div class="bp-strong">Lagenco Business Panel</div><div class="bp-muted">Versie 1.0 · Handelsadministratie</div></div></div>' +
-      '<div class="bp-list-item"><div class="bp-list-icon" style="background:var(--bp-success-soft);color:var(--bp-success)"><i class="fas fa-database"></i></div><div><div class="bp-strong">Locale opslag</div><div class="bp-muted">Data wordt opgeslagen in je browser (localStorage)</div></div></div>' +
+      '<div class="bp-list-item"><div class="bp-list-icon" style="background:var(--bp-success-soft);color:var(--bp-success)"><i class="fas fa-fire"></i></div><div><div class="bp-strong">Firebase Realtime Database</div><div class="bp-muted">Alle data wordt direct in Firebase opgeslagen en real-time gesynchroniseerd met de website</div></div></div>' +
       '<div class="bp-list-item"><div class="bp-list-icon" style="background:#f3e8ff;color:var(--bp-violet)"><i class="fas fa-bolt"></i></div><div><div class="bp-strong">Prestaties</div><div class="bp-muted">Dashboard wordt lazy-loaded · geen impact op website</div></div></div>' +
       '</div></div>';
     html += '</div>';
@@ -3052,7 +3256,59 @@
       if (h && VIEWS[h]) navigate(h);
       else navigate('dashboard');
     }
-    if (!(window.LagencoDB && window.LagencoDB.isConfigured)) {
+
+    // Wait for Firebase to finish initial sync before rendering the
+    // first view — otherwise the dashboard would render with empty data.
+    if (window.LagencoDB && window.LagencoDB.isConfigured) {
+      // Show "loading" message in the splash while we wait
+      const msg = $('#bpSplashMsg');
+      if (msg) msg.textContent = 'Bezig met synchroniseren met Firebase…';
+      window.LagencoDB.syncAll().then(() => {
+        // After initial sync, start real-time listeners
+        window.LagencoDB.startPolling({
+          onProductsChange: function () {
+            // Re-render the website producten view if it's currently active
+            if (currentView === 'websiteproducten') navigate('websiteproducten');
+          },
+          onBidsChange: function () {
+            if (currentView === 'biedingen') navigate('biedingen');
+          },
+          onPostsChange: function () {
+            // community posts are not in the dashboard, but keep hook for completeness
+          },
+          onBpChange: function (collection) {
+            // Re-render current view if its underlying collection changed.
+            // The dashboard / catalogus / etc. read from multiple collections,
+            // so the safest approach is to just re-render the current view.
+            const relevantViews = {
+              producten: ['producten'],
+              voorraad: ['voorraad'],
+              inkoop: ['inkoop'],
+              verkoop: ['verkoop'],
+              catalogus: ['producten', 'voorraad', 'verkoop'],
+              klanten: ['klanten'],
+              tracking: ['tracking'],
+              marktplaats: ['marktplaats'],
+              research: ['research'],
+              werknemers: ['werknemers']
+            };
+            const deps = relevantViews[currentView] || [];
+            if (deps.indexOf(collection) !== -1) {
+              navigate(currentView);
+            }
+          }
+        });
+        // Wait one more tick for BPData.init to finish seeding (if needed)
+        D.onInit(function () {
+          routeFromHash();
+        });
+        // Safety net: if onInit doesn't fire within 2s (e.g., LagencoDB not configured), route anyway
+        setTimeout(function () { routeFromHash(); }, 2000);
+      }).catch(function (e) {
+        console.warn('[BP] syncAll failed', e);
+        routeFromHash();
+      });
+    } else {
       routeFromHash();
     }
   }
