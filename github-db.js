@@ -21,7 +21,7 @@
   console.log('🐙 Lagenco GitHub DB loaded...');
 
   // ═══ CONFIG — Vul hier je gegevens in ═══
-  const GITHUB_TOKEN = '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';
+  const GITHUB_TOKEN = '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';
   const GITHUB_REPO = 'eleios/lagenco2';
   const GITHUB_BRANCH = 'main';
   const DATA_FILE = 'data/database.json';
