@@ -139,7 +139,6 @@
 
   const VIEW_META = {
     dashboard:    { title: 'Dashboard',         sub: 'Overzicht van je handelsadministratie' },
-    websiteproducten: { title: 'Website Producten', sub: 'Beheer producten die op de website staan' },
     producten:    { title: 'Producten',          sub: 'Beheer je productcatalogus en prijzen' },
     voorraad:     { title: 'Voorraad',           sub: 'Voorraadniveaus en magazijnbeheer' },
     inkoop:       { title: 'Inkoop',             sub: 'Inkooporders en leveranciers' },
@@ -426,204 +425,6 @@
       }
     };
   }
-
-  // ═══════════════════════════════════════════════════════
-  // VIEW: WEBSITE PRODUCTEN (beheer producten op de website)
-  // ═══════════════════════════════════════════════════════
-  view('websiteproducten', function (root) {
-    // Lees website producten uit localStorage
-    let products = [];
-    try {
-      const raw = localStorage.getItem('lagencoProducts');
-      products = raw ? JSON.parse(raw) : [];
-    } catch (e) { products = []; }
-
-    // Condition grade labels
-    const GRADES = {
-      5: { label: 'Excellent', stars: '⭐⭐⭐⭐⭐', desc: 'Als nieuw', color: 'var(--bp-success)' },
-      4: { label: 'Goed', stars: '⭐⭐⭐⭐', desc: 'Lichte gebruikssporen', color: 'var(--bp-info)' },
-      3: { label: 'Redelijk', stars: '⭐⭐⭐', desc: 'Zichtbare slijtage', color: 'var(--bp-warn)' },
-      2: { label: 'Beschadigd', stars: '⭐⭐', desc: 'Functioneel maar niet mooi', color: 'var(--bp-danger)' },
-      0: { label: 'Niet beoordeeld', stars: '—', desc: 'Geen conditie ingesteld', color: 'var(--bp-text-faint)' }
-    };
-
-    const getGrade = (p) => {
-      const g = parseInt(p.condition) || 0;
-      return GRADES[g] || GRADES[0];
-    };
-
-    // KPI's
-    const total = products.length;
-    const withGrade = products.filter(p => parseInt(p.condition) > 0).length;
-    const withoutGrade = total - withGrade;
-    const totalValue = products.reduce((a, p) => a + (parseFloat(p.price) || 0), 0);
-
-    let html = '<div class="bp-kpi-grid" style="margin-bottom:1rem">';
-    html += kpiCard('Website producten', D.fmtNum(total), 'fa-globe', 'primary');
-    html += kpiCard('Met conditie grade', D.fmtNum(withGrade), 'fa-star', 'success');
-    html += kpiCard('Zonder grade', D.fmtNum(withoutGrade), 'fa-exclamation', withoutGrade > 0 ? 'warn' : 'success');
-    html += kpiCard('Totale waarde', D.fmtEuro(totalValue), 'fa-euro-sign', 'info');
-    html += '</div>';
-
-    // Search
-    html += '<div class="bp-filter-bar">' +
-      '<input type="text" class="bp-input" id="wsProductSearch" placeholder="Zoek op naam of badge…" style="flex:1;max-width:400px">' +
-      '</div>';
-
-    html += '<div id="wsProductList">' + renderWSProductList(products, '') + '</div>';
-    root.innerHTML = html;
-
-    // Search handler
-    $('#wsProductSearch', root).addEventListener('input', () => {
-      const s = ($('#wsProductSearch', root).value || '').toLowerCase();
-      $('#wsProductList', root).innerHTML = renderWSProductList(products, s);
-      setTimeout(() => wireWSActions(), 50);
-    });
-    setTimeout(() => wireWSActions(), 50);
-
-    function wireWSActions() {
-      $$('.ws-edit-btn', root).forEach(b => b.addEventListener('click', e => {
-        const id = e.currentTarget.dataset.id;
-        const product = products.find(p => p.id === id);
-        if (product) editWSProduct(product);
-      }));
-      $$('.ws-delete-btn', root).forEach(b => b.addEventListener('click', e => {
-        const id = e.currentTarget.dataset.id;
-        confirmModal('Verwijderen', 'Dit product van de website verwijderen?', () => {
-          const filtered = products.filter(p => p.id !== id);
-          try { localStorage.setItem('lagencoProducts', JSON.stringify(filtered)); } catch (e) {}
-          if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.deleteProduct(id); }
-          toast('Product verwijderd', '', 'success');
-          navigate('websiteproducten');
-        });
-      }));
-    }
-
-    function renderWSProductList(allProducts, search) {
-      let list = allProducts;
-      if (search) {
-        list = list.filter(p =>
-          (p.title || '').toLowerCase().includes(search) ||
-          (p.badge || '').toLowerCase().includes(search) ||
-          (p.description || '').toLowerCase().includes(search)
-        );
-      }
-      if (!list.length) {
-        return emptyState('fa-globe', 'Geen website producten', 'Voeg producten toe via de website admin modus', '', null).outerHTML;
-      }
-
-      let h = '<div class="bp-card"><div class="bp-card-body-p0"><div class="bp-table-wrap"><table class="bp-table">' +
-        '<thead><tr><th>Naam</th><th>Beschrijving</th><th class="num">Prijs</th><th>Oude prijs</th><th>Badge</th><th>Conditie</th><th class="num">Acties</th></tr></thead><tbody>';
-      list.forEach(p => {
-        const grade = getGrade(p);
-        const descShort = (p.description || '').length > 40 ? (p.description || '').substring(0, 40) + '…' : (p.description || '—');
-        h += '<tr data-id="' + esc(p.id) + '">' +
-          '<td class="strong">' + esc(p.title || 'Naamloos') + '</td>' +
-          '<td style="max-width:200px;font-size:.82rem;color:var(--bp-text-muted)">' + esc(descShort) + '</td>' +
-          '<td class="num strong">' + D.fmtEuro(p.price) + '</td>' +
-          '<td class="num bp-muted">' + (p.oldPrice ? D.fmtEuro(p.oldPrice) : '—') + '</td>' +
-          '<td>' + esc(p.badge || '—') + '</td>' +
-          '<td><span style="color:' + grade.color + ';font-weight:600;font-size:.82rem">' + grade.stars + ' ' + grade.label + '</span></td>' +
-          '<td class="num"></td></tr>';
-      });
-      h += '</tbody></table></div></div></div>';
-      setTimeout(() => {
-        $$('#wsProductList tr[data-id]').forEach(tr => {
-          const id = tr.dataset.id;
-          const product = products.find(p => p.id === id);
-          if (!product) return;
-          const wrap = document.createElement('div');
-          wrap.className = 'bp-row-actions';
-          const eb = document.createElement('button');
-          eb.className = 'bp-row-action ws-edit-btn'; eb.title = 'Bewerken';
-          eb.dataset.id = id;
-          eb.innerHTML = '<i class="fas fa-pen"></i>';
-          wrap.appendChild(eb);
-          const db = document.createElement('button');
-          db.className = 'bp-row-action ws-delete-btn'; db.title = 'Verwijderen';
-          db.dataset.id = id;
-          db.innerHTML = '<i class="fas fa-trash"></i>';
-          wrap.appendChild(db);
-          tr.querySelector('td:last-child').appendChild(wrap);
-        });
-      }, 0);
-      return h;
-    }
-
-    function editWSProduct(product) {
-      const grade = getGrade(product);
-      const body = '<div class="bp-form-grid">' +
-        '<div class="bp-field full">' +
-          '<label class="bp-label">Product naam <span class="req">*</span></label>' +
-          '<input class="bp-input" id="wsEditTitle" value="' + esc(product.title || '') + '">' +
-        '</div>' +
-        '<div class="bp-field full">' +
-          '<label class="bp-label">Beschrijving</label>' +
-          '<textarea class="bp-textarea" id="wsEditDesc" rows="3">' + esc(product.description || '') + '</textarea>' +
-        '</div>' +
-        '<div class="bp-field">' +
-          '<label class="bp-label">Prijs (€) <span class="req">*</span></label>' +
-          '<div class="bp-input-group"><span class="bp-prefix">€</span><input type="number" step="0.01" class="bp-input" id="wsEditPrice" value="' + (product.price || 0) + '"></div>' +
-        '</div>' +
-        '<div class="bp-field">' +
-          '<label class="bp-label">Oude prijs (€)</label>' +
-          '<div class="bp-input-group"><span class="bp-prefix">€</span><input type="number" step="0.01" class="bp-input" id="wsEditOldPrice" value="' + (product.oldPrice || '') + '"></div>' +
-        '</div>' +
-        '<div class="bp-field">' +
-          '<label class="bp-label">Badge / Categorie</label>' +
-          '<input class="bp-input" id="wsEditBadge" value="' + esc(product.badge || '') + '" placeholder="Tweedehands / Retourproduct / Nieuw">' +
-        '</div>' +
-        '<div class="bp-field">' +
-          '<label class="bp-label">Conditie grade</label>' +
-          '<select class="bp-select" id="wsEditCondition">' +
-            '<option value="0"' + (!parseInt(product.condition) ? ' selected' : '') + '>— Niet beoordeeld</option>' +
-            '<option value="5"' + (parseInt(product.condition) === 5 ? ' selected' : '') + '>⭐⭐⭐⭐⭐ Excellent (als nieuw)</option>' +
-            '<option value="4"' + (parseInt(product.condition) === 4 ? ' selected' : '') + '>⭐⭐⭐⭐ Goed (lichte gebruikssporen)</option>' +
-            '<option value="3"' + (parseInt(product.condition) === 3 ? ' selected' : '') + '>⭐⭐⭐ Redelijk (zichtbare slijtage)</option>' +
-            '<option value="2"' + (parseInt(product.condition) === 2 ? ' selected' : '') + '>⭐⭐ Beschadigd (functioneel maar niet mooi)</option>' +
-          '</select>' +
-        '</div>' +
-        '</div>' +
-        '<div style="margin-top:1rem;padding:.75rem 1rem;background:var(--bp-bg-2);border-radius:.5rem;display:flex;gap:.5rem;align-items:center">' +
-          '<i class="fas fa-info-circle" style="color:var(--bp-info)"></i>' +
-          '<p style="margin:0;font-size:.78rem;color:var(--bp-text-muted)">Wijzigingen worden direct opgeslagen op de website. Bezoekers zien de update direct.</p>' +
-        '</div>';
-
-      openModal({
-        title: 'Product bewerken', icon: 'fa-edit', large: true, body: body,
-        footer:
-          '<button class="bp-btn bp-btn-ghost" data-action="cancel">Annuleren</button>' +
-          '<button class="bp-btn bp-btn-primary" data-action="save"><i class="fas fa-check"></i> Opslaan</button>',
-        onMount: (m, close) => {
-          m.querySelector('[data-action="cancel"]').addEventListener('click', close);
-          m.querySelector('[data-action="save"]').addEventListener('click', () => {
-            const title = m.querySelector('#wsEditTitle').value.trim();
-            const desc = m.querySelector('#wsEditDesc').value.trim();
-            const price = parseFloat(m.querySelector('#wsEditPrice').value) || 0;
-            const oldPrice = parseFloat(m.querySelector('#wsEditOldPrice').value) || 0;
-            const badge = m.querySelector('#wsEditBadge').value.trim();
-            const condition = parseInt(m.querySelector('#wsEditCondition').value) || 0;
-
-            if (!title) { toast('Fout', 'Naam is verplicht', 'error'); return; }
-
-            // Update product in localStorage
-            product.title = title;
-            product.description = desc;
-            product.price = price;
-            product.oldPrice = oldPrice || undefined;
-            product.badge = badge;
-            product.condition = condition;
-
-            try { localStorage.setItem('lagencoProducts', JSON.stringify(products)); } catch (e) {}
-            if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveProduct(product); }
-            toast('Product bijgewerkt!', '', 'success');
-            close();
-            navigate('websiteproducten');
-          });
-        }
-      });
-    }
-  });
 
   // ═══════════════════════════════════════════════════════
   // VIEW: PRODUCTEN
@@ -1725,7 +1526,7 @@
               '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">' +
                 '<tr>' +
                   '<td align="center">' +
-                    '<a href="https://lagenco.eu/assortiment.html" target="_blank" style="display:inline-block;padding:16px 40px;background:linear-gradient(135deg,#6BBF7E 0%,#4A9D5E 100%);color:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',\'Inter\',Roboto,sans-serif;font-size:15px;font-weight:700;text-decoration:none;border-radius:100px;box-shadow:0 6px 20px rgba(107,191,126,0.30);letter-spacing:0.02em;">' +
+                    '<a href="https://lagenco.nl/assortiment.html" target="_blank" style="display:inline-block;padding:16px 40px;background:linear-gradient(135deg,#6BBF7E 0%,#4A9D5E 100%);color:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',\'Inter\',Roboto,sans-serif;font-size:15px;font-weight:700;text-decoration:none;border-radius:100px;box-shadow:0 6px 20px rgba(107,191,126,0.30);letter-spacing:0.02em;">' +
                       'Bekijk andere producten →' +
                     '</a>' +
                   '</td>' +
@@ -1777,7 +1578,7 @@
           '<tr>' +
             '<td style="background-color:#FFF8F0;padding:28px 40px;border-top:1px solid #FFE0CC;">' +
               '<p style="margin:0 0 8px 0;font-size:13px;color:#6B7A6C;text-align:center;">' +
-                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.eu" style="color:#6BBF7E;font-weight:600;">info@lagenco.eu</a>' +
+                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.nl" style="color:#6BBF7E;font-weight:600;">info@lagenco.nl</a>' +
               '</p>' +
               '<p style="margin:0 0 16px 0;font-size:12px;color:#A5B5A7;text-align:center;">' +
                 'Lagenco · Kwaliteit verdient een tweede kans' +
@@ -1809,7 +1610,7 @@
         'Bedankt voor je bod op ' + (bid.productTitle || 'ons product') + '.\n' +
         'Bedrag: € ' + Number(bid.amount).toFixed(2).replace('.', ',') + '\n\n' +
         msg + '\n\n' +
-        'Bekijk onze andere producten op https://lagenco.eu/assortiment.html\n\n' +
+        'Bekijk onze andere producten op https://lagenco.nl/assortiment.html\n\n' +
         'Met vriendelijke groet,\nLagenco';
       const mailto = 'mailto:' + encodeURIComponent(bid.email || '') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
       window.location.href = mailto;
@@ -1990,7 +1791,7 @@
               // Help section
               '<h2 style="margin:0 0 14px 0;font-size:15px;font-weight:700;color:#2D3A2E;letter-spacing:0.04em;text-transform:uppercase;">Vragen of hulp nodig?</h2>' +
               '<p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#6B7A6C;">' +
-                'Liever toch afhalen? Of problemen met betalen? Reageer op deze mail of stuur een berichtje naar <a href="mailto:info@lagenco.eu" style="color:#6BBF7E;font-weight:600;">info@lagenco.eu</a> — we helpen je graag verder.' +
+                'Liever toch afhalen? Of problemen met betalen? Reageer op deze mail of stuur een berichtje naar <a href="mailto:info@lagenco.nl" style="color:#6BBF7E;font-weight:600;">info@lagenco.nl</a> — we helpen je graag verder.' +
               '</p>' +
 
             '</td>' +
@@ -2000,7 +1801,7 @@
           '<tr>' +
             '<td style="background-color:#FFF8F0;padding:28px 40px;border-top:1px solid #FFE0CC;">' +
               '<p style="margin:0 0 8px 0;font-size:13px;color:#6B7A6C;text-align:center;">' +
-                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.eu" style="color:#6BBF7E;font-weight:600;">info@lagenco.eu</a>' +
+                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.nl" style="color:#6BBF7E;font-weight:600;">info@lagenco.nl</a>' +
               '</p>' +
               '<p style="margin:0 0 16px 0;font-size:12px;color:#A5B5A7;text-align:center;">' +
                 'Lagenco · Kwaliteit verdient een tweede kans' +
@@ -2292,7 +2093,7 @@
           '<tr>' +
             '<td style="background-color:#FFF8F0;padding:28px 40px;border-top:1px solid #FFE0CC;">' +
               '<p style="margin:0 0 8px 0;font-size:13px;color:#6B7A6C;text-align:center;">' +
-                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.eu" style="color:#6BBF7E;font-weight:600;">info@lagenco.eu</a>' +
+                'Vragen? Reply op deze mail of stuur een mail naar <a href="mailto:info@lagenco.nl" style="color:#6BBF7E;font-weight:600;">info@lagenco.nl</a>' +
               '</p>' +
               '<p style="margin:0 0 16px 0;font-size:12px;color:#A5B5A7;text-align:center;">' +
                 'Lagenco · Kwaliteit verdient een tweede kans' +
@@ -2643,7 +2444,6 @@
           coupon.status = 'ongebruikt';
           coupon.usedAt = null;
           try { localStorage.setItem('lagencoWheelPrizes', JSON.stringify(coupons)); } catch (e) {}
-          if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.updateCouponStatus(coupon.code, 'ongebruikt'); }
           toast('Coupon teruggezet naar ongebruikt', '', 'success');
           navigate('coupons');
         }
@@ -3245,28 +3045,6 @@
     }, 300);
     // Wire all navigation and buttons
     wireApp();
-    
-    // ═══ GITHUB DB SYNC — haal laatste data op bij dashboard load ═══
-    if (window.LagencoDB && window.LagencoDB.isConfigured) {
-      console.log('🐙 Dashboard: syncing from GitHub...');
-      window.LagencoDB.syncAll().then(function() {
-        console.log('🐙 Dashboard: sync complete, re-rendering...');
-        routeFromHash();
-      });
-      // Polling: check elke 30s voor updates van andere gebruikers
-      window.LagencoDB.startPolling({
-        onProductsChange: function() { 
-          var h = window.location.hash.replace('#', '');
-          if (h === 'websiteproducten' || h === 'dashboard') navigate(h); 
-        },
-        onBidsChange: function() { 
-          var h = window.location.hash.replace('#', '');
-          if (h === 'biedingen') navigate(h); 
-        },
-        onPostsChange: function() {}
-      });
-    }
-    
     // Route to default view
     function routeFromHash() {
       const h = window.location.hash.replace('#', '');

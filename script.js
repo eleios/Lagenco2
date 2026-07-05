@@ -13,7 +13,7 @@
 // Constants
 // ────────────────────────────────────────────────────────
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.net/photo-1503602642458-232111445657?w=500&q=80';
-const AUTH = { email: 'admin@lagenco.eu', password: 'lagenco123' };
+const AUTH = { email: 'admin@lagenco.nl', password: 'lagenco123' };
 const PAGE = document.body.dataset.page;
 const MAX_IMAGES = 8;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -100,18 +100,6 @@ const badgeClass = (badge = '') => {
   if (b.includes('tweede') || b.includes('tweedehands')) return 'badge-used';
   if (b.includes('sale') || b.includes('aanbieding'))    return 'badge-sale';
   return 'badge-new';
-};
-
-// Condition grade helper — returns stars + label + CSS class
-const conditionInfo = (condition) => {
-  const c = parseInt(condition) || 0;
-  switch (c) {
-    case 5:  return { stars: '★★★★★', label: 'Excellent', cls: 'condition-excellent', desc: 'Als nieuw' };
-    case 4:  return { stars: '★★★★☆', label: 'Goed', cls: 'condition-good', desc: 'Lichte gebruikssporen' };
-    case 3:  return { stars: '★★★☆☆', label: 'Redelijk', cls: 'condition-fair', desc: 'Zichtbare slijtage' };
-    case 2:  return { stars: '★★☆☆☆', label: 'Beschadigd', cls: 'condition-poor', desc: 'Functioneel maar niet mooi' };
-    default: return null; // no grade set
-  }
 };
 
 const escapeHtml = (str = '') => String(str)
@@ -331,8 +319,6 @@ const buildCarouselCard = (product, admin = false) => {
   const discTag = disc
     ? `<span class="tag" style="background:#fef3c7;color:#92400e">-${disc}%</span>`
     : `<span class="tag" style="background:var(--green-light);color:var(--green)">Uitgelicht</span>`;
-  const cond = conditionInfo(product.condition);
-  const condHtml = cond ? `<div class="condition-grade ${cond.cls}" title="${cond.label} — ${cond.desc}"><span class="condition-stars">${cond.stars}</span> <span class="condition-label">${cond.label}</span></div>` : '';
 
   return `
   <article class="card product-card carousel-item" data-product-id="${product.id}">
@@ -348,7 +334,6 @@ const buildCarouselCard = (product, admin = false) => {
     </div>
     <div class="p-5">
       <h3 class="font-semibold text-lg mb-1" style="color:var(--text)">${escapeHtml(product.title)}</h3>
-      ${condHtml}
       <p class="text-sm mb-3" style="color:var(--text-muted)">${escapeHtml(product.description)}</p>
       <div class="flex items-center justify-between gap-2 flex-wrap">
         <div>
@@ -376,8 +361,6 @@ const buildGridCard = (product, admin = false) => {
   const bidBadge = bidCount > 0
     ? `<span class="bid-count-badge" title="${bidCount} ${bidCount === 1 ? 'bod' : 'biedingen'} geplaatst"><i class="fas fa-gavel"></i> ${bidCount}</span>`
     : '';
-  const cond = conditionInfo(product.condition);
-  const condHtml = cond ? `<div class="condition-grade ${cond.cls}" title="${cond.label} — ${cond.desc}"><span class="condition-stars">${cond.stars}</span> <span class="condition-label">${cond.label}</span></div>` : '';
 
   return `
   <article class="card product-card reveal" data-reveal data-product-id="${product.id}">
@@ -394,7 +377,6 @@ const buildGridCard = (product, admin = false) => {
     </div>
     <div class="p-6 flex flex-col" style="flex:1">
       <h3 class="text-xl font-semibold mb-2" style="color:var(--text)">${escapeHtml(product.title)}</h3>
-      ${condHtml}
       <p class="text-sm mb-4" style="color:var(--text-muted);flex:1">${escapeHtml(product.description)}</p>
       <div class="flex items-center justify-between gap-3 flex-wrap mt-auto">
         <div>
@@ -661,20 +643,6 @@ const openProductModal = (id) => {
   const discEl = q('#pmDiscount');
   if (discEl) { discEl.textContent = disc ? `-${disc}%` : ''; discEl.style.display = disc ? '' : 'none'; }
 
-  // Condition grade
-  const condEl = q('#pmCondition');
-  if (condEl) {
-    const cond = conditionInfo(product.condition);
-    if (cond) {
-      condEl.className = `condition-grade ${cond.cls}`;
-      condEl.innerHTML = `<span class="condition-stars">${cond.stars}</span> <span class="condition-label">${cond.label}</span>`;
-      condEl.style.display = '';
-      condEl.title = cond.desc;
-    } else {
-      condEl.style.display = 'none';
-    }
-  }
-
   // Gallery
   const gallery = q('#pmGallery');
   if (gallery) {
@@ -687,11 +655,11 @@ const openProductModal = (id) => {
 
   // Contact link
   const contactBtn = q('#pmContactBtn');
-  if (contactBtn) contactBtn.href = `mailto:info@lagenco.eu?subject=${encodeURIComponent('Interesse in: ' + product.title)}`;
+  if (contactBtn) contactBtn.href = `mailto:info@lagenco.nl?subject=${encodeURIComponent('Interesse in: ' + product.title)}`;
 
   // WhatsApp share
   const waBtn = q('#pmShareWA');
-  if (waBtn) waBtn.onclick = () => window.open(`https://wa.me/?text=${encodeURIComponent(product.title + ' – ' + fmt(product.price) + ' bij Lagenco: info@lagenco.eu')}`, '_blank', 'noopener');
+  if (waBtn) waBtn.onclick = () => window.open(`https://wa.me/?text=${encodeURIComponent(product.title + ' – ' + fmt(product.price) + ' bij Lagenco: info@lagenco.nl')}`, '_blank', 'noopener');
 
   // Wishlist state in modal
   const wmBtn = q('#pmWishlist');
@@ -710,71 +678,7 @@ const openProductModal = (id) => {
     bidBtn.onclick = () => openBidModal(id);
   }
 
-  // Update dynamic structured data (JSON-LD) for this product
-  updateProductStructuredData(product);
-
   openModal('productModal');
-};
-
-// ═══════════════════════════════════════════════════════
-// STRUCTURED DATA (JSON-LD) — dynamische product data voor Google
-// ═══════════════════════════════════════════════════════
-const updateProductStructuredData = (product) => {
-  if (!product) return;
-
-  // Verwijder bestaande product structured data
-  const existing = document.getElementById('product-jsonld');
-  if (existing) existing.remove();
-
-  // Conditie grade bepalen
-  const conditionMap = {
-    5: 'https://schema.org/NewCondition',
-    4: 'https://schema.org/UsedCondition',
-    3: 'https://schema.org/UsedCondition',
-    2: 'https://schema.org/DamagedCondition',
-    0: 'https://schema.org/UsedCondition'
-  };
-  const conditionUrl = conditionMap[parseInt(product.condition) || 0];
-
-  // Bouw structured data object
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": product.title,
-    "description": product.description || '',
-    "image": getImg(product) !== PLACEHOLDER_IMAGE ? [getImg(product)] : undefined,
-    "brand": {
-      "@type": "Brand",
-      "name": "Lagenco"
-    },
-    "offers": {
-      "@type": "Offer",
-      "url": "https://lagenco.eu/assortiment.html",
-      "priceCurrency": "EUR",
-      "price": product.price,
-      "availability": "https://schema.org/InStock",
-      "itemCondition": conditionUrl,
-      "seller": {
-        "@type": "Organization",
-        "name": "Lagenco"
-      }
-    }
-  };
-
-  // Voeg oude prijs toe als er korting is
-  if (product.oldPrice && product.oldPrice > product.price) {
-    structuredData.offers.originalPrice = product.oldPrice;
-  }
-
-  // Voeg rating toe als er reviews zijn
-  // (kan later uitgebreid worden met echte reviews)
-
-  // Inject in head
-  const script = document.createElement('script');
-  script.type = 'application/ld+json';
-  script.id = 'product-jsonld';
-  script.textContent = JSON.stringify(structuredData);
-  document.head.appendChild(script);
 };
 
 const renderRelated = (product) => {
@@ -1185,7 +1089,7 @@ const openShareSheet = (id) => {
   const sharePanel = document.getElementById('shareModal');
   if (sharePanel) {
     document.getElementById('shareWA')?.setAttribute('href', `https://wa.me/?text=${encodeURIComponent(text)}`);
-    document.getElementById('shareFB')?.setAttribute('href', `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://lagenco.eu')}&quote=${encodeURIComponent(text)}`);
+    document.getElementById('shareFB')?.setAttribute('href', `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://lagenco.nl')}&quote=${encodeURIComponent(text)}`);
     document.getElementById('shareEM')?.setAttribute('href', `mailto:?subject=${encodeURIComponent('Bekijk dit bij Lagenco')}&body=${encodeURIComponent(text)}`);
     openModal('shareModal');
   }
@@ -1318,7 +1222,7 @@ const updateAuthUI = () => {
   const status = document.getElementById('loginStatus');
   if (status) {
     status.style.display = logged ? '' : 'none';
-    status.textContent = logged ? '✓ admin@lagenco.eu' : '';
+    status.textContent = logged ? '✓ admin@lagenco.nl' : '';
   }
   document.getElementById('adminPanel')?.classList.toggle('hidden', !logged);
   renderFeatured();
@@ -1606,8 +1510,6 @@ const initAddProduct = () => {
     const price = Number(priceEl?.value);
     const oldPr = Number(oldPrEl?.value) || null;
     const badge = badgeEl?.value.trim() || 'Uitgelicht';
-    const conditionEl = document.getElementById('productCondition');
-    const condition = conditionEl ? parseInt(conditionEl.value) || 0 : 0;
 
     // Validation with field-level feedback
     if (!title) { toast('Vul een productnaam in', 'warn'); titleEl?.focus(); return; }
@@ -1630,7 +1532,6 @@ const initAddProduct = () => {
       title, description: desc,
       price, oldPrice: (oldPr && oldPr > 0) ? oldPr : null,
       badge, image: images[0], images,
-      condition,
       createdAt: Date.now()
     };
 
@@ -1681,8 +1582,6 @@ const openEditModal = (id) => {
   document.getElementById('editPrice').value          = product.price;
   document.getElementById('editOldPrice').value       = product.oldPrice || '';
   document.getElementById('editBadge').value          = product.badge || '';
-  const editCond = document.getElementById('editCondition');
-  if (editCond) editCond.value = parseInt(product.condition) || 0;
 
   openModal('editModal');
 };
@@ -1699,11 +1598,9 @@ const initEditProduct = () => {
     const price = Number(document.getElementById('editPrice')?.value);
     const oldPr = Number(document.getElementById('editOldPrice')?.value) || null;
     const badge = document.getElementById('editBadge')?.value.trim() || 'Uitgelicht';
-    const editCond = document.getElementById('editCondition');
-    const condition = editCond ? parseInt(editCond.value) || 0 : 0;
     if (!title || !price) { toast('Vul naam en prijs in', 'warn'); return; }
 
-    const products = getProducts().map(p => p.id === id ? { ...p, title, description: desc, price, oldPrice: oldPr, badge, condition } : p);
+    const products = getProducts().map(p => p.id === id ? { ...p, title, description: desc, price, oldPrice: oldPr, badge } : p);
     saveProducts(products);
     if (window.LagencoDB && window.LagencoDB.isConfigured) {
       const updated = products.find(p => p.id === id);
@@ -3318,20 +3215,17 @@ const showWheelResult = (winner) => {
     // Sla de coupon op met status 'ongebruikt'
     try {
       const prizes = storage.get('lagencoWheelPrizes', []);
-      const coupon = {
+      prizes.push({
         code,
         type: winner.id,
         label: winner.label,
         wonAt: new Date().toISOString(),
-        status: 'ongebruikt',
+        status: 'ongebruikt',  // ongebruikt | gebruikt
         usedAt: null,
         winnerName: '',
         winnerEmail: ''
-      };
-      prizes.push(coupon);
+      });
       storage.set('lagencoWheelPrizes', prizes);
-      // Sync naar GitHub
-      if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveCoupon(coupon); }
     } catch (e) {}
 
     // Toon het resultaat met naam/email veld EN de code
@@ -3386,7 +3280,7 @@ const showWheelResult = (winner) => {
     // GEEN PRIJS — toon gewoon het resultaat, sla op als 'geen prijs'
     try {
       const prizes = storage.get('lagencoWheelPrizes', []);
-      const coupon = {
+      prizes.push({
         code: null,
         type: winner.id,
         label: winner.label,
@@ -3395,11 +3289,8 @@ const showWheelResult = (winner) => {
         usedAt: null,
         winnerName: '',
         winnerEmail: ''
-      };
-      prizes.push(coupon);
+      });
       storage.set('lagencoWheelPrizes', prizes);
-      // Sync naar GitHub
-      if (window.LagencoDB && window.LagencoDB.isConfigured) { window.LagencoDB.saveCoupon(coupon); }
     } catch (e) {}
 
     if (result) {
@@ -3429,42 +3320,6 @@ const initWheelSpin = () => {
 
 // Expose for inline onclick
 window.openWheelSpin = openWheelSpin;
-
-// Open kopersbescherming info modal
-const openBuyerProtectionModal = () => {
-  openModal('buyerProtectionModal');
-};
-window.openBuyerProtectionModal = openBuyerProtectionModal;
-
-// ═══════════════════════════════════════════════════════
-// NOTIFICATION STACK — beheert meerdere notificaties zonder overlap
-// ═══════════════════════════════════════════════════════
-const getNotificationStack = () => {
-  let stack = document.getElementById('notificationStack');
-  if (!stack) {
-    stack = document.createElement('div');
-    stack.id = 'notificationStack';
-    document.body.appendChild(stack);
-  }
-  return stack;
-};
-
-const addToNotificationStack = (notif) => {
-  const stack = getNotificationStack();
-  stack.appendChild(notif);
-};
-
-const removeFromNotificationStack = (notif, delay = 500) => {
-  notif.classList.add('hiding');
-  setTimeout(() => {
-    notif.remove();
-    // Remove stack container if empty
-    const stack = document.getElementById('notificationStack');
-    if (stack && stack.children.length === 0) {
-      stack.remove();
-    }
-  }, delay);
-};
 
 // ═══════════════════════════════════════════════════════
 // LIVE BOD NOTIFICATIE — toon popup na 15s met laatste bod (1x per bezoeker)
@@ -3523,7 +3378,7 @@ const showLiveBidNotification = () => {
   // Get bidder first name
   const firstName = (latestBid.name || 'Iemand').split(' ')[0];
 
-  // Remove existing live-bid notification if any
+  // Remove existing notification if any
   const existing = document.querySelector('.live-bid-notification');
   if (existing) existing.remove();
 
@@ -3542,17 +3397,21 @@ const showLiveBidNotification = () => {
     </div>
     <button class="live-bid-notification-close" aria-label="Sluiten"><i class="fas fa-times"></i></button>
   `;
-  // Add to notification stack (stapelt automatisch zonder overlap)
-  addToNotificationStack(notif);
+  document.body.appendChild(notif);
+
+  // Animate in
+  setTimeout(() => notif.classList.add('show'), 50);
 
   // Close button
   notif.querySelector('.live-bid-notification-close').addEventListener('click', () => {
-    removeFromNotificationStack(notif);
+    notif.classList.remove('show');
+    setTimeout(() => notif.remove(), 500);
   });
 
   // Auto-dismiss after 8 seconds
   const dismissTimer = setTimeout(() => {
-    removeFromNotificationStack(notif);
+    notif.classList.remove('show');
+    setTimeout(() => notif.remove(), 500);
   }, 8000);
 
   // Pause auto-dismiss on hover
@@ -3592,7 +3451,7 @@ const showWheelSpinNotification = () => {
     if (alreadySpun === '1') return;
   } catch (e) {}
 
-  // Remove existing wheel-spin notification
+  // Remove existing notification
   const existing = document.querySelector('.wheel-spin-notification');
   if (existing) existing.remove();
 
@@ -3610,8 +3469,10 @@ const showWheelSpinNotification = () => {
     <button class="wheel-spin-notification-action" aria-label="Open wheel spin"><i class="fas fa-arrow-right"></i></button>
     <button class="wheel-spin-notification-close" aria-label="Sluiten"><i class="fas fa-times"></i></button>
   `;
-  // Add to notification stack (stapelt automatisch zonder overlap)
-  addToNotificationStack(notif);
+  document.body.appendChild(notif);
+
+  // Animate in
+  setTimeout(() => notif.classList.add('show'), 50);
 
   // Click on action button → scroll to community + open wheel spin
   notif.querySelector('.wheel-spin-notification-action').addEventListener('click', () => {
@@ -3623,19 +3484,22 @@ const showWheelSpinNotification = () => {
     // Mark as seen
     try { sessionStorage.setItem('lagencoWheelSpinNotifShown', wheelSpinPost.id); } catch (e) {}
     // Dismiss notification
-    removeFromNotificationStack(notif);
+    notif.classList.remove('show');
+    setTimeout(() => notif.remove(), 500);
   });
 
   // Close button
   notif.querySelector('.wheel-spin-notification-close').addEventListener('click', () => {
-    removeFromNotificationStack(notif);
+    notif.classList.remove('show');
+    setTimeout(() => notif.remove(), 500);
     // Mark as seen so it doesn't reappear
     try { sessionStorage.setItem('lagencoWheelSpinNotifShown', wheelSpinPost.id); } catch (e) {}
   });
 
   // Auto-dismiss after 10 seconds
   const dismissTimer = setTimeout(() => {
-    removeFromNotificationStack(notif);
+    notif.classList.remove('show');
+    setTimeout(() => notif.remove(), 500);
     try { sessionStorage.setItem('lagencoWheelSpinNotifShown', wheelSpinPost.id); } catch (e) {}
   }, 10000);
 
@@ -3667,7 +3531,6 @@ const init = () => {
   initCardTilt();
   initCounters();
 
-  // ═══ GITHUB DB SYNC ═══
   if (window.LagencoDB && window.LagencoDB.isConfigured) {
     window.LagencoDB.syncAll().then(function() {
       if (PAGE === 'index') { renderFeatured(); renderLiveBids(); renderCommunityPosts(); }
@@ -3680,12 +3543,8 @@ const init = () => {
         if (PAGE === 'index') { renderFeatured(); renderLiveBids(); }
         if (PAGE === 'assortiment') renderAssortment();
       },
-      onBidsChange: function() {
-        if (PAGE === 'index') renderLiveBids();
-      },
-      onPostsChange: function() {
-        if (PAGE === 'index') renderCommunityPosts();
-      }
+      onBidsChange: function() { if (PAGE === 'index') renderLiveBids(); },
+      onPostsChange: function() { if (PAGE === 'index') renderCommunityPosts(); }
     });
   }
 

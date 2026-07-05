@@ -6,9 +6,7 @@
   <title>Lagenco Business Panel — Handelsadministratie</title>
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#0F3D2E">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230F3D2E'/><text y='72' x='50' font-size='62' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>B</text></svg>">
 
   <!-- Fonts: Inter for UI, Sora for headings, Fraunces for editorial accents -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,7 +32,7 @@
       // references window.__bpAuth) keeps working without changes.
       window.__bpAuth = {
         isLoggedIn: function () { return true; },
-        AUTH: { email: 'admin@lagenco.eu', password: 'lagenco123' },
+        AUTH: { email: 'admin@lagenco.nl', password: 'lagenco123' },
         LOGIN_KEY: 'lagencoLoggedIn',
         doLogin: function (email, pass, callback) { callback(true); },
         forceRedirect: function () {}
@@ -97,9 +95,6 @@
 
         <div class="bp-nav-section">
           <div class="bp-nav-label">Handel</div>
-          <a href="#websiteproducten" class="bp-nav-item" data-view="websiteproducten">
-            <i class="fas fa-globe"></i><span>Website Producten</span>
-          </a>
           <a href="#producten" class="bp-nav-item" data-view="producten">
             <i class="fas fa-box"></i><span>Producten</span>
           </a>
@@ -228,7 +223,7 @@
   <script src="business-panel-data.js?v=6" defer></script>
   <!-- Chart.js loaded async — only used by dashboard/reports -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-    <script src="github-db.js?v=7" defer></script>
+    <script src="github-db.js?v=8" defer></script>
   <script src="business-panel.js?v=6" defer></script>
 </body>
 </html>

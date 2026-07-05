@@ -25,7 +25,7 @@ GEWIJZIGDE BESTANDEN
 
 HOE HET WERKT
 ─────────────
-1. Gebruiker logt in via de bestaande login (admin@lagenco.eu / lagenco123)
+1. Gebruiker logt in via de bestaande login (admin@lagenco.nl / lagenco123)
 2. Na login verschijnt rechtsonder een vaste knop "Admin Modus"
 3. Klik op de knop → opent business-panel.html
 4. Het dashboard bevat ALLE functionaliteiten uit de Google Spreadsheet:
@@ -59,7 +59,7 @@ Alle data wordt opgeslagen in localStorage (browser).
 
 INLOGGEN
 ────────
-E-mail:    admin@lagenco.eu
+E-mail:    admin@lagenco.nl
 Wachtwoord: lagenco123
 (zelfde als bestaande website)
 
