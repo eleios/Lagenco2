@@ -890,7 +890,7 @@ h4, h5, h6 { font-weight: 600; letter-spacing: -0.015em; }
   right: 1.5rem;
   z-index: 9999;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse; /* nieuwe meldingen stapelen BOVEN de vorige */
   gap: .75rem;
   pointer-events: none;
   max-width: calc(100vw - 3rem);
@@ -949,8 +949,14 @@ h4, h5, h6 { font-weight: 600; letter-spacing: -0.015em; }
 .toast-warn .toast-progress { background: var(--warn); }
 @keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
 @media (max-width: 480px) {
-  #toast-container { left: 1rem; right: 1rem; bottom: 1rem; }
+  /* Toast-container boven de floating-reviews knop (bottom-left) en backToTop houden */
+  #toast-container { left: 1rem; right: 1rem; bottom: 5.5rem; }
   .toast { min-width: auto; max-width: none; }
+}
+/* Wanneer compareBar zichtbaar is, moet toast-container nog hoger staan (boven compareBar) */
+body:has(#compareBar[style*="display: flex"]) #toast-container { bottom: 7rem; }
+@media (max-width: 480px) {
+  body:has(#compareBar[style*="display: flex"]) #toast-container { bottom: 11rem; }
 }
 
 /* ─────────────────────────────────────────────
@@ -4695,8 +4701,9 @@ textarea:focus {
    ═══════════════════════════════════════════════════════ */
 .live-bid-notification {
   position: fixed;
-  bottom: 1.5rem;
+  top: 5.5rem;
   right: 1.5rem;
+  bottom: auto;
   z-index: 95;
   background: white;
   border: 1.5px solid var(--border);
@@ -4773,9 +4780,10 @@ textarea:focus {
 }
 @media (max-width: 640px) {
   .live-bid-notification {
-    bottom: 1rem;
+    top: 5rem;
     right: 1rem;
     left: 1rem;
+    bottom: auto;
     max-width: none;
   }
 }
@@ -5010,11 +5018,12 @@ footer .footer-link:hover {
 }
 .wheel-result-code.hidden { display: none; }
 
-/* ── Wheel spin notification (bottom-right) ── */
+/* ── Wheel spin notification (top-right, above content) ── */
 .wheel-spin-notification {
   position: fixed;
-  bottom: 1.5rem;
+  top: 5.5rem;
   right: 1.5rem;
+  bottom: auto;
   z-index: 95;
   background: white;
   border: 1.5px solid var(--peach);
@@ -5113,9 +5122,10 @@ footer .footer-link:hover {
 }
 @media (max-width: 640px) {
   .wheel-spin-notification {
-    bottom: 1rem;
+    top: 5rem;
     right: 1rem;
     left: 1rem;
+    bottom: auto;
     max-width: none;
   }
   .wheel-container {
@@ -5136,66 +5146,101 @@ footer .footer-link:hover {
    V11 NOTIFICATION STACK + BUYER PROTECTION
    ═══════════════════════════════════════════════════════ */
 
-/* Buyer protection box */
+/* Buyer protection box — professionele groene trust-badge stijl */
 .buyer-protection-box {
-  background: linear-gradient(135deg, var(--green-light) 0%, var(--blue-soft) 100%);
-  border: 1.5px solid var(--green-light);
+  position: relative;
+  background: linear-gradient(135deg, var(--green-mid) 0%, var(--green) 60%, #5cb070 100%);
+  border: none;
   border-radius: var(--radius-sm);
   padding: 1rem 1.25rem;
   display: flex;
   align-items: center;
   gap: .875rem;
-  transition: all .25s var(--ease-spring);
+  transition: transform .25s var(--ease-spring), box-shadow .25s var(--ease-out), filter .25s;
   cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(74, 157, 94, 0.22), 0 2px 4px rgba(74, 157, 94, 0.12);
+  color: #fff;
+}
+/* Subtiel diagonaal glanzend streepje voor premium uitstraling */
+.buyer-protection-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.18) 50%, transparent 100%);
+  transform: skewX(-20deg);
+  transition: left .65s var(--ease-out);
+  pointer-events: none;
 }
 .buyer-protection-box:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-  border-color: var(--green-mid);
+  box-shadow: 0 10px 26px rgba(74, 157, 94, 0.32), 0 4px 8px rgba(74, 157, 94, 0.18);
+  filter: brightness(1.04);
+}
+.buyer-protection-box:hover::before { left: 130%; }
+.buyer-protection-box:active { transform: translateY(0) scale(.995); }
+.buyer-protection-box:focus-visible {
+  outline: 3px solid var(--green-soft);
+  outline-offset: 3px;
 }
 .buyer-protection-icon {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--green), var(--green-mid));
-  color: white;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1rem;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(107,191,126,0.30);
+  box-shadow: 0 2px 8px rgba(15, 61, 46, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 .buyer-protection-content { flex: 1; min-width: 0; }
 .buyer-protection-title {
   font-family: 'Poppins', sans-serif;
   font-size: .82rem;
   font-weight: 700;
-  color: var(--text);
+  color: #fff;
   margin: 0;
   display: flex;
   align-items: center;
   gap: .35rem;
+  letter-spacing: -.005em;
+  text-shadow: 0 1px 2px rgba(15, 61, 46, 0.15);
 }
 .buyer-protection-title i {
-  color: var(--green-mid);
+  color: #fff;
   font-size: .75rem;
+  opacity: .95;
 }
 .buyer-protection-link {
   font-family: 'Poppins', sans-serif;
   font-size: .72rem;
-  color: var(--green-mid);
+  color: rgba(255, 255, 255, 0.92);
   font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  margin: .15rem 0 0;
+  text-decoration: none;
+  margin: .2rem 0 0;
   display: inline-flex;
   align-items: center;
-  gap: .2rem;
+  gap: .25rem;
+  letter-spacing: .01em;
+}
+.buyer-protection-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-sm);
 }
 .buyer-protection-link i {
-  font-size: .55rem;
-  transition: transform .2s;
+  font-size: .6rem;
+  transition: transform .2s var(--ease-out);
 }
 .buyer-protection-box:hover .buyer-protection-link i {
   transform: translateX(3px);
@@ -5247,4 +5292,128 @@ footer .footer-link:hover {
     max-width: none !important;
     gap: .5rem !important;
   }
+}
+
+/* ═══════════════════════════════════════════════════════
+   V12 PRODUCT CONDITION GRADE — moderne pill-weergave
+   Geïntegreerd in het soft & playful design system.
+   Kleur per grade:
+     excellent  → groen (topkwaliteit)
+     goed       → blauw (solid)
+     redelijk   → geel (acceptable)
+     beschadigd → perzik (functioneel, met cosmetische schade)
+   ═══════════════════════════════════════════════════════ */
+.condition-grade {
+  --cg-tint:        var(--green-light);
+  --cg-tint-strong: var(--green);
+  --cg-ink:         var(--green-mid);
+  --cg-star:        #f5b53d;
+  --cg-star-empty:  rgba(45, 58, 46, 0.16);
+
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .3rem .65rem .3rem .5rem;
+  background: var(--cg-tint);
+  border: 1px solid color-mix(in srgb, var(--cg-tint-strong) 22%, transparent);
+  border-radius: 100px;
+  font-family: 'Poppins', sans-serif;
+  font-size: .72rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+  letter-spacing: -.005em;
+  cursor: default;
+  transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.condition-grade__stars {
+  display: inline-flex;
+  gap: .12rem;
+  font-size: .65rem;
+  line-height: 1;
+}
+.condition-grade__stars i {
+  color: var(--cg-star);
+  font-size: inherit;
+  filter: drop-shadow(0 1px 1px rgba(245, 181, 61, 0.25));
+}
+/* Lege sterren (far) = zachte grijze tint, geen gloed */
+.condition-grade__stars i.far {
+  color: var(--cg-star-empty);
+  filter: none;
+}
+.condition-grade__label {
+  font-weight: 700;
+  color: var(--cg-ink);
+  letter-spacing: .01em;
+}
+.condition-grade__desc {
+  display: none;
+  font-weight: 500;
+  color: var(--text-muted);
+  font-size: .8rem;
+}
+
+/* Per-grade kleurpalet — zacht, speels, onderscheidend */
+.condition-grade--excellent {
+  --cg-tint:        var(--green-light);
+  --cg-tint-strong: var(--green);
+  --cg-ink:         var(--green-mid);
+}
+.condition-grade--goed {
+  --cg-tint:        var(--blue-soft);
+  --cg-tint-strong: var(--blue);
+  --cg-ink:         var(--blue-deep);
+}
+.condition-grade--redelijk {
+  --cg-tint:        var(--yellow-soft);
+  --cg-tint-strong: var(--yellow);
+  --cg-ink:         var(--yellow-deep);
+}
+.condition-grade--beschadigd {
+  --cg-tint:        var(--warm-light);
+  --cg-tint-strong: var(--warm);
+  --cg-ink:         var(--warm-deep);
+}
+
+/* Subtiele hover op productkaarten */
+.product-card .condition-grade:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--cg-tint-strong) 25%, transparent);
+}
+
+/* Grote variant in product-modal */
+.condition-grade--lg {
+  padding: .55rem .9rem .55rem .75rem;
+  font-size: .85rem;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--cg-tint-strong) 18%, transparent);
+}
+.condition-grade--lg .condition-grade__stars { font-size: .8rem; gap: .15rem; }
+.condition-grade--lg .condition-grade__label { font-size: .95rem; font-weight: 800; }
+.condition-grade--lg .condition-grade__desc {
+  display: inline;
+  margin-left: .25rem;
+  font-weight: 500;
+}
+
+/* Donkere-modus verfijning (indien ooit gebruikt) */
+@media (prefers-color-scheme: dark) {
+  .condition-grade {
+    border-color: color-mix(in srgb, var(--cg-tint-strong) 35%, transparent);
+  }
+}
+
+/* Reduced motion: geen hover-animaties */
+@media (prefers-reduced-motion: reduce) {
+  .condition-grade,
+  .product-card .condition-grade:hover { transition: none; transform: none; }
+}
+
+/* Mobiele compacte weergave — pill iets kleiner */
+@media (max-width: 640px) {
+  .condition-grade { font-size: .68rem; padding: .25rem .55rem .25rem .45rem; }
+  .condition-grade__stars { font-size: .6rem; }
 }

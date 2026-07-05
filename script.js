@@ -65,22 +65,22 @@ const saveRecent     = list      => { if (window.LagencoDB) window.LagencoDB.set
 
 // ── Condition grades (Back Market style) ──
 const CONDITION_GRADES = [
-  { value: 'excellent',  stars: 5, label: 'Excellent',  desc: 'Als nieuw' },
-  { value: 'goed',       stars: 4, label: 'Goed',       desc: 'Lichte gebruikssporen' },
-  { value: 'redelijk',   stars: 3, label: 'Redelijk',   desc: 'Zichtbare slijtage' },
-  { value: 'beschadigd', stars: 2, label: 'Beschadigd',  desc: 'Functioneel, met cosmetische schade' }
+  { value: 'excellent',  stars: 5, label: 'Excellent',  desc: 'Als nieuw',            short: 'Exc.' },
+  { value: 'goed',       stars: 4, label: 'Goed',       desc: 'Lichte gebruikssporen', short: 'Goed' },
+  { value: 'redelijk',   stars: 3, label: 'Redelijk',   desc: 'Zichtbare slijtage',    short: 'Red.' },
+  { value: 'beschadigd', stars: 2, label: 'Beschadigd',  desc: 'Functioneel, met cosmetische schade', short: 'Besch.' }
 ];
 const getConditionGrade = (value) => CONDITION_GRADES.find(g => g.value === value) || CONDITION_GRADES[0];
 const renderConditionStars = (value, opts = {}) => {
   const g = getConditionGrade(value);
-  const size = opts.size || '.85rem';
   const showLabel = opts.showLabel !== false;
+  const compact = opts.compact === true;
   const stars = Array.from({ length: 5 }, (_, i) =>
-    `<i class="fa${i < g.stars ? 's' : 'r'} fa-star" style="color:${i < g.stars ? '#f59e0b' : '#d1d5db'};font-size:${size}"></i>`
+    `<i class="fa${i < g.stars ? 's' : 'r'} fa-star" aria-hidden="true"></i>`
   ).join('');
-  return `<span class="condition-grade" data-grade="${g.value}" style="display:inline-flex;align-items:center;gap:.4rem">
-    <span class="condition-stars" style="display:inline-flex;gap:.1rem;line-height:1">${stars}</span>
-    ${showLabel ? `<span class="condition-label" style="font-weight:700;color:var(--text);font-size:.8rem">${g.label}</span>` : ''}
+  return `<span class="condition-grade condition-grade--${g.value}" data-grade="${g.value}" title="${g.label} — ${g.desc}">
+    <span class="condition-grade__stars" aria-hidden="true">${stars}</span>
+    ${showLabel ? `<span class="condition-grade__label">${compact ? g.short : g.label}</span>` : ''}
   </span>`;
 };
 
@@ -369,7 +369,7 @@ const buildCarouselCard = (product, admin = false) => {
     </div>
     <div class="p-5">
       <h3 class="font-semibold text-lg mb-1" style="color:var(--text)">${escapeHtml(product.title)}</h3>
-      <div class="mb-2">${renderConditionStars(product.conditionGrade, { size: '.75rem', showLabel: true })}</div>
+      <div class="mb-2">${renderConditionStars(product.conditionGrade, { compact: true })}</div>
       <p class="text-sm mb-3" style="color:var(--text-muted)">${escapeHtml(product.description)}</p>
       <div class="flex items-center justify-between gap-2 flex-wrap">
         <div>
@@ -413,7 +413,7 @@ const buildGridCard = (product, admin = false) => {
     </div>
     <div class="p-6 flex flex-col" style="flex:1">
       <h3 class="text-xl font-semibold mb-2" style="color:var(--text)">${escapeHtml(product.title)}</h3>
-      <div class="mb-2">${renderConditionStars(product.conditionGrade, { size: '.8rem', showLabel: true })}</div>
+      <div class="mb-2">${renderConditionStars(product.conditionGrade)}</div>
       <p class="text-sm mb-4" style="color:var(--text-muted);flex:1">${escapeHtml(product.description)}</p>
       <div class="flex items-center justify-between gap-3 flex-wrap mt-auto">
         <div>
@@ -682,15 +682,14 @@ const openProductModal = (id) => {
   const condEl = q('#pmConditionGrade');
   if (condEl) {
     const g = getConditionGrade(product.conditionGrade);
+    const stars = Array.from({ length: 5 }, (_, i) =>
+      `<i class="fa${i < g.stars ? 's' : 'r'} fa-star" aria-hidden="true"></i>`
+    ).join('');
     condEl.innerHTML = `
-      <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
-        <span style="display:inline-flex;gap:.15rem;line-height:1">
-          ${Array.from({ length: 5 }, (_, i) =>
-            `<i class="fa${i < g.stars ? 's' : 'r'} fa-star" style="color:${i < g.stars ? '#f59e0b' : '#d1d5db'};font-size:1.05rem"></i>`
-          ).join('')}
-        </span>
-        <span style="font-weight:800;color:var(--text);font-size:1rem;font-family:'Sora',sans-serif">${g.label}</span>
-        <span style="color:var(--text-muted);font-size:.85rem">— ${g.desc}</span>
+      <div class="condition-grade condition-grade--lg condition-grade--${g.value}" data-grade="${g.value}" title="${g.label} — ${g.desc}">
+        <span class="condition-grade__stars" aria-hidden="true">${stars}</span>
+        <span class="condition-grade__label">${g.label}</span>
+        <span class="condition-grade__desc">— ${g.desc}</span>
       </div>`;
   }
 
