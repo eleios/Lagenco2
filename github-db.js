@@ -22,7 +22,7 @@
 
   // ═══ CONFIG — Vul hier je gegevens in ═══
   const GITHUB_TOKEN = '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';
-  const GITHUB_REPO = 'eleios/lagenco';
+  const GITHUB_REPO = 'eleios/lagenco2';
   const GITHUB_BRANCH = 'main';
   const DATA_FILE = 'data/database.json';
 
