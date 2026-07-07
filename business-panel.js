@@ -770,7 +770,7 @@
     const isNew = !p;
     const fields = [
       { key: 'name', label: 'Productnaam', required: true, placeholder: 'bv. Sennheiser E604', full: true },
-      { key: 'category', label: 'Categorie', type: 'select', options: ['Microfoons', 'Gereedschap', 'Accessoires', 'Overigen', 'Overig'], default: 'Microfoons' },
+      { key: 'category', label: 'Categorie', type: 'select', options: ['Microfoons', 'Gereedschap', 'Dyson', 'Overigen', 'Overig'], default: 'Microfoons' },
       { key: 'costPrice', label: 'Inkoopprijs', type: 'euro', placeholder: '0,00' },
       { key: 'sellPrice', label: 'Verkoopprijs', type: 'euro', placeholder: '0,00' },
       { key: 'sold', label: 'Aantal verkocht', type: 'number', step: '1', default: 0 },
