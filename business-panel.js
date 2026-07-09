@@ -290,17 +290,50 @@
   // ═══════════════════════════════════════════════════════
   // VIEW: DASHBOARD
   // ═══════════════════════════════════════════════════════
+  // Periode-state voor de winst-weergave (blijft bewaard tijdens de sessie)
+  let dashboardPeriod = 'always'; // 'today' | '7weeks' | '1month' | 'always'
+
   view('dashboard', function (root) {
     const s = D.dashboardStats();
-    let html = '<div class="bp-kpi-grid">';
-    html += kpiCard('Totale Winst', D.fmtEuro(s.totalProfit), 'fa-arrow-trend-up', 'success', { up: true, text: s.salesCount + ' verkopen' });
+
+    // ── Periode-filterbalk (Vandaag / 7 weken / 1 maand / Altijd) ──
+    const periods = [
+      { key: 'today',   label: 'Vandaag',        icon: 'fa-calendar-day' },
+      { key: '7weeks',  label: 'Afgelopen 7 weken', icon: 'fa-calendar-week' },
+      { key: '1month',  label: '1 maand',        icon: 'fa-calendar' },
+      { key: 'always',  label: 'Altijd',         icon: 'fa-infinity' }
+    ];
+    let periodHtml = '<div class="bp-period-bar">';
+    periodHtml += '<div class="bp-period-label"><i class="fas fa-filter"></i> Winst periode:</div>';
+    periodHtml += '<div class="bp-period-tabs">';
+    periods.forEach(p => {
+      periodHtml += '<button class="bp-period-tab' + (dashboardPeriod === p.key ? ' active' : '') + '" data-period="' + p.key + '">' +
+        '<i class="fas ' + p.icon + '"></i> ' + esc(p.label) +
+        '</button>';
+    });
+    periodHtml += '</div></div>';
+
+    // ── Winst+omzet voor de geselecteerde periode berekenen ──
+    const periodData = D.profitInPeriod(dashboardPeriod);
+    // Handmatige winst-correctie wordt BIJ de periode-winst opgeteld
+    const ms = D.getManualStats();
+    const periodProfit = periodData.profit + ms.winst;
+    const periodRevenue = periodData.revenue + ms.omzet;
+
+    let html = periodHtml;
+    html += '<div class="bp-kpi-grid">';
+    html += kpiCard('Winst · ' + periods.find(p => p.key === dashboardPeriod).label,
+                    D.fmtEuro(periodProfit),
+                    'fa-arrow-trend-up', 'success',
+                    { up: true, text: periodData.count + ' verkopen' });
     html += kpiCard('Omzet', D.fmtEuro(s.totalRevenue), 'fa-euro-sign', 'info');
     html += kpiCard('Geïnvesteerd', D.fmtEuro(s.totalInvested), 'fa-piggy-bank', 'warn');
     html += kpiCard('Voorraadwaarde', D.fmtEuro(s.totalStockValue), 'fa-warehouse', 'violet', { up: true, text: s.totalUnits + ' eenheden' });
     html += kpiCard('Producten', D.fmtNum(s.totalProducts), 'fa-box', 'primary');
     html += kpiCard('Gem. Marge', D.fmtPct(s.avgMargin), 'fa-percent', 'info');
-    html += kpiCard('Lage Voorraad', D.fmtNum(s.lowStockCount), 'fa-triangle-exclamation', s.lowStockCount > 0 ? 'danger' : 'success');
+    html += kpiCard('Voorwaarden', D.fmtNum(s.voorwaarden), 'fa-file-signature', 'lavender');
     html += kpiCard('Klanten', D.fmtNum(s.customersCount), 'fa-users', 'success');
+    html += kpiCard('Lage Voorraad', D.fmtNum(s.lowStockCount), 'fa-triangle-exclamation', s.lowStockCount > 0 ? 'danger' : 'success');
     html += '</div>';
 
     html += '<div class="bp-grid-dashboard">';
@@ -350,6 +383,15 @@
 
     // Wire navigation buttons
     $$('[data-goto]', root).forEach(b => b.addEventListener('click', () => navigate(b.dataset.goto)));
+
+    // Wire periode-tabs — bij klik wordt de geselecteerde periode bewaard
+    // en de dashboard-view opnieuw gerendered.
+    $$('.bp-period-tab', root).forEach(btn => {
+      btn.addEventListener('click', () => {
+        dashboardPeriod = btn.dataset.period;
+        navigate('dashboard');
+      });
+    });
   });
 
   function renderDashboardCharts() {
@@ -359,10 +401,31 @@
       return;
     }
     // Chart 1: Revenue & profit over time
+    // (afhankelijk van geselecteerde periode — toont meer of minder data)
     const c1 = document.getElementById('dashChart1');
     if (c1) {
       const data = D.salesOverTime();
-      const labels = data.map(d => {
+      // Filter op dezelfde periode als de winst-tab
+      let filtered = data;
+      const now = new Date();
+      let since = null;
+      if (dashboardPeriod === 'today') {
+        since = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        // vandaag kan meerdere maanden overlappen → behoud huidige maand
+        since = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else if (dashboardPeriod === '7weeks') {
+        since = new Date(now.getTime() - 49 * 24 * 60 * 60 * 1000);
+      } else if (dashboardPeriod === '1month') {
+        since = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+      }
+      if (since) {
+        filtered = data.filter(d => {
+          const [y, m] = d.month.split('-');
+          return new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1) >= new Date(since.getFullYear(), since.getMonth(), 1);
+        });
+        if (filtered.length === 0) filtered = data.slice(-3);
+      }
+      const labels = filtered.map(d => {
         const [y, m] = d.month.split('-');
         return new Date(y, m - 1).toLocaleDateString('nl-NL', { month: 'short', year: '2-digit' });
       });
@@ -371,8 +434,8 @@
         data: {
           labels: labels.length ? labels : ['Geen data'],
           datasets: [
-            { label: 'Omzet', data: data.map(d => d.revenue), borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,0.1)', fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#4f46e5' },
-            { label: 'Winst', data: data.map(d => d.profit), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#10b981' }
+            { label: 'Omzet', data: filtered.map(d => d.revenue), borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,0.1)', fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#4f46e5' },
+            { label: 'Winst', data: filtered.map(d => d.profit), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#10b981' }
           ]
         },
         options: chartOpts({ legend: true })
@@ -3112,19 +3175,118 @@
   // ═══════════════════════════════════════════════════════
   view('instellingen', function (root) {
     let html = '<div class="bp-grid-2">';
+
+    // ═══ Kaart 1: Statistieken aanpassen (NIEUW) ═══
+    html += '<div class="bp-card" style="grid-column:1 / -1">' +
+      '<div class="bp-card-head">' +
+        '<div class="bp-card-title"><i class="fas fa-sliders"></i> Statistieken aanpassen</div>' +
+        '<button class="bp-btn bp-btn-danger bp-btn-sm" id="setResetStats"><i class="fas fa-rotate-left"></i> Reset naar standaardwaarden</button>' +
+      '</div>' +
+      '<div class="bp-card-body">' +
+        '<p class="bp-muted" style="margin-bottom:1rem;font-size:.85rem">Pas de dashboard-statistieken handmatig omhoog of omlaag aan. De correcties worden opgeteld bij de automatisch berekende waarden. Klik op "Reset naar standaardwaarden" om alle correcties terug te zetten naar 0.</p>' +
+        '<div class="bp-stat-grid" id="statGrid"></div>' +
+      '</div>' +
+    '</div>';
+
+    // ═══ Kaart 2: Data beheer ═══
     html += '<div class="bp-card"><div class="bp-card-head"><div class="bp-card-title"><i class="fas fa-database"></i> Data beheer</div></div><div class="bp-card-body bp-stack">' +
       '<button class="bp-btn bp-btn-secondary" id="setExport"><i class="fas fa-download"></i> Exporteer alle data (JSON)</button>' +
       '<button class="bp-btn bp-btn-secondary" id="setImport"><i class="fas fa-upload"></i> Importeer data (JSON)</button>' +
       '<input type="file" id="setImportFile" accept=".json" hidden>' +
       '<button class="bp-btn bp-btn-danger" id="setReset"><i class="fas fa-rotate-left"></i> Reset naar seed data</button>' +
       '</div></div>';
+
+    // ═══ Kaart 3: Over ═══
     html += '<div class="bp-card"><div class="bp-card-head"><div class="bp-card-title"><i class="fas fa-info-circle"></i> Over</div></div><div class="bp-card-body bp-stack">' +
-      '<div class="bp-list-item"><div class="bp-list-icon" style="background:var(--bp-primary-soft);color:var(--bp-primary)"><i class="fas fa-chart-line"></i></div><div><div class="bp-strong">Lagenco Business Panel</div><div class="bp-muted">Versie 1.0 · Handelsadministratie</div></div></div>' +
+      '<div class="bp-list-item"><div class="bp-list-icon" style="background:var(--bp-primary-soft);color:var(--bp-primary)"><i class="fas fa-chart-line"></i></div><div><div class="bp-strong">Lagenco Business Panel</div><div class="bp-muted">Versie 1.1 · Handelsadministratie</div></div></div>' +
       '<div class="bp-list-item"><div class="bp-list-icon" style="background:var(--bp-success-soft);color:var(--bp-success)"><i class="fas fa-fire"></i></div><div><div class="bp-strong">Firebase Realtime Database</div><div class="bp-muted">Alle data wordt direct in Firebase opgeslagen en real-time gesynchroniseerd met de website</div></div></div>' +
       '<div class="bp-list-item"><div class="bp-list-icon" style="background:#f3e8ff;color:var(--bp-violet)"><i class="fas fa-bolt"></i></div><div><div class="bp-strong">Prestaties</div><div class="bp-muted">Dashboard wordt lazy-loaded · geen impact op website</div></div></div>' +
       '</div></div>';
     html += '</div>';
+
     root.innerHTML = html;
+
+    // ── Statistieken-aanpassen grid renderen ──
+    const STAT_DEFS = [
+      { key: 'winst',        label: 'Winst',         icon: 'fa-arrow-trend-up', color: 'success', unit: 'euro',   step: 1 },
+      { key: 'omzet',        label: 'Omzet',         icon: 'fa-euro-sign',       color: 'info',    unit: 'euro',   step: 1 },
+      { key: 'geinvesteerd', label: 'Geïnvesteerd',  icon: 'fa-piggy-bank',      color: 'warn',    unit: 'euro',   step: 1 },
+      { key: 'voorwaarden',  label: 'Voorwaarden',   icon: 'fa-file-signature',  color: 'lavender',unit: 'count',  step: 1 },
+      { key: 'klanten',      label: 'Klanten',       icon: 'fa-users',           color: 'primary', unit: 'count',  step: 1 }
+    ];
+
+    function renderStatGrid() {
+      const ms = D.getManualStats();
+      const grid = $('#statGrid', root);
+      if (!grid) return;
+      let g = '';
+      STAT_DEFS.forEach(def => {
+        const val = ms[def.key] || 0;
+        const isEuro = def.unit === 'euro';
+        const display = isEuro ? D.fmtEuro(val) : D.fmtNum(val);
+        g += '<div class="bp-stat-row" data-stat="' + def.key + '">' +
+          '<div class="bp-stat-row-head">' +
+            '<div class="bp-stat-icon bp-stat-' + def.color + '"><i class="fas ' + def.icon + '"></i></div>' +
+            '<div class="bp-stat-row-info">' +
+              '<div class="bp-stat-row-label">' + esc(def.label) + '</div>' +
+              '<div class="bp-stat-row-sub bp-muted">Correctie t.o.v. berekende waarde</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="bp-stat-row-controls">' +
+            '<button class="bp-stat-btn dec" data-action="dec" data-stat="' + def.key + '" data-step="' + def.step + '" title="Omlaag"><i class="fas fa-minus"></i></button>' +
+            '<input type="number" class="bp-stat-input" data-stat="' + def.key + '" step="' + (isEuro ? '0.01' : '1') + '" value="' + esc(val) + '">' +
+            '<button class="bp-stat-btn inc" data-action="inc" data-stat="' + def.key + '" data-step="' + def.step + '" title="Omhoog"><i class="fas fa-plus"></i></button>' +
+            '<div class="bp-stat-display">' + display + '</div>' +
+          '</div>' +
+        '</div>';
+      });
+      grid.innerHTML = g;
+
+      // Wire +/- buttons
+      $$('.bp-stat-btn', grid).forEach(btn => {
+        btn.addEventListener('click', () => {
+          const stat = btn.dataset.stat;
+          const step = parseFloat(btn.dataset.step) || 1;
+          const delta = btn.dataset.action === 'inc' ? step : -step;
+          const newStats = D.adjustManualStat(stat, delta);
+          toast(btn.dataset.action === 'inc' ? 'Verhoogd' : 'Verlaagd',
+                STAT_DEFS.find(d => d.key === stat).label + ' correctie is nu ' +
+                  (newStats[stat] >= 0 ? '+' : '') + (STAT_DEFS.find(d => d.key === stat).unit === 'euro' ? D.fmtEuro(newStats[stat]) : D.fmtNum(newStats[stat])),
+                'success');
+          renderStatGrid();
+        });
+      });
+
+      // Wire direct input editing
+      $$('.bp-stat-input', grid).forEach(input => {
+        input.addEventListener('change', () => {
+          const stat = input.dataset.stat;
+          const newVal = D.parseNum(input.value);
+          const current = D.getManualStats();
+          current[stat] = newVal;
+          D.setManualStats(current);
+          toast('Opgeslagen', STAT_DEFS.find(d => d.key === stat).label + ' correctie ingesteld op ' +
+                (newVal >= 0 ? '+' : '') + (STAT_DEFS.find(d => d.key === stat).unit === 'euro' ? D.fmtEuro(newVal) : D.fmtNum(newVal)),
+                'success');
+          renderStatGrid();
+        });
+      });
+    }
+    renderStatGrid();
+
+    // ── Reset alle correcties naar 0 (standaardwaarden) ──
+    $('#setResetStats', root).addEventListener('click', () => {
+      confirmModal(
+        'Reset statistieken',
+        'Weet je zeker dat je alle handmatige correcties wilt terugzetten naar de standaardwaarden (0)? De automatisch berekende waarden blijven ongewijzigd.',
+        () => {
+          D.resetManualStats();
+          toast('Reset voltooid', 'Alle correcties zijn teruggezet naar 0', 'success');
+          renderStatGrid();
+        }
+      );
+    });
+
     $('#setExport', root).addEventListener('click', exportJson);
     $('#setReset', root).addEventListener('click', () => {
       confirmModal('Reset data', 'Alle wijzigingen gaan verloren. Doorgaan?', () => {

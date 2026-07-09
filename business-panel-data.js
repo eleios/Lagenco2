@@ -141,6 +141,18 @@
       { id: 'w_1', reference: 'BET-001', employee: 'Bart van Lagen', amount: 175, date: '2026-06-09', reason: 'Aandeel inkoop bestelling', category: 'Uitkering', approver: 'Bart van Lagen', note: 'Gedeeld met broer — ieder €175', status: 'Goedgekeurd' }
     ],
 
+    // ═══ Handmatige statistiek-correcties ═══
+    // Deze waarden worden door de gebruiker in Instellingen → Statistieken
+    // aanpassen opgeteld bij de berekende dashboard-statistieken.
+    // Standaardwaarde = 0 (geen correctie → originele berekende waarden).
+    manualStats: {
+      winst:        0,   // opgeteld bij totale winst
+      omzet:        0,   // opgeteld bij omzet
+      geinvesteerd: 0,   // opgeteld bij geïnvesteerd
+      voorwaarden:  0,   // los te tellen teller (geen automatische bron)
+      klanten:      0    // opgeteld bij klanten-aantal
+    },
+
     catalogus: [] // computed dynamically from producten + voorraad + verkoop
   };
 
@@ -289,19 +301,23 @@
 
     const lowStock = voorraad.filter(function (v) { return parseNum(v.stock) <= parseNum(v.minStock); });
 
+    // ── Handmatige correcties ophalen (standaard 0) ──
+    const ms = getManualStats();
+
     return {
       totalProducts: producten.length,
       totalUnits: totalUnits,
-      totalInvested: totalInvested,
-      totalRevenue: totalRevenue,
-      totalProfit: totalProfit,
+      totalInvested: totalInvested + ms.geinvesteerd,
+      totalRevenue: totalRevenue + ms.omzet,
+      totalProfit: totalProfit + ms.winst,
       totalStockValue: totalStockValue,
       avgMargin: avgMargin,
       salesCount: verkoop.length,
       purchasesCount: inkoop.length,
       lowStockCount: lowStock.length,
       lowStock: lowStock,
-      customersCount: list('klanten').length,
+      customersCount: list('klanten').length + ms.klanten,
+      voorwaarden: ms.voorwaarden,
       activeListings: list('marktplaats').filter(function (m) { return m.status !== 'Verkocht'; }).length
     };
   }
@@ -321,6 +337,100 @@
     return Object.keys(map).sort().map(function (k) {
       return Object.assign({ month: k }, map[k]);
     });
+  }
+
+  // ────────────────────────────────────────────────────────
+  // Periode-filter voor de dashboard-winst
+  // Ondersteunde perioden: 'today' | '7weeks' | '1month' | 'always'
+  // ────────────────────────────────────────────────────────
+  function profitInPeriod(period) {
+    const verkoop = list('verkoop');
+    const now = new Date();
+    let since = null;
+
+    if (period === 'today') {
+      // Begin van vandaag (00:00 uur, locale NL)
+      since = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (period === '7weeks') {
+      // 7 weken = 49 dagen geleden
+      since = new Date(now.getTime() - 49 * 24 * 60 * 60 * 1000);
+    } else if (period === '1month') {
+      // 1 kalendermaand geleden
+      since = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+    } else {
+      // 'always' of onbekend → geen filter
+      since = null;
+    }
+
+    let revenue = 0;
+    let profit = 0;
+    let count = 0;
+    verkoop.forEach(function (s) {
+      const d = new Date(s.date);
+      if (isNaN(d)) return;
+      if (since && d < since) return;
+      revenue += parseNum(s.sellPrice);
+      profit += parseNum(s.profit);
+      count += 1;
+    });
+
+    return { revenue: revenue, profit: profit, count: count, period: period || 'always' };
+  }
+
+  // ────────────────────────────────────────────────────────
+  // Handmatige statistiek-correcties (manualStats)
+  // — opgeslagen als bp/manualStats in Firebase
+  // — standaardwaarden: alle 0 (= originele berekende waarden)
+  // ────────────────────────────────────────────────────────
+  const MANUAL_KEYS = ['winst', 'omzet', 'geinvesteerd', 'voorwaarden', 'klanten'];
+
+  function getManualStats() {
+    // Lees uit Firebase cache (via LagencoDB.bpList) of fallback op SEED
+    if (window.LagencoDB) {
+      const v = window.LagencoDB.bpList('manualStats');
+      // bpList geeft array terug; voor een objectwaarde moeten we het anders uitlezen
+      if (Array.isArray(v) && v.length === 0) {
+        //-cache leeg → fallback
+      } else if (Array.isArray(v) && v.length > 0 && typeof v[0] === 'object') {
+        return normalizeManualStats(v[0]);
+      } else if (v && typeof v === 'object' && !Array.isArray(v)) {
+        return normalizeManualStats(v);
+      }
+    }
+    // Fallback op SEED
+    const seed = SEED.manualStats;
+    return normalizeManualStats(seed);
+  }
+
+  function normalizeManualStats(obj) {
+    const o = obj || {};
+    const out = {};
+    MANUAL_KEYS.forEach(function (k) {
+      out[k] = parseNum(o[k]);
+    });
+    return out;
+  }
+
+  function setManualStats(stats) {
+    const clean = normalizeManualStats(stats);
+    if (window.LagencoDB && window.LagencoDB.isConfigured) {
+      // Sla op als array met één object — consistent met de rest van bp/{collection}
+      window.LagencoDB.bpSave('manualStats', [clean]);
+    }
+    return clean;
+  }
+
+  function adjustManualStat(key, delta) {
+    if (MANUAL_KEYS.indexOf(key) === -1) return null;
+    const current = getManualStats();
+    current[key] = current[key] + parseNum(delta);
+    return setManualStats(current);
+  }
+
+  function resetManualStats() {
+    const reset = {};
+    MANUAL_KEYS.forEach(function (k) { reset[k] = 0; });
+    return setManualStats(reset);
   }
 
   function categoryBreakdown() {
@@ -415,6 +525,12 @@
     computeProductMetrics: computeProductMetrics,
     dashboardStats: dashboardStats,
     salesOverTime: salesOverTime,
+    profitInPeriod: profitInPeriod,
+    getManualStats: getManualStats,
+    setManualStats: setManualStats,
+    adjustManualStat: adjustManualStat,
+    resetManualStats: resetManualStats,
+    MANUAL_STATS_KEYS: MANUAL_KEYS,
     categoryBreakdown: categoryBreakdown,
     buildCatalogus: buildCatalogus,
     exportAll: exportAll,
