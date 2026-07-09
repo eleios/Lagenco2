@@ -296,10 +296,10 @@
   view('dashboard', function (root) {
     const s = D.dashboardStats();
 
-    // ── Periode-filterbalk (Vandaag / 7 weken / 1 maand / Altijd) ──
+    // ── Periode-filterbalk (Vandaag / 7 dagen / 1 maand / Altijd) ──
     const periods = [
       { key: 'today',   label: 'Vandaag',        icon: 'fa-calendar-day' },
-      { key: '7weeks',  label: 'Afgelopen 7 weken', icon: 'fa-calendar-week' },
+      { key: '7days',  label: 'Afgelopen 7 dagen', icon: 'fa-calendar-week' },
       { key: '1month',  label: '1 maand',        icon: 'fa-calendar' },
       { key: 'always',  label: 'Altijd',         icon: 'fa-infinity' }
     ];
