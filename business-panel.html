@@ -17,7 +17,59 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- Business panel styles (only loaded on this page — does not affect main website) -->
-  <link rel="stylesheet" href="business-panel.css">
+  <!-- v=20 cache-busting query zorgt dat browsers altijd de nieuwste CSS ophalen -->
+  <link rel="stylesheet" href="business-panel.css?v=20">
+
+  <!-- ═══ INLINE FALLBACK STYLES (v1.1) ═══
+       Garandeert dat de nieuwe UI-elementen (periode-tabs + statistiek-
+       aanpassing) altijd correct worden weergegeven, zelfs als de browser
+       een verouderde versie van business-panel.css heeft gecached. -->
+  <style>
+    /* Periode-filterbalk */
+    .bp-period-bar{display:flex !important;align-items:center !important;gap:1rem !important;flex-wrap:wrap !important;background:#fff !important;border:1px solid #FFE0CC !important;border-radius:1.25rem !important;padding:0.85rem 1rem !important;margin-bottom:1.25rem !important;box-shadow:0 4px 12px rgba(74,122,78,0.06) !important}
+    .bp-period-label{display:inline-flex !important;align-items:center !important;gap:0.5rem !important;font-family:'Poppins',sans-serif !important;font-weight:600 !important;font-size:0.85rem !important;color:#2D3A2E !important;white-space:nowrap !important}
+    .bp-period-label i{color:#6BBF7E !important;font-size:0.8rem !important}
+    .bp-period-tabs{display:flex !important;gap:0.35rem !important;flex-wrap:wrap !important;background:#FFEDD8 !important;border-radius:9999px !important;padding:0.25rem !important}
+    .bp-period-tab{display:inline-flex !important;align-items:center !important;gap:0.4rem !important;padding:0.5rem 1rem !important;font-family:'Poppins',sans-serif !important;font-weight:600 !important;font-size:0.82rem !important;color:#6B7A6C !important;background:transparent !important;border:none !important;border-radius:9999px !important;cursor:pointer !important;transition:all 0.18s cubic-bezier(0.16,1,0.3,1) !important;white-space:nowrap !important}
+    .bp-period-tab i{font-size:0.75rem !important}
+    .bp-period-tab:hover{color:#4A9D5E !important;background:rgba(107,191,126,0.15) !important}
+    .bp-period-tab.active{background:linear-gradient(135deg,#6BBF7E,#4A9D5E) !important;color:#fff !important;box-shadow:0 4px 12px rgba(107,191,126,0.45) !important}
+    .bp-period-tab.active i{color:#fff !important}
+
+    /* Statistieken-aanpassen grid */
+    .bp-stat-grid{display:grid !important;grid-template-columns:repeat(auto-fit,minmax(280px,1fr)) !important;gap:0.875rem !important}
+    .bp-stat-row{display:flex !important;flex-direction:column !important;gap:0.75rem !important;padding:1rem 1.1rem !important;background:#FFF4E8 !important;border:1px solid #FFE0CC !important;border-radius:1rem !important;transition:all 0.18s cubic-bezier(0.16,1,0.3,1) !important}
+    .bp-stat-row:hover{border-color:#6BBF7E !important;box-shadow:0 4px 12px rgba(74,122,78,0.06) !important;transform:translateY(-1px) !important}
+    .bp-stat-row-head{display:flex !important;align-items:center !important;gap:0.75rem !important}
+    .bp-stat-icon{width:2.25rem !important;height:2.25rem !important;border-radius:0.75rem !important;display:flex !important;align-items:center !important;justify-content:center !important;font-size:0.95rem !important;flex-shrink:0 !important}
+    .bp-stat-success{background:#D5EDDA !important;color:#4A9D5E !important}
+    .bp-stat-info{background:#D8EEF6 !important;color:#5BA8C9 !important}
+    .bp-stat-warn{background:#FFF3CC !important;color:#D4A24E !important}
+    .bp-stat-lavender{background:#E8DEF8 !important;color:#9F8AC9 !important}
+    .bp-stat-primary{background:#D5EDDA !important;color:#6BBF7E !important}
+    .bp-stat-row-info{flex:1 !important;min-width:0 !important}
+    .bp-stat-row-label{font-family:'Poppins',sans-serif !important;font-weight:700 !important;font-size:0.92rem !important;color:#2D3A2E !important;letter-spacing:-0.01em !important}
+    .bp-stat-row-sub{font-size:0.72rem !important;margin-top:0.1rem !important;color:#6B7A6C !important}
+    .bp-stat-row-controls{display:flex !important;align-items:center !important;gap:0.4rem !important}
+    .bp-stat-btn{width:2rem !important;height:2rem !important;border-radius:0.5rem !important;background:#fff !important;border:1px solid #FFE0CC !important;color:#6B7A6C !important;font-size:0.75rem !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;cursor:pointer !important;transition:all 0.18s cubic-bezier(0.16,1,0.3,1) !important;flex-shrink:0 !important}
+    .bp-stat-btn:hover{background:linear-gradient(135deg,#6BBF7E,#4A9D5E) !important;color:#fff !important;border-color:#6BBF7E !important;transform:scale(1.05) !important;box-shadow:0 4px 10px rgba(107,191,126,0.3) !important}
+    .bp-stat-btn:active{transform:scale(0.95) !important}
+    .bp-stat-btn.dec:hover{background:linear-gradient(135deg,#E06055,#c54a3f) !important;border-color:#E06055 !important;box-shadow:0 4px 10px rgba(224,96,85,0.3) !important}
+    .bp-stat-input{flex:1 !important;min-width:0 !important;padding:0.45rem 0.65rem !important;border:1px solid #FFE0CC !important;border-radius:0.5rem !important;background:#fff !important;font-family:'Poppins',sans-serif !important;font-size:0.85rem !important;font-weight:600 !important;color:#2D3A2E !important;outline:none !important;text-align:center !important;font-variant-numeric:tabular-nums !important;transition:all 0.18s cubic-bezier(0.16,1,0.3,1) !important;-moz-appearance:textfield !important}
+    .bp-stat-input::-webkit-outer-spin-button,.bp-stat-input::-webkit-inner-spin-button{-webkit-appearance:none !important;margin:0 !important}
+    .bp-stat-input:focus{border-color:#6BBF7E !important;box-shadow:0 0 0 3px rgba(107,191,126,0.15) !important}
+    .bp-stat-display{font-family:'Poppins',sans-serif !important;font-weight:700 !important;font-size:0.85rem !important;color:#4A9D5E !important;min-width:4.5rem !important;text-align:right !important;font-variant-numeric:tabular-nums !important;letter-spacing:-0.01em !important}
+
+    /* Quick-adjust paneel bovenaan dashboard */
+    .bp-quick-adjust{background:linear-gradient(135deg,#fff,#FFF4E8) !important;border:1px solid #FFE0CC !important;border-radius:1.25rem !important;padding:1rem 1.1rem !important;margin-bottom:1.25rem !important;box-shadow:0 4px 12px rgba(74,122,78,0.06) !important}
+    .bp-quick-adjust-head{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:0.75rem !important;flex-wrap:wrap !important;margin-bottom:0.85rem !important}
+    .bp-quick-adjust-title{display:inline-flex !important;align-items:center !important;gap:0.5rem !important;font-family:'Poppins',sans-serif !important;font-weight:700 !important;font-size:0.95rem !important;color:#2D3A2E !important;letter-spacing:-0.01em !important}
+    .bp-quick-adjust-title i{color:#6BBF7E !important}
+    .bp-quick-adjust-hint{font-size:0.75rem !important;color:#6B7A6C !important}
+
+    /* KPI-variant lavender (voor Voorwaarden) */
+    .bp-kpi.is-lavender{--bp-accent:#9F8AC9 !important;--bp-accent-soft:#E8DEF8 !important}
+  </style>
 
   <!-- ═══════════════════════════════════════════════════════
        INLINE BOOTSTRAP — runs BEFORE any other script.
@@ -227,13 +279,13 @@
 
   <!-- ═══ Scripts — loaded in order, no impact on main website ═══ -->
   <!-- Cache-busting: version query forces browsers to fetch fresh copies -->
-  <script src="business-panel-data.js?v=8" defer></script>
+  <script src="business-panel-data.js?v=20" defer></script>
   <!-- Chart.js loaded async — only used by dashboard/reports -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
     <!-- ═══ FIREBASE (real-time database) ═══ -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="github-db.js?v=10" defer></script>
-  <script src="business-panel.js?v=8" defer></script>
+  <script src="business-panel.js?v=20" defer></script>
 </body>
 </html>

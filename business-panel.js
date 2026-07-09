@@ -321,7 +321,51 @@
     const periodRevenue = periodData.revenue + ms.omzet;
 
     let html = periodHtml;
-    html += '<div class="bp-kpi-grid">';
+
+    // ═══ "Snelle aanpassing" paneel — direct op het dashboard (v1.1) ═══
+    // Compacte versie van de instellingen-kaart, zodat gebruikers de +/-
+    // knoppen direct kunnen vinden zonder naar Instellingen te gaan.
+    const QUICK_STATS = [
+      { key: 'winst',        label: 'Winst',        icon: 'fa-arrow-trend-up', color: 'success',  unit: 'euro'  },
+      { key: 'omzet',        label: 'Omzet',        icon: 'fa-euro-sign',       color: 'info',     unit: 'euro'  },
+      { key: 'geinvesteerd', label: 'Geïnvesteerd', icon: 'fa-piggy-bank',      color: 'warn',     unit: 'euro'  },
+      { key: 'voorwaarden',  label: 'Voorwaarden',  icon: 'fa-file-signature',  color: 'lavender', unit: 'count' },
+      { key: 'klanten',      label: 'Klanten',      icon: 'fa-users',           color: 'primary',  unit: 'count' }
+    ];
+
+    html += '<div class="bp-quick-adjust">';
+    html += '<div class="bp-quick-adjust-head">';
+    html += '<div class="bp-quick-adjust-title"><i class="fas fa-sliders"></i> Statistieken snel aanpassen</div>';
+    html += '<div class="bp-quick-adjust-hint">+ / − om handmatig te verhogen of verlagen · <a href="#" data-goto="instellingen" style="color:var(--bp-primary);font-weight:600">meer opties →</a></div>';
+    html += '</div>';
+    html += '<div class="bp-stat-grid">';
+    QUICK_STATS.forEach(def => {
+      const val = ms[def.key] || 0;
+      const display = def.unit === 'euro' ? D.fmtEuro(val) : D.fmtNum(val);
+      html += '<div class="bp-stat-row" data-stat="' + def.key + '">' +
+        '<div class="bp-stat-row-head">' +
+          '<div class="bp-stat-icon bp-stat-' + def.color + '"><i class="fas ' + def.icon + '"></i></div>' +
+          '<div class="bp-stat-row-info">' +
+            '<div class="bp-stat-row-label">' + esc(def.label) + '</div>' +
+            '<div class="bp-stat-row-sub">Correctie: ' + (val >= 0 ? '+' : '') + display + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="bp-stat-row-controls">' +
+          '<button class="bp-stat-btn dec" data-action="dec" data-stat="' + def.key + '" title="Omlaag"><i class="fas fa-minus"></i></button>' +
+          '<input type="number" class="bp-stat-input" data-stat="' + def.key + '" step="' + (def.unit === 'euro' ? '0.01' : '1') + '" value="' + esc(val) + '">' +
+          '<button class="bp-stat-btn inc" data-action="inc" data-stat="' + def.key + '" title="Omhoog"><i class="fas fa-plus"></i></button>' +
+        '</div>' +
+      '</div>';
+    });
+    html += '</div>';
+    html += '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.85rem;padding-top:.85rem;border-top:1px dashed var(--bp-border)">' +
+      '<button class="bp-btn bp-btn-danger bp-btn-sm" id="qaReset"><i class="fas fa-rotate-left"></i> Reset alle correcties naar 0</button>' +
+      '<span class="bp-quick-adjust-hint" style="align-self:center">Wijzigingen worden direct opgeslagen en zijn direct zichtbaar in de KPI-kaarten hieronder.</span>' +
+    '</div>';
+    html += '</div>';
+
+    let kpiHtml = '<div class="bp-kpi-grid">';
+    html += kpiHtml;
     html += kpiCard('Winst · ' + periods.find(p => p.key === dashboardPeriod).label,
                     D.fmtEuro(periodProfit),
                     'fa-arrow-trend-up', 'success',
@@ -392,6 +436,46 @@
         navigate('dashboard');
       });
     });
+
+    // Wire quick-adjust +/- knoppen (dashboard) — zelfde logic als in instellingen
+    $$('.bp-stat-btn', root).forEach(btn => {
+      btn.addEventListener('click', () => {
+        const stat = btn.dataset.stat;
+        const step = 1;
+        const delta = btn.dataset.action === 'inc' ? step : -step;
+        D.adjustManualStat(stat, delta);
+        // Re-render dashboard zodat de nieuwe waarden direct zichtbaar zijn
+        navigate('dashboard');
+      });
+    });
+
+    // Wire quick-adjust direct input editing (dashboard)
+    $$('.bp-stat-input', root).forEach(input => {
+      input.addEventListener('change', () => {
+        const stat = input.dataset.stat;
+        const newVal = D.parseNum(input.value);
+        const current = D.getManualStats();
+        current[stat] = newVal;
+        D.setManualStats(current);
+        navigate('dashboard');
+      });
+    });
+
+    // Wire quick-adjust reset knop (dashboard)
+    const qaReset = $('#qaReset', root);
+    if (qaReset) {
+      qaReset.addEventListener('click', () => {
+        confirmModal(
+          'Reset statistieken',
+          'Weet je zeker dat je alle handmatige correcties wilt terugzetten naar de standaardwaarden (0)?',
+          () => {
+            D.resetManualStats();
+            toast('Reset voltooid', 'Alle correcties zijn teruggezet naar 0', 'success');
+            navigate('dashboard');
+          }
+        );
+      });
+    }
   });
 
   function renderDashboardCharts() {

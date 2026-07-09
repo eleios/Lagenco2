@@ -1352,225 +1352,263 @@
 
 /* ═══════════════════════════════════════════════════════
    NIEUW v1.1 — Dashboard periode-filter + Statistieken aanpassen
+   Alle regels hieronder gebruiken !important om te zorgen dat ze
+   altijd winnen van eventuele eerdere overrides (geen platte tekst UI).
    ═══════════════════════════════════════════════════════ */
 
 /* KPI-variant 'lavender' (voor Voorwaarden-kaart) */
 .bp-kpi.is-lavender {
-  --bp-accent: var(--bp-lavender);
-  --bp-accent-soft: var(--bp-lavender-soft);
+  --bp-accent: var(--bp-lavender) !important;
+  --bp-accent-soft: var(--bp-lavender-soft) !important;
 }
 
 /* ── Periode-filterbalk (Vandaag / 7 weken / 1 maand / Altijd) ── */
 .bp-period-bar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-  background: var(--bp-card);
-  border: 1px solid var(--bp-border);
-  border-radius: var(--bp-r-lg);
-  padding: 0.85rem 1rem;
-  margin-bottom: 1.25rem;
-  box-shadow: var(--bp-shadow-sm);
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  flex-wrap: wrap !important;
+  background: var(--bp-card) !important;
+  border: 1px solid var(--bp-border) !important;
+  border-radius: var(--bp-r-lg) !important;
+  padding: 0.85rem 1rem !important;
+  margin-bottom: 1.25rem !important;
+  box-shadow: var(--bp-shadow-sm) !important;
 }
 .bp-period-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: 'Sora', 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: var(--bp-text);
-  white-space: nowrap;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  font-family: 'Poppins', 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  color: var(--bp-text) !important;
+  white-space: nowrap !important;
 }
 .bp-period-label i {
-  color: var(--bp-primary);
-  font-size: 0.8rem;
+  color: var(--bp-primary) !important;
+  font-size: 0.8rem !important;
 }
 .bp-period-tabs {
-  display: flex;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-  background: var(--bp-bg-2);
-  border-radius: var(--bp-r-full);
-  padding: 0.25rem;
+  display: flex !important;
+  gap: 0.35rem !important;
+  flex-wrap: wrap !important;
+  background: var(--bp-bg-2) !important;
+  border-radius: var(--bp-r-full) !important;
+  padding: 0.25rem !important;
 }
 .bp-period-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 1rem;
-  font-family: 'Nunito', 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 0.82rem;
-  color: var(--bp-text-muted);
-  background: transparent;
-  border: none;
-  border-radius: var(--bp-r-full);
-  cursor: pointer;
-  transition: all var(--bp-fast) var(--bp-ease);
-  white-space: nowrap;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  padding: 0.5rem 1rem !important;
+  font-family: 'Poppins', 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.82rem !important;
+  color: var(--bp-text-muted) !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: var(--bp-r-full) !important;
+  cursor: pointer !important;
+  transition: all var(--bp-fast) var(--bp-ease) !important;
+  white-space: nowrap !important;
 }
 .bp-period-tab i {
-  font-size: 0.75rem;
+  font-size: 0.75rem !important;
 }
 .bp-period-tab:hover {
-  color: var(--bp-primary-2);
-  background: rgba(107, 191, 126, 0.12);
+  color: var(--bp-primary-2) !important;
+  background: rgba(107, 191, 126, 0.15) !important;
 }
 .bp-period-tab.active {
-  background: var(--bp-primary);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(107, 191, 126, 0.35);
+  background: linear-gradient(135deg, var(--bp-primary), var(--bp-primary-2)) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(107, 191, 126, 0.45) !important;
 }
 .bp-period-tab.active i {
-  color: #fff;
+  color: #fff !important;
 }
 @media (max-width: 640px) {
-  .bp-period-bar { flex-direction: column; align-items: stretch; }
-  .bp-period-label { justify-content: center; }
-  .bp-period-tabs { justify-content: center; }
-  .bp-period-tab { flex: 1; justify-content: center; padding: 0.5rem 0.75rem; font-size: 0.78rem; }
+  .bp-period-bar { flex-direction: column !important; align-items: stretch !important; }
+  .bp-period-label { justify-content: center !important; }
+  .bp-period-tabs { justify-content: center !important; }
+  .bp-period-tab { flex: 1 !important; justify-content: center !important; padding: 0.5rem 0.75rem !important; font-size: 0.78rem !important; }
 }
 
 /* ── Statistieken-aanpassen grid (Instellingen → Statistieken aanpassen) ── */
 .bp-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 0.875rem;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 0.875rem !important;
 }
 .bp-stat-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem 1.1rem;
-  background: var(--bp-card-2);
-  border: 1px solid var(--bp-border);
-  border-radius: var(--bp-r-md);
-  transition: all var(--bp-fast) var(--bp-ease);
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+  padding: 1rem 1.1rem !important;
+  background: var(--bp-card-2) !important;
+  border: 1px solid var(--bp-border) !important;
+  border-radius: var(--bp-r-md) !important;
+  transition: all var(--bp-fast) var(--bp-ease) !important;
 }
 .bp-stat-row:hover {
-  border-color: var(--bp-primary);
-  box-shadow: var(--bp-shadow-sm);
-  transform: translateY(-1px);
+  border-color: var(--bp-primary) !important;
+  box-shadow: var(--bp-shadow-sm) !important;
+  transform: translateY(-1px) !important;
 }
 .bp-stat-row-head {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
 }
 .bp-stat-icon {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: var(--bp-r);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.95rem;
-  flex-shrink: 0;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  border-radius: var(--bp-r) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.95rem !important;
+  flex-shrink: 0 !important;
 }
-.bp-stat-success  { background: var(--bp-success-soft); color: var(--bp-success); }
-.bp-stat-info     { background: var(--bp-info-soft);    color: var(--bp-info); }
-.bp-stat-warn     { background: var(--bp-warn-soft);    color: var(--bp-warn); }
-.bp-stat-lavender { background: var(--bp-lavender-soft);color: var(--bp-lavender); }
-.bp-stat-primary  { background: var(--bp-primary-soft); color: var(--bp-primary); }
+.bp-stat-success  { background: var(--bp-success-soft) !important; color: var(--bp-success) !important; }
+.bp-stat-info     { background: var(--bp-info-soft) !important;    color: var(--bp-info) !important; }
+.bp-stat-warn     { background: var(--bp-warn-soft) !important;    color: var(--bp-warn) !important; }
+.bp-stat-lavender { background: var(--bp-lavender-soft) !important;color: var(--bp-lavender) !important; }
+.bp-stat-primary  { background: var(--bp-primary-soft) !important; color: var(--bp-primary) !important; }
 .bp-stat-row-info {
-  flex: 1;
-  min-width: 0;
+  flex: 1 !important;
+  min-width: 0 !important;
 }
 .bp-stat-row-label {
-  font-family: 'Sora', 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 0.92rem;
-  color: var(--bp-text);
-  letter-spacing: -0.01em;
+  font-family: 'Poppins', 'Inter', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 0.92rem !important;
+  color: var(--bp-text) !important;
+  letter-spacing: -0.01em !important;
 }
 .bp-stat-row-sub {
-  font-size: 0.72rem;
-  margin-top: 0.1rem;
+  font-size: 0.72rem !important;
+  margin-top: 0.1rem !important;
 }
 .bp-stat-row-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
 }
 .bp-stat-btn {
-  width: 2rem;
-  height: 2rem;
-  border-radius: var(--bp-r-sm);
-  background: var(--bp-card);
-  border: 1px solid var(--bp-border);
-  color: var(--bp-text-muted);
-  font-size: 0.75rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all var(--bp-fast) var(--bp-ease);
-  flex-shrink: 0;
+  width: 2rem !important;
+  height: 2rem !important;
+  border-radius: var(--bp-r-sm) !important;
+  background: var(--bp-card) !important;
+  border: 1px solid var(--bp-border) !important;
+  color: var(--bp-text-muted) !important;
+  font-size: 0.75rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all var(--bp-fast) var(--bp-ease) !important;
+  flex-shrink: 0 !important;
 }
 .bp-stat-btn:hover {
-  background: var(--bp-primary);
-  color: #fff;
-  border-color: var(--bp-primary);
-  transform: scale(1.05);
+  background: linear-gradient(135deg, var(--bp-primary), var(--bp-primary-2)) !important;
+  color: #fff !important;
+  border-color: var(--bp-primary) !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 10px rgba(107, 191, 126, 0.3) !important;
 }
 .bp-stat-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.95) !important;
 }
 .bp-stat-btn.dec:hover {
-  background: var(--bp-danger);
-  border-color: var(--bp-danger);
+  background: linear-gradient(135deg, var(--bp-danger), #c54a3f) !important;
+  border-color: var(--bp-danger) !important;
+  box-shadow: 0 4px 10px rgba(224, 96, 85, 0.3) !important;
 }
 .bp-stat-input {
-  flex: 1;
-  min-width: 0;
-  padding: 0.45rem 0.65rem;
-  border: 1px solid var(--bp-border);
-  border-radius: var(--bp-r-sm);
-  background: var(--bp-card);
-  font-family: 'Nunito', 'Inter', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--bp-text);
-  outline: none;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  transition: all var(--bp-fast) var(--bp-ease);
-  /* Verberg spinner-buttons in number-input */
-  -moz-appearance: textfield;
+  flex: 1 !important;
+  min-width: 0 !important;
+  padding: 0.45rem 0.65rem !important;
+  border: 1px solid var(--bp-border) !important;
+  border-radius: var(--bp-r-sm) !important;
+  background: var(--bp-card) !important;
+  font-family: 'Poppins', 'Inter', sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  color: var(--bp-text) !important;
+  outline: none !important;
+  text-align: center !important;
+  font-variant-numeric: tabular-nums !important;
+  transition: all var(--bp-fast) var(--bp-ease) !important;
+  -moz-appearance: textfield !important;
 }
 .bp-stat-input::-webkit-outer-spin-button,
 .bp-stat-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+  -webkit-appearance: none !important;
+  margin: 0 !important;
 }
 .bp-stat-input:focus {
-  border-color: var(--bp-primary);
-  box-shadow: 0 0 0 3px rgba(107, 191, 126, 0.15);
+  border-color: var(--bp-primary) !important;
+  box-shadow: 0 0 0 3px rgba(107, 191, 126, 0.15) !important;
 }
 .bp-stat-display {
-  font-family: 'Sora', 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--bp-primary-2);
-  min-width: 4.5rem;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+  font-family: 'Poppins', 'Inter', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+  color: var(--bp-primary-2) !important;
+  min-width: 4.5rem !important;
+  text-align: right !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -0.01em !important;
 }
 @media (max-width: 480px) {
-  .bp-stat-display { display: none; }
-  .bp-stat-input { text-align: left; }
+  .bp-stat-display { display: none !important; }
+  .bp-stat-input { text-align: left !important; }
 }
 
 /* ── Mobile aanpassingen voor de reset-knop in de card-head ── */
 @media (max-width: 640px) {
   .bp-card-head .bp-btn-sm {
-    padding: 0.4rem 0.65rem;
-    font-size: 0.72rem;
+    padding: 0.4rem 0.65rem !important;
+    font-size: 0.72rem !important;
   }
   .bp-card-head .bp-btn-sm i {
-    margin-right: 0.25rem;
+    margin-right: 0.25rem !important;
   }
+}
+
+/* ── Quick-adjust paneel bovenaan het dashboard (v1.1) ── */
+.bp-quick-adjust {
+  background: linear-gradient(135deg, var(--bp-card), var(--bp-card-2)) !important;
+  border: 1px solid var(--bp-border) !important;
+  border-radius: var(--bp-r-lg) !important;
+  padding: 1rem 1.1rem !important;
+  margin-bottom: 1.25rem !important;
+  box-shadow: var(--bp-shadow-sm) !important;
+}
+.bp-quick-adjust-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.75rem !important;
+  flex-wrap: wrap !important;
+  margin-bottom: 0.85rem !important;
+}
+.bp-quick-adjust-title {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  font-family: 'Poppins', 'Inter', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  color: var(--bp-text) !important;
+  letter-spacing: -0.01em !important;
+}
+.bp-quick-adjust-title i {
+  color: var(--bp-primary) !important;
+}
+.bp-quick-adjust-hint {
+  font-size: 0.75rem !important;
+  color: var(--bp-text-muted) !important;
 }
