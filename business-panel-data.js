@@ -146,11 +146,11 @@
     // aanpassen opgeteld bij de berekende dashboard-statistieken.
     // Standaardwaarde = 0 (geen correctie → originele berekende waarden).
     manualStats: {
-      winst:        0,   // opgeteld bij totale winst
-      omzet:        0,   // opgeteld bij omzet
-      geinvesteerd: 0,   // opgeteld bij geïnvesteerd
-      voorwaarden:  0,   // los te tellen teller (geen automatische bron)
-      klanten:      0    // opgeteld bij klanten-aantal
+      winst:          0,   // opgeteld bij totale winst
+      omzet:          0,   // opgeteld bij omzet
+      geinvesteerd:   0,   // opgeteld bij geïnvesteerd
+      voorraadwaarde: 0,   // opgeteld bij voorraadwaarde
+      klanten:        0    // opgeteld bij klanten-aantal
     },
 
     catalogus: [] // computed dynamically from producten + voorraad + verkoop
@@ -310,14 +310,13 @@
       totalInvested: totalInvested + ms.geinvesteerd,
       totalRevenue: totalRevenue + ms.omzet,
       totalProfit: totalProfit + ms.winst,
-      totalStockValue: totalStockValue,
+      totalStockValue: totalStockValue + ms.voorraadwaarde,
       avgMargin: avgMargin,
       salesCount: verkoop.length,
       purchasesCount: inkoop.length,
       lowStockCount: lowStock.length,
       lowStock: lowStock,
       customersCount: list('klanten').length + ms.klanten,
-      voorwaarden: ms.voorwaarden,
       activeListings: list('marktplaats').filter(function (m) { return m.status !== 'Verkocht'; }).length
     };
   }
@@ -382,7 +381,7 @@
   // — opgeslagen als bp/manualStats in Firebase
   // — standaardwaarden: alle 0 (= originele berekende waarden)
   // ────────────────────────────────────────────────────────
-  const MANUAL_KEYS = ['winst', 'omzet', 'geinvesteerd', 'voorwaarden', 'klanten'];
+  const MANUAL_KEYS = ['winst', 'omzet', 'geinvesteerd', 'voorraadwaarde', 'klanten'];
 
   function getManualStats() {
     // Lees uit Firebase cache (via LagencoDB.bpList) of fallback op SEED

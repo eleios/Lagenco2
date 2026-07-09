@@ -1476,6 +1476,7 @@
 .bp-stat-warn     { background: var(--bp-warn-soft) !important;    color: var(--bp-warn) !important; }
 .bp-stat-lavender { background: var(--bp-lavender-soft) !important;color: var(--bp-lavender) !important; }
 .bp-stat-primary  { background: var(--bp-primary-soft) !important; color: var(--bp-primary) !important; }
+.bp-stat-violet   { background: #FFE0CC !important;                color: var(--bp-violet) !important; }
 .bp-stat-row-info {
   flex: 1 !important;
   min-width: 0 !important;
