@@ -128,6 +128,7 @@
 
   const VIEW_META = {
     dashboard:        { title: 'Dashboard',         sub: 'Overzicht van je handelsadministratie' },
+    agenda:           { title: 'Agenda',            sub: 'Afspraken, notities en herinneringen — maand-, week- en dagweergave' },
     websiteproducten: { title: 'Website Producten', sub: 'Beheer alle producten die op de website staan (naam, prijs, beschrijving, conditiegrade) — real-time sync via Firebase' },
     producten:        { title: 'Producten',          sub: 'Beheer je productcatalogus en prijzen' },
     voorraad:         { title: 'Voorraad',           sub: 'Voorraadniveaus en magazijnbeheer' },
@@ -373,7 +374,68 @@
       });
       html += '</tbody></table></div>';
     }
-    html += '</div></div></div>';
+    html += '</div></div>';
+
+    // ── Agenda widget: komende herinneringen ──
+    const upcoming = D.upcomingAgenda(7);
+    html += '<div class="bp-grid-2">';
+    html += '<div class="bp-card"><div class="bp-card-head"><div class="bp-card-title"><i class="fas fa-bell"></i> Komende herinneringen</div>' +
+      '<button class="bp-btn bp-btn-ghost bp-btn-sm" data-goto="agenda">Naar agenda →</button></div>' +
+      '<div class="bp-card-body-p0">';
+    if (upcoming.items.length === 0) {
+      html += '<div class="bp-empty"><div class="bp-empty-icon"><i class="fas fa-check"></i></div>' +
+        '<div class="bp-empty-title">Geen herinneringen</div>' +
+        '<div class="bp-empty-sub">Voor de komende 7 dagen staat niets gepland</div></div>';
+    } else {
+      html += '<div class="bp-agenda-widget">';
+      upcoming.items.slice(0, 5).forEach(function (e) {
+        const evDate = D.parseDate(e.date);
+        const dayNum = evDate.getDate();
+        const monShort = MONTH_NAMES_NL_SHORT[evDate.getMonth()];
+        const meta = D.AGENDA_TYPE_META[e.type] || D.AGENDA_TYPE_META.afspraak;
+        const timeLabel = e.time ? e.time : 'hele dag';
+        html += '<div class="bp-agenda-widget-item" data-goto="agenda" data-occurrence="' + esc(e.occurrenceId) + '">' +
+          '<div class="bp-agenda-widget-date"><div class="bp-agenda-widget-date-day">' + dayNum + '</div>' +
+          '<div class="bp-agenda-widget-date-mon">' + esc(monShort) + '</div></div>' +
+          '<div class="bp-agenda-widget-body">' +
+          '<div class="bp-agenda-widget-title">' + esc(e.title) + '</div>' +
+          '<div class="bp-agenda-widget-meta">' +
+          '<span class="bp-agenda-widget-pill" data-type="' + esc(e.type) + '"></span>' +
+          '<span><i class="far fa-clock"></i> ' + esc(timeLabel) + '</span>' +
+          (e.customerName ? '<span><i class="fas fa-user"></i> ' + esc(e.customerName) + '</span>' : '') +
+          '</div></div></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div></div>';
+
+    // ── Quick actions / snelkoppelingen ──
+    html += '<div class="bp-card"><div class="bp-card-head"><div class="bp-card-title"><i class="fas fa-bolt"></i> Snelkoppelingen</div></div>' +
+      '<div class="bp-card-body">';
+    html += '<div class="bp-grid-2" style="gap:0.6rem">';
+    html += '<button class="bp-btn bp-btn-primary bp-btn-sm" data-goto="agenda" data-preset="today"><i class="fas fa-plus"></i> Nieuwe afspraak</button>';
+    html += '<button class="bp-btn bp-btn-ghost bp-btn-sm" data-goto="agenda"><i class="fas fa-calendar-day"></i> Vandaag</button>';
+    html += '<button class="bp-btn bp-btn-ghost bp-btn-sm" data-goto="verkoop"><i class="fas fa-cash-register"></i> Verkoop loggen</button>';
+    html += '<button class="bp-btn bp-btn-ghost bp-btn-sm" data-goto="klanten"><i class="fas fa-user-plus"></i> Nieuwe klant</button>';
+    html += '</div>';
+    html += '<div class="bp-section-heading">Agenda overzicht</div>';
+    const todayStr = D.fmtDate(new Date());
+    const allAgenda = D.list('agenda') || [];
+    const todayItems = allAgenda.filter(function (x) { return x.date === todayStr; }).length;
+    const weekItems = D.expandAgendaEvents(
+      startOfWeek(new Date()),
+      addDays(startOfWeek(new Date()), 7)
+    ).length;
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:0.5rem">' +
+      '<div style="padding:0.85rem;background:var(--bp-card-2);border:1px solid var(--bp-border);border-radius:var(--bp-r)">' +
+      '<div style="font-family:Poppins;font-weight:700;font-size:1.5rem;color:var(--bp-primary-2);line-height:1">' + todayItems + '</div>' +
+      '<div style="font-size:0.75rem;color:var(--bp-text-muted);margin-top:0.25rem">items vandaag</div></div>' +
+      '<div style="padding:0.85rem;background:var(--bp-card-2);border:1px solid var(--bp-border);border-radius:var(--bp-r)">' +
+      '<div style="font-family:Poppins;font-weight:700;font-size:1.5rem;color:var(--bp-warn);line-height:1">' + weekItems + '</div>' +
+      '<div style="font-size:0.75rem;color:var(--bp-text-muted);margin-top:0.25rem">items deze week</div></div>' +
+      '</div>';
+    html += '</div></div>';
+    html += '</div>';
 
     root.innerHTML = html;
 
@@ -433,8 +495,8 @@
         data: {
           labels: labels.length ? labels : ['Geen data'],
           datasets: [
-            { label: 'Omzet', data: filtered.map(d => d.revenue), borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,0.1)', fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#4f46e5' },
-            { label: 'Winst', data: filtered.map(d => d.profit), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#10b981' }
+            { label: 'Omzet', data: filtered.map(d => d.revenue), borderColor: '#5BA8C9', backgroundColor: 'rgba(91,168,201,0.12)', fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#5BA8C9' },
+            { label: 'Winst', data: filtered.map(d => d.profit), borderColor: '#4A9D5E', backgroundColor: 'rgba(74,157,94,0.12)', fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#4A9D5E' }
           ]
         },
         options: chartOpts({ legend: true })
@@ -450,7 +512,8 @@
           labels: cats.map(c => c.category),
           datasets: [{
             data: cats.map(c => c.stockValue),
-            backgroundColor: ['#4f46e5', '#7c3aed', '#2563eb', '#0891b2', '#10b981', '#f59e0b'],
+            // Merk-palette: groen → perzik → geel → lavendel → blauw → warm-rood
+            backgroundColor: ['#6BBF7E', '#FF8B5C', '#FFD56B', '#9F8AC9', '#5BA8C9', '#E06055'],
             borderWidth: 0
           }]
         },
@@ -477,6 +540,652 @@
       }
     };
   }
+
+  // ═══════════════════════════════════════════════════════
+  // VIEW: AGENDA  (v1.2 — nieuw)
+  // Volledige kalender met maand-, week- en dagweergave.
+  // Ondersteunt herhalingen (weekly/monthly/yearly), kleur-codering
+  // per type, klant-koppeling, notities, herinneringen en zoeken/filteren.
+  // Data-laag: D.expandAgendaEvents(start, end) → lijst voorkomens.
+  // ═══════════════════════════════════════════════════════
+
+  /** Agendastate — blijft bewaard tijdens de sessie (zoals dashboardPeriod). */
+  const agendaState = {
+    view: 'month',           // 'month' | 'week' | 'day'
+    cursor: new Date(),      // middelpunt van de weergave
+    selectedDate: D.fmtDate(new Date()),  // geselecteerde dag (YYYY-MM-DD)
+    search: '',
+    typeFilter: 'all'        // 'all' | 'afspraak' | 'persoonlijk' | 'notitie'
+  };
+
+  /** Nederlandse weekdagnamen — korte en lange variant. */
+  const DAY_NAMES_NL = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'];
+  const DAY_NAMES_NL_SHORT = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
+  const MONTH_NAMES_NL = ['januari', 'februari', 'maart', 'april', 'mei', 'juni',
+                          'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+  const MONTH_NAMES_NL_SHORT = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun',
+                                'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+
+  /** Helpers voor datumweergave — gecentraliseerd i.p.v. inline new Date(). */
+  function startOfWeek(d) {
+    const r = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    // Maandag = eerste dag van de week in NL
+    const day = (r.getDay() + 6) % 7;
+    r.setDate(r.getDate() - day);
+    return r;
+  }
+  function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+  function endOfMonth(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59); }
+  function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+  function addMonths(d, n) { const r = new Date(d); r.setMonth(r.getMonth() + n); return r; }
+  function sameDay(a, b) {
+    return a.getFullYear() === b.getFullYear() &&
+           a.getMonth() === b.getMonth() &&
+           a.getDate() === b.getDate();
+  }
+  function isToday(d) { return sameDay(d, new Date()); }
+
+  /** Event-pill HTML voor in het maand-rooster (max 3 zichtbaar, daarna "+N meer"). */
+  function agendaEventPill(ev) {
+    const time = ev.time ? '<span class="bp-evt-pill-time">' + esc(ev.time) + '</span>' : '';
+    const completedCls = ev.completed ? ' completed' : '';
+    return '<button class="bp-evt-pill' + completedCls + '" data-type="' + esc(ev.type) + '" data-occurrence="' + esc(ev.occurrenceId) + '" data-event-id="' + esc(ev.id) + '" title="' + esc(ev.title) + '">' +
+      time + '<span class="bp-evt-pill-title">' + esc(ev.title) + '</span>' +
+      '</button>';
+  }
+
+  /** Type-badge HTML (voor in dag-view en modal). */
+  function agendaTypeBadge(type) {
+    const meta = D.AGENDA_TYPE_META[type] || D.AGENDA_TYPE_META.afspraak;
+    return '<span class="bp-cal-day-row-type" data-type="' + esc(type) + '">' +
+      '<i class="fas ' + meta.icon + '"></i> ' + esc(meta.label) + '</span>';
+  }
+
+  /** Klanten-lookup voor het modal — geeft [{value,label}] options terug. */
+  function agendaCustomerOptions() {
+    const customers = D.list('klanten') || [];
+    return [{ value: '', label: '— Geen klant —' }].concat(
+      customers.map(function (k) { return { value: k.id, label: k.name + (k.email ? ' · ' + k.email : '') }; })
+    );
+  }
+
+  /** Open het add/edit-modal voor een agenda-item. */
+  function editAgendaEvent(event, presetDate) {
+    const isEdit = !!event;
+    const initial = event || {};
+    if (presetDate && !initial.date) initial.date = presetDate;
+
+    const typeOpts = Object.keys(D.AGENDA_TYPE_META).map(function (k) {
+      return { value: k, label: D.AGENDA_TYPE_META[k].label };
+    });
+    const recurOpts = D.AGENDA_RECURRENCE_TYPES.map(function (r) {
+      const labels = { none: 'Eenmalig', weekly: 'Wekelijks', monthly: 'Maandelijks', yearly: 'Jaarlijks' };
+      return { value: r, label: labels[r] || r };
+    });
+
+    const fields = [
+      { key: 'title', label: 'Titel', required: true, full: true, placeholder: 'Bijv. "Levering Sennheiser E604 ophalen"' },
+      { key: 'type', label: 'Type', type: 'select', options: typeOpts, required: true, full: true },
+      { key: 'date', label: 'Datum', type: 'date', required: true },
+      { key: 'time', label: 'Starttijd', type: 'time', placeholder: 'HH:MM (leeg = hele dag)' },
+      { key: 'endtime', label: 'Eindtijd', type: 'time', placeholder: 'optioneel' },
+      { key: 'location', label: 'Locatie', placeholder: 'Bijv. "Magazijn A" of adres' },
+      { key: 'customerId', label: 'Klant koppelen', type: 'select', options: agendaCustomerOptions() },
+      { key: 'recurrence', label: 'Herhaling', type: 'select', options: recurOpts },
+      { key: 'recurrenceEndDate', label: 'Herhaling t/m', type: 'date', placeholder: 'leeg = voor altijd' },
+      { key: 'reminder', label: 'Herinnering op dashboard', type: 'select',
+        options: [{ value: 'true', label: 'Ja — toon in dashboard-widget' }, { value: 'false', label: 'Nee — alleen in agenda' }] },
+      { key: 'note', label: 'Notitie', type: 'textarea', full: true, placeholder: 'Extra details, checklist, telefoonnummer…' }
+    ];
+
+    formModal(isEdit ? 'Afspraak bewerken' : 'Nieuwe agenda-item',
+      'fa-calendar-day', fields,
+      function (data, close) {
+        if (!data.title || !String(data.title).trim()) {
+          toast('Fout', 'Titel is verplicht', 'error');
+          return;
+        }
+        if (!data.date) {
+          toast('Fout', 'Datum is verplicht', 'error');
+          return;
+        }
+        // Normaliseer: lege strings → null waar relevant
+        const clean = {
+          title: String(data.title).trim(),
+          type: data.type || 'afspraak',
+          date: data.date,
+          time: data.time || null,
+          endtime: data.endtime || null,
+          location: data.location || '',
+          customerId: data.customerId || '',
+          customerName: '',
+          note: data.note || '',
+          recurrence: data.recurrence || 'none',
+          recurrenceEndDate: data.recurrenceEndDate || '',
+          reminder: data.reminder === 'true' || data.reminder === true,
+          completed: initial.completed || false
+        };
+        // Cache customerName bij selectie
+        if (clean.customerId) {
+          const k = D.get('klanten', clean.customerId);
+          if (k) clean.customerName = k.name;
+        }
+        if (isEdit) {
+          D.update('agenda', event.id, clean);
+          toast('Opgeslagen', clean.title + ' is bijgewerkt', 'success');
+        } else {
+          D.add('agenda', clean);
+          toast('Toegevoegd', clean.title + ' staat in de agenda', 'success');
+        }
+        close();
+        navigate('agenda');
+      }, initial);
+  }
+
+  /** Verwijder een agenda-item met bevestiging. */
+  function deleteAgendaEvent(event) {
+    confirmModal('Agenda-item verwijderen',
+      'Weet je zeker dat je "' + event.title + '" wilt verwijderen?' +
+      (event.recurrence && event.recurrence !== 'none' ? ' Dit verwijdert ook alle toekomstige herhalingen.' : ''),
+      function () {
+        D.remove('agenda', event.id);
+        toast('Verwijderd', event.title + ' is verwijderd', 'success');
+        navigate('agenda');
+      });
+  }
+
+  /** Detail-modal: toon alle info van één voorkomen met actie-knoppen. */
+  function viewAgendaOccurrence(ev) {
+    const item = D.get('agenda', ev.id);
+    if (!item) { toast('Fout', 'Item niet (meer) gevonden', 'error'); return; }
+    const meta = D.AGENDA_TYPE_META[ev.type] || D.AGENDA_TYPE_META.afspraak;
+    const recurLabels = { none: 'Eenmalig', weekly: 'Wekelijks', monthly: 'Maandelijks', yearly: 'Jaarlijks' };
+    const dateNL = D.parseDate(ev.date).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    let body = '<div class="bp-detail-grid">';
+    body += '<div class="bp-detail-row"><div class="bp-detail-label">Type</div><div class="bp-detail-value">' + agendaTypeBadge(ev.type) + '</div></div>';
+    body += '<div class="bp-detail-row"><div class="bp-detail-label">Datum</div><div class="bp-detail-value">' + esc(dateNL) + '</div></div>';
+    if (ev.time) {
+      body += '<div class="bp-detail-row"><div class="bp-detail-label">Tijd</div><div class="bp-detail-value">' + esc(ev.time) + (ev.endtime ? ' — ' + esc(ev.endtime) : '') + '</div></div>';
+    }
+    if (ev.location) {
+      body += '<div class="bp-detail-row"><div class="bp-detail-label">Locatie</div><div class="bp-detail-value"><i class="fas fa-map-marker-alt"></i> ' + esc(ev.location) + '</div></div>';
+    }
+    if (ev.customerName) {
+      body += '<div class="bp-detail-row"><div class="bp-detail-label">Klant</div><div class="bp-detail-value"><i class="fas fa-user"></i> ' + esc(ev.customerName) + '</div></div>';
+    }
+    if (ev.recurrence && ev.recurrence !== 'none') {
+      body += '<div class="bp-detail-row"><div class="bp-detail-label">Herhaling</div><div class="bp-detail-value"><i class="fas fa-repeat"></i> ' + esc(recurLabels[ev.recurrence] || ev.recurrence) + (item.recurrenceEndDate ? ' t/m ' + esc(item.recurrenceEndDate) : '') + '</div></div>';
+    }
+    if (ev.reminder) {
+      body += '<div class="bp-detail-row"><div class="bp-detail-label">Herinnering</div><div class="bp-detail-value"><i class="fas fa-bell" style="color:var(--bp-warn)"></i> Wordt op dashboard getoond</div></div>';
+    }
+    if (ev.note) {
+      body += '<div class="bp-detail-row"><div class="bp-detail-label">Notitie</div><div class="bp-detail-value">' + esc(ev.note).replace(/\n/g, '<br>') + '</div></div>';
+    }
+    body += '</div>';
+
+    openModal({
+      title: ev.title, icon: meta.icon, large: true, body: body,
+      footer:
+        '<button class="bp-btn bp-btn-ghost" data-action="close">Sluiten</button>' +
+        '<button class="bp-btn bp-btn-danger" data-action="delete"><i class="fas fa-trash"></i> Verwijderen</button>' +
+        '<button class="bp-btn bp-btn-primary" data-action="edit"><i class="fas fa-pen"></i> Bewerken</button>' +
+        (ev.completed
+          ? '<button class="bp-btn bp-btn-success" data-action="toggle"><i class="fas fa-rotate-left"></i> Markereren als open</button>'
+          : '<button class="bp-btn bp-btn-success" data-action="toggle"><i class="fas fa-check"></i> Markeren als voltooid</button>'),
+      onMount: function (m, close) {
+        m.querySelector('[data-action="close"]').addEventListener('click', close);
+        m.querySelector('[data-action="delete"]').addEventListener('click', function () {
+          close();
+          deleteAgendaEvent(item);
+        });
+        m.querySelector('[data-action="edit"]').addEventListener('click', function () {
+          close();
+          editAgendaEvent(item);
+        });
+        m.querySelector('[data-action="toggle"]').addEventListener('click', function () {
+          D.toggleAgendaCompleted(item.id);
+          toast('Bijgewerkt', item.title + ' gemarkeerd als ' + (item.completed ? 'open' : 'voltooid'), 'success');
+          close();
+          navigate('agenda');
+        });
+      }
+    });
+  }
+
+  /** Maand-view renderen — 6 weken rooster rondom de cursor-maand. */
+  function renderAgendaMonth(root, events) {
+    const cursor = agendaState.cursor;
+    const first = startOfMonth(cursor);
+    const last = endOfMonth(cursor);
+    // Begin op de maandag vóór of op de eerste dag van de maand
+    const gridStart = startOfWeek(first);
+    const todayStr = D.fmtDate(new Date());
+
+    // Events per datum groeperen
+    const byDate = {};
+    events.forEach(function (e) {
+      if (!byDate[e.date]) byDate[e.date] = [];
+      byDate[e.date].push(e);
+    });
+
+    let html = '<div class="bp-cal-month">';
+    html += '<div class="bp-cal-weekdays">';
+    DAY_NAMES_NL_SHORT.forEach(function (name, i) {
+      html += '<div class="bp-cal-weekday' + (i >= 5 ? ' weekend' : '') + '">' + esc(name) + '</div>';
+    });
+    html += '</div>';
+    html += '<div class="bp-cal-grid">';
+
+    // 6 weken × 7 dagen = 42 cellen
+    for (let i = 0; i < 42; i++) {
+      const d = addDays(gridStart, i);
+      const ds = D.fmtDate(d);
+      const otherMonth = d.getMonth() !== cursor.getMonth();
+      const isTodayCls = isToday(d) ? ' today' : '';
+      const otherCls = otherMonth ? ' other-month' : '';
+      html += '<div class="bp-cal-day' + otherCls + isTodayCls + '" data-date="' + ds + '">';
+      html += '<div class="bp-cal-daynum">' + d.getDate() + '</div>';
+      const dayEvents = byDate[ds] || [];
+      if (dayEvents.length > 0) {
+        html += '<div class="bp-cal-day-events">';
+        dayEvents.slice(0, 3).forEach(function (e) {
+          html += agendaEventPill(e);
+        });
+        if (dayEvents.length > 3) {
+          html += '<div class="bp-evt-more">+' + (dayEvents.length - 3) + ' meer</div>';
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div></div>';
+    root.innerHTML = html;
+
+    // Wire: klik op dag → switch naar dag-view met die datum
+    $$('.bp-cal-day', root).forEach(function (cell) {
+      cell.addEventListener('click', function (e) {
+        // Als er op een event-pill geklikt is, laat dat de event-actie doen
+        if (e.target.closest('.bp-evt-pill')) return;
+        agendaState.selectedDate = cell.dataset.date;
+        agendaState.view = 'day';
+        agendaState.cursor = D.parseDate(cell.dataset.date) || new Date();
+        navigate('agenda');
+      });
+    });
+    // Wire: klik op event-pill → detail-modal
+    $$('.bp-evt-pill', root).forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const occ = events.find(function (x) { return x.occurrenceId === btn.dataset.occurrence; });
+        if (occ) viewAgendaOccurrence(occ);
+      });
+    });
+  }
+
+  /** Week-view renderen — 7 dagen × uren (8:00–20:00). */
+  function renderAgendaWeek(root, events) {
+    const weekStart = startOfWeek(agendaState.cursor);
+    const days = []; for (let i = 0; i < 7; i++) days.push(addDays(weekStart, i));
+    const HOUR_START = 8;  // 08:00
+    const HOUR_END = 20;   // 20:00 (exclusief)
+    const PX_PER_HOUR = 48;
+
+    // Events per datum groeperen
+    const byDate = {};
+    events.forEach(function (e) {
+      if (!byDate[e.date]) byDate[e.date] = [];
+      byDate[e.date].push(e);
+    });
+
+    let html = '<div class="bp-cal-week">';
+    // Header
+    html += '<div class="bp-cal-week-head">';
+    html += '<div class="bp-cal-week-head-cell"></div>'; // lege hoek
+    days.forEach(function (d) {
+      const todayCls = isToday(d) ? ' today' : '';
+      html += '<div class="bp-cal-week-head-cell' + todayCls + '">' +
+        '<div class="bp-cal-week-head-day">' + esc(DAY_NAMES_NL_SHORT[(d.getDay() + 6) % 7]) + '</div>' +
+        '<div class="bp-cal-week-head-num">' + d.getDate() + '</div>' +
+        '</div>';
+    });
+    html += '</div>';
+    // Body
+    html += '<div class="bp-cal-week-body">';
+    // Tijd-kolom
+    html += '<div class="bp-cal-time-col">';
+    for (let h = HOUR_START; h < HOUR_END; h++) {
+      html += '<div class="bp-cal-time-slot">' + String(h).padStart(2, '0') + ':00</div>';
+    }
+    html += '</div>';
+    // Dag-kolommen
+    days.forEach(function (d) {
+      const ds = D.fmtDate(d);
+      const todayCls = isToday(d) ? ' today' : '';
+      html += '<div class="bp-cal-day-col' + todayCls + '" data-date="' + ds + '">';
+      for (let h = HOUR_START; h < HOUR_END; h++) {
+        html += '<div class="bp-cal-hour" data-hour="' + h + '" data-date="' + ds + '"></div>';
+      }
+      // Events absoluut positioneren
+      const dayEvents = (byDate[ds] || []).filter(function (e) {
+        if (!e.time) return false;
+        const hour = parseInt(e.time.split(':')[0], 10);
+        return hour >= HOUR_START && hour < HOUR_END;
+      });
+      dayEvents.forEach(function (e) {
+        const [h, m] = e.time.split(':').map(function (x) { return parseInt(x, 10); });
+        const top = (h - HOUR_START) * PX_PER_HOUR + (m / 60) * PX_PER_HOUR;
+        let height = PX_PER_HOUR * 0.85;
+        if (e.endtime) {
+          const [eh, em] = e.endtime.split(':').map(function (x) { return parseInt(x, 10); });
+          const endTop = (eh - HOUR_START) * PX_PER_HOUR + (em / 60) * PX_PER_HOUR;
+          height = Math.max(20, endTop - top - 2);
+        }
+        const completedCls = e.completed ? ' completed' : '';
+        html += '<div class="bp-cal-event-block' + completedCls + '" data-type="' + esc(e.type) + '" data-occurrence="' + esc(e.occurrenceId) + '" style="top:' + top + 'px;height:' + height + 'px">' +
+          '<div class="bp-cal-event-time">' + esc(e.time) + (e.endtime ? '–' + esc(e.endtime) : '') + '</div>' +
+          '<div class="bp-cal-event-title">' + esc(e.title) + '</div>' +
+          '</div>';
+      });
+      html += '</div>';
+    });
+    html += '</div></div>';
+    root.innerHTML = html;
+
+    // Wire: klik op lege uurslot → nieuw item met preset-datum+tijd
+    $$('.bp-cal-hour', root).forEach(function (slot) {
+      slot.addEventListener('click', function () {
+        const date = slot.dataset.date;
+        const hour = slot.dataset.hour;
+        // Pre-fill via een tijdelijk initial object
+        const initial = { date: date, time: String(hour).padStart(2, '0') + ':00', type: 'afspraak', reminder: true, recurrence: 'none' };
+        editAgendaEvent(null, date);
+        // Patch the form values after modal opens — formModal leest initial bij mount,
+        // dus we kunnen niet meer ingrijpen. Daarom timer:
+        setTimeout(function () {
+          const timeInput = document.querySelector('#bpModalRoot [name="time"]');
+          if (timeInput) timeInput.value = String(hour).padStart(2, '0') + ':00';
+        }, 30);
+      });
+    });
+    // Wire: klik op event-block → detail-modal
+    $$('.bp-cal-event-block', root).forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const occ = events.find(function (x) { return x.occurrenceId === btn.dataset.occurrence; });
+        if (occ) viewAgendaOccurrence(occ);
+      });
+    });
+  }
+
+  /** Dag-view renderen — lijst van events op geselecteerde datum. */
+  function renderAgendaDay(root, events) {
+    const sel = agendaState.selectedDate || D.fmtDate(new Date());
+    const d = D.parseDate(sel) || new Date();
+    const dayEvents = events.filter(function (e) { return e.date === sel; });
+
+    let html = '<div class="bp-cal-day-view">';
+    html += '<div class="bp-cal-day-header">';
+    html += '<div class="bp-cal-day-header-left">';
+    html += '<div class="bp-cal-day-header-day">' + d.getDate() + '</div>';
+    html += '<div class="bp-cal-day-header-month">' + esc(DAY_NAMES_NL[(d.getDay() + 6) % 7] + ' ' + MONTH_NAMES_NL[d.getMonth()] + ' ' + d.getFullYear()) + '</div>';
+    html += '</div>';
+    html += '<div class="bp-cal-day-header-right">';
+    html += '<button class="bp-btn bp-btn-ghost bp-btn-sm" data-day-nav="prev"><i class="fas fa-chevron-left"></i></button>';
+    html += '<button class="bp-btn bp-btn-ghost bp-btn-sm" data-day-nav="today">Vandaag</button>';
+    html += '<button class="bp-btn bp-btn-ghost bp-btn-sm" data-day-nav="next"><i class="fas fa-chevron-right"></i></button>';
+    html += '<button class="bp-btn bp-btn-primary bp-btn-sm" data-day-nav="add"><i class="fas fa-plus"></i> Nieuw</button>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div class="bp-cal-day-list">';
+    if (dayEvents.length === 0) {
+      html += '<div class="bp-empty"><div class="bp-empty-icon"><i class="fas fa-calendar-day"></i></div>' +
+        '<div class="bp-empty-title">Geen items op deze dag</div>' +
+        '<div class="bp-empty-sub">Klik op "Nieuw" om een afspraak of notitie toe te voegen.</div></div>';
+    } else {
+      dayEvents.forEach(function (e) {
+        const timeLabel = e.time ? e.time + (e.endtime ? '–' + e.endtime : '') : 'hele dag';
+        const allDayCls = e.time ? '' : ' all-day';
+        const completedCls = e.completed ? ' completed' : '';
+        html += '<div class="bp-cal-day-row" data-occurrence="' + esc(e.occurrenceId) + '">';
+        html += '<div class="bp-cal-day-row-time' + allDayCls + '">' + esc(timeLabel) + '</div>';
+        html += '<div class="bp-cal-day-row-body">';
+        html += '<div class="bp-cal-day-row-title' + completedCls + '">' + esc(e.title) + ' ' + agendaTypeBadge(e.type) + '</div>';
+        const meta = [];
+        if (e.location) meta.push('<span><i class="fas fa-map-marker-alt"></i>' + esc(e.location) + '</span>');
+        if (e.customerName) meta.push('<span><i class="fas fa-user"></i>' + esc(e.customerName) + '</span>');
+        if (e.recurrence && e.recurrence !== 'none') meta.push('<span><i class="fas fa-repeat"></i>herhalend</span>');
+        if (e.reminder) meta.push('<span><i class="fas fa-bell" style="color:var(--bp-warn)"></i>herinnering</span>');
+        if (e.note) meta.push('<span><i class="fas fa-note-sticky"></i>' + esc(e.note.length > 60 ? e.note.slice(0, 57) + '…' : e.note) + '</span>');
+        if (meta.length) html += '<div class="bp-cal-day-row-meta">' + meta.join('') + '</div>';
+        html += '</div>';
+        html += '<div>' + (e.completed
+          ? '<button class="bp-row-action view" data-act="toggle" title="Markeer als open"><i class="fas fa-rotate-left"></i></button>'
+          : '<button class="bp-row-action view" data-act="toggle" title="Markeer als voltooid"><i class="fas fa-check"></i></button>') + '</div>';
+        html += '</div>';
+      });
+    }
+    html += '</div></div>';
+    root.innerHTML = html;
+
+    // Wire: navigatie-knoppen
+    $$('[data-day-nav]', root).forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const nav = btn.dataset.dayNav;
+        if (nav === 'prev') { agendaState.cursor = addDays(d, -1); agendaState.selectedDate = D.fmtDate(agendaState.cursor); navigate('agenda'); }
+        else if (nav === 'next') { agendaState.cursor = addDays(d, 1); agendaState.selectedDate = D.fmtDate(agendaState.cursor); navigate('agenda'); }
+        else if (nav === 'today') { agendaState.cursor = new Date(); agendaState.selectedDate = D.fmtDate(agendaState.cursor); navigate('agenda'); }
+        else if (nav === 'add') { editAgendaEvent(null, sel); }
+      });
+    });
+    // Wire: rij-klik → detail-modal
+    $$('.bp-cal-day-row', root).forEach(function (row) {
+      row.addEventListener('click', function (e) {
+        if (e.target.closest('[data-act]')) return;
+        const occ = events.find(function (x) { return x.occurrenceId === row.dataset.occurrence; });
+        if (occ) viewAgendaOccurrence(occ);
+      });
+    });
+    // Wire: toggle voltooid
+    $$('[data-act="toggle"]', root).forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const row = btn.closest('.bp-cal-day-row');
+        const occ = events.find(function (x) { return x.occurrenceId === row.dataset.occurrence; });
+        if (occ) {
+          D.toggleAgendaCompleted(occ.id);
+          toast('Bijgewerkt', 'Status gewijzigd', 'success');
+          navigate('agenda');
+        }
+      });
+    });
+  }
+
+  /** Toolbar (view-switcher + navigatie + zoek + filter) voor de agenda. */
+  function renderAgendaToolbar() {
+    const cursor = agendaState.cursor;
+    let currentLabel = '';
+    if (agendaState.view === 'month') {
+      currentLabel = MONTH_NAMES_NL[cursor.getMonth()].charAt(0).toUpperCase() + MONTH_NAMES_NL[cursor.getMonth()].slice(1) + ' ' + cursor.getFullYear();
+    } else if (agendaState.view === 'week') {
+      const ws = startOfWeek(cursor);
+      const we = addDays(ws, 6);
+      currentLabel = 'Week ' + getWeekNumber(cursor) + ' · ' + ws.getDate() + ' ' + MONTH_NAMES_NL_SHORT[ws.getMonth()] + ' – ' + we.getDate() + ' ' + MONTH_NAMES_NL_SHORT[we.getMonth()];
+    } else {
+      const d = D.parseDate(agendaState.selectedDate) || new Date();
+      currentLabel = DAY_NAMES_NL[(d.getDay() + 6) % 7].charAt(0).toUpperCase() + DAY_NAMES_NL[(d.getDay() + 6) % 7].slice(1) + ' ' + d.getDate() + ' ' + MONTH_NAMES_NL[d.getMonth()];
+    }
+
+    const views = [
+      { key: 'month', label: 'Maand', icon: 'fa-calendar-days' },
+      { key: 'week',  label: 'Week',  icon: 'fa-calendar-week' },
+      { key: 'day',   label: 'Dag',   icon: 'fa-calendar-day' }
+    ];
+
+    let html = '<div class="bp-agenda-toolbar">';
+    html += '<div class="bp-agenda-nav">';
+    html += '<button class="bp-agenda-nav-btn" data-nav="prev" aria-label="Vorige"><i class="fas fa-chevron-left"></i></button>';
+    html += '<button class="bp-agenda-nav-btn" data-nav="today" aria-label="Vandaag"><i class="fas fa-circle-dot"></i></button>';
+    html += '<button class="bp-agenda-nav-btn" data-nav="next" aria-label="Volgende"><i class="fas fa-chevron-right"></i></button>';
+    html += '<div class="bp-agenda-current">' + esc(currentLabel) + '</div>';
+    html += '</div>';
+    html += '<div class="bp-agenda-viewtabs">';
+    views.forEach(function (v) {
+      html += '<button class="bp-agenda-viewtab' + (agendaState.view === v.key ? ' active' : '') + '" data-viewtab="' + v.key + '"><i class="fas ' + v.icon + '"></i> ' + esc(v.label) + '</button>';
+    });
+    html += '</div>';
+    html += '<div class="bp-agenda-search"><i class="fas fa-search"></i><input type="text" id="bpAgendaSearch" placeholder="Zoek in titel, notitie, klant…" value="' + esc(agendaState.search) + '"></div>';
+    html += '<select class="bp-agenda-filter" id="bpAgendaFilter">';
+    html += '<option value="all"' + (agendaState.typeFilter === 'all' ? ' selected' : '') + '>Alle types</option>';
+    Object.keys(D.AGENDA_TYPE_META).forEach(function (k) {
+      html += '<option value="' + esc(k) + '"' + (agendaState.typeFilter === k ? ' selected' : '') + '>' + esc(D.AGENDA_TYPE_META[k].label) + '</option>';
+    });
+    html += '</select>';
+    html += '<button class="bp-btn bp-btn-primary bp-btn-sm" id="bpAgendaAdd"><i class="fas fa-plus"></i> Nieuw</button>';
+    html += '</div>';
+    return html;
+  }
+
+  /** ISO-weeknummer berekenen (1–53). */
+  function getWeekNumber(d) {
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = (date.getUTCDay() + 6) % 7;
+    date.setUTCDate(date.getUTCDate() - dayNum + 3);
+    const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
+    return 1 + Math.round(((date - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+  }
+
+  /** Sidebar (legenda + quick-add) voor de agenda. */
+  function renderAgendaAside() {
+    let html = '<div class="bp-agenda-aside">';
+    html += '<div class="bp-agenda-legend">';
+    html += '<div class="bp-agenda-legend-title">Legenda</div>';
+    Object.keys(D.AGENDA_TYPE_META).forEach(function (k) {
+      html += '<div class="bp-agenda-legend-row"><div class="bp-agenda-legend-swatch" data-type="' + esc(k) + '"></div>' +
+        '<i class="fas ' + D.AGENDA_TYPE_META[k].icon + '" style="color:var(--bp-text-faint);width:1rem"></i> ' +
+        esc(D.AGENDA_TYPE_META[k].label) + '</div>';
+    });
+    html += '</div>';
+    // Mini-stats
+    const todayStr = D.fmtDate(new Date());
+    const allItems = D.list('agenda') || [];
+    const todayCount = allItems.filter(function (x) { return x.date === todayStr; }).length;
+    const reminderCount = allItems.filter(function (x) { return x.reminder && !x.completed; }).length;
+    html += '<div class="bp-card"><div class="bp-card-body">';
+    html += '<div class="bp-section-heading">Vandaag</div>';
+    html += '<div style="font-family:Poppins;font-size:1.5rem;font-weight:700;color:var(--bp-primary-2)">' + todayCount + ' <span style="font-size:0.8rem;color:var(--bp-text-muted);font-weight:600">items</span></div>';
+    html += '<div class="bp-section-heading">Actieve herinneringen</div>';
+    html += '<div style="font-family:Poppins;font-size:1.5rem;font-weight:700;color:var(--bp-warn)">' + reminderCount + '</div>';
+    html += '</div></div>';
+    html += '</div>';
+    return html;
+  }
+
+  /** Hoofd-view voor 'agenda'. */
+  view('agenda', function (root) {
+    // Bereken periode rondom de cursor
+    let start, end;
+    if (agendaState.view === 'month') {
+      // Iets breder dan de maand zelf, want de grid toont ook een paar dagen van vorige/volgende maand
+      const first = startOfMonth(agendaState.cursor);
+      start = addDays(startOfWeek(first), -1);
+      end = addDays(startOfWeek(first), 43);
+    } else if (agendaState.view === 'week') {
+      start = addDays(startOfWeek(agendaState.cursor), -1);
+      end = addDays(startOfWeek(agendaState.cursor), 8);
+    } else {
+      const d = D.parseDate(agendaState.selectedDate) || new Date();
+      start = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+      end = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 23, 59, 59);
+    }
+    let events = D.expandAgendaEvents(start, end);
+
+    // Filter: zoek
+    if (agendaState.search) {
+      const q = agendaState.search.toLowerCase();
+      events = events.filter(function (e) {
+        return (e.title || '').toLowerCase().indexOf(q) !== -1 ||
+               (e.note || '').toLowerCase().indexOf(q) !== -1 ||
+               (e.customerName || '').toLowerCase().indexOf(q) !== -1 ||
+               (e.location || '').toLowerCase().indexOf(q) !== -1;
+      });
+    }
+    // Filter: type
+    if (agendaState.typeFilter !== 'all') {
+      events = events.filter(function (e) { return e.type === agendaState.typeFilter; });
+    }
+
+    // Layout: toolbar + (calendar | aside)
+    let html = renderAgendaToolbar();
+    html += '<div class="bp-agenda-layout">';
+    html += '<div class="bp-agenda-main" id="bpAgendaMain"></div>';
+    html += renderAgendaAside();
+    html += '</div>';
+    root.innerHTML = html;
+
+    // Render de juiste view in #bpAgendaMain
+    const main = $('#bpAgendaMain', root);
+    if (agendaState.view === 'month') renderAgendaMonth(main, events);
+    else if (agendaState.view === 'week') renderAgendaWeek(main, events);
+    else renderAgendaDay(main, events);
+
+    // Wire toolbar
+    $$('[data-nav]', root).forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const nav = btn.dataset.nav;
+        if (nav === 'prev') {
+          if (agendaState.view === 'month') agendaState.cursor = addMonths(agendaState.cursor, -1);
+          else if (agendaState.view === 'week') agendaState.cursor = addDays(agendaState.cursor, -7);
+          else { const d = D.parseDate(agendaState.selectedDate) || new Date(); const n = addDays(d, -1); agendaState.cursor = n; agendaState.selectedDate = D.fmtDate(n); }
+        } else if (nav === 'next') {
+          if (agendaState.view === 'month') agendaState.cursor = addMonths(agendaState.cursor, 1);
+          else if (agendaState.view === 'week') agendaState.cursor = addDays(agendaState.cursor, 7);
+          else { const d = D.parseDate(agendaState.selectedDate) || new Date(); const n = addDays(d, 1); agendaState.cursor = n; agendaState.selectedDate = D.fmtDate(n); }
+        } else if (nav === 'today') {
+          agendaState.cursor = new Date();
+          agendaState.selectedDate = D.fmtDate(agendaState.cursor);
+        }
+        navigate('agenda');
+      });
+    });
+    $$('[data-viewtab]', root).forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        agendaState.view = btn.dataset.viewtab;
+        if (agendaState.view === 'day' && !agendaState.selectedDate) {
+          agendaState.selectedDate = D.fmtDate(new Date());
+        }
+        navigate('agenda');
+      });
+    });
+    const searchInput = $('#bpAgendaSearch', root);
+    if (searchInput) {
+      let t;
+      searchInput.addEventListener('input', function () {
+        clearTimeout(t);
+        t = setTimeout(function () {
+          agendaState.search = searchInput.value;
+          navigate('agenda');
+        }, 220);
+      });
+    }
+    const filterSel = $('#bpAgendaFilter', root);
+    if (filterSel) {
+      filterSel.addEventListener('change', function () {
+        agendaState.typeFilter = filterSel.value;
+        navigate('agenda');
+      });
+    }
+    const addBtn = $('#bpAgendaAdd', root);
+    if (addBtn) {
+      addBtn.addEventListener('click', function () {
+        // Pre-fill datum met selectedDate (als day-view) of vandaag
+        const preset = agendaState.view === 'day' ? agendaState.selectedDate : D.fmtDate(new Date());
+        editAgendaEvent(null, preset);
+      });
+    }
+  });
 
   // ═══════════════════════════════════════════════════════
   // VIEW: WEBSITE PRODUCTEN
@@ -3376,13 +4085,24 @@
       openModal({
         title: 'Snel toevoegen', icon: 'fa-plus',
         body: '<div class="bp-grid-2">' +
-          ['producten:Product:fa-box', 'verkoop:Verkoop:fa-cash-register', 'inkoop:Inkoop:fa-shopping-cart', 'klanten:Klant:fa-user', 'tracking:Zending:fa-truck', 'research:Research:fa-lightbulb'].map(x => {
+          ['agenda:Agenda-item:fa-calendar-day', 'producten:Product:fa-box', 'verkoop:Verkoop:fa-cash-register', 'inkoop:Inkoop:fa-shopping-cart', 'klanten:Klant:fa-user', 'tracking:Zending:fa-truck', 'research:Research:fa-lightbulb'].map(x => {
             const [v, l, i] = x.split(':');
             return '<button class="bp-card bp-card-hover bp-list-item" data-add="' + v + '"><div class="bp-list-icon" style="background:var(--bp-primary-soft);color:var(--bp-primary)"><i class="fas ' + i + '"></i></div><div class="bp-strong">' + l + '</div></button>';
           }).join('') +
           '</div>',
         onMount: (m, close) => {
-          $$('[data-add]', m).forEach(b => b.addEventListener('click', () => { close(); navigate(b.dataset.add); }));
+          $$('[data-add]', m).forEach(b => b.addEventListener('click', () => {
+            const target = b.dataset.add;
+            close();
+            if (target === 'agenda') {
+              // Voor agenda: open direct het "nieuwe item" modal na korte delay
+              // zodat de view eerst kan renderen.
+              navigate('agenda');
+              setTimeout(function () { editAgendaEvent(null, D.fmtDate(new Date())); }, 100);
+            } else {
+              navigate(target);
+            }
+          }));
         }
       });
     });
@@ -3451,7 +4171,9 @@
               tracking: ['tracking'],
               marktplaats: ['marktplaats'],
               research: ['research'],
-              werknemers: ['werknemers']
+              werknemers: ['werknemers'],
+              agenda: ['agenda'],
+              dashboard: ['agenda', 'verkoop', 'voorraad']
             };
             const deps = relevantViews[currentView] || [];
             if (deps.indexOf(collection) !== -1) {

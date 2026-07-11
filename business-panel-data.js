@@ -141,6 +141,39 @@
       { id: 'w_1', reference: 'BET-001', employee: 'Bart van Lagen', amount: 175, date: '2026-06-09', reason: 'Aandeel inkoop bestelling', category: 'Uitkering', approver: 'Bart van Lagen', note: 'Gedeeld met broer — ieder €175', status: 'Goedgekeurd' }
     ],
 
+    // ═══ Agenda / Kalender ═══
+    // Een agenda-item kan een eenmalige afspraak zijn, een herhalend item
+    // (weekly/monthly), of een vrije notitie op een specifieke datum.
+    // Velden:
+    //   id, title, date (YYYY-MM-DD), time (HH:MM|null), endtime (HH:MM|null),
+    //   type ('afspraak'|'persoonlijk'|'notitie'),
+    //   location, customerId, customerName (cache voor display),
+    //   note, recurrence ('none'|'weekly'|'monthly'),
+    //   recurrenceEndDate (YYYY-MM-DD|null), reminder (bool), completed (bool),
+    //   createdAt, updatedAt
+    agenda: [
+      { id: 'a_1', title: 'Voorraad check Magazijn A', date: '2026-07-14', time: '09:00', endtime: '09:30',
+        type: 'afspraak', location: 'Magazijn A', customerId: '', customerName: '',
+        note: 'Wekelijkse controle van microfoon-voorraad.', recurrence: 'weekly', recurrenceEndDate: '',
+        reminder: true, completed: false },
+      { id: 'a_2', title: 'Bel terug — Geert Klijnstra', date: '2026-07-15', time: '14:00', endtime: '14:15',
+        type: 'afspraak', location: '', customerId: 'k_1', customerName: 'Geert Klijnstra',
+        note: 'Vragen of hij nog interesse heeft in een tweede Sennheiser E604.', recurrence: 'none', recurrenceEndDate: '',
+        reminder: true, completed: false },
+      { id: 'a_3', title: 'Marktplaats advertenties vernieuwen', date: '2026-07-16', time: null, endtime: null,
+        type: 'notitie', location: '', customerId: '', customerName: '',
+        note: 'Alle "Verkocht" advertenties verwijderen, nieuwe listings online zetten.', recurrence: 'none', recurrenceEndDate: '',
+        reminder: false, completed: false },
+      { id: 'a_4', title: 'Verjaardag Bart', date: '2026-07-18', time: null, endtime: null,
+        type: 'persoonlijk', location: '', customerId: '', customerName: '',
+        note: 'Cadeau regelen.', recurrence: 'yearly', recurrenceEndDate: '',
+        reminder: true, completed: false },
+      { id: 'a_5', title: 'Belasting aangifte BTW Q2', date: '2026-07-31', time: null, endtime: null,
+        type: 'afspraak', location: '', customerId: '', customerName: '',
+        note: 'Indienen voor 31 juli.', recurrence: 'none', recurrenceEndDate: '',
+        reminder: true, completed: false }
+    ],
+
     // ═══ Handmatige statistiek-correcties ═══
     // Deze waarden worden door de gebruiker in Instellingen → Statistieken
     // aanpassen opgeteld bij de berekende dashboard-statistieken.
@@ -483,7 +516,7 @@
   // ────────────────────────────────────────────────────────
   function exportAll() {
     const data = { meta: list('meta'), version: VERSION, exportedAt: nowISO() };
-    ['producten', 'voorraad', 'inkoop', 'verkoop', 'klanten', 'tracking', 'marktplaats', 'research', 'werknemers'].forEach(function (k) {
+    ['producten', 'voorraad', 'inkoop', 'verkoop', 'klanten', 'tracking', 'marktplaats', 'research', 'werknemers', 'agenda'].forEach(function (k) {
       data[k] = list(k);
     });
     return data;
@@ -491,7 +524,7 @@
   function importAll(data) {
     if (!data || typeof data !== 'object') return false;
     try {
-      ['producten', 'voorraad', 'inkoop', 'verkoop', 'klanten', 'tracking', 'marktplaats', 'research', 'werknemers'].forEach(function (k) {
+      ['producten', 'voorraad', 'inkoop', 'verkoop', 'klanten', 'tracking', 'marktplaats', 'research', 'werknemers', 'agenda'].forEach(function (k) {
         if (Array.isArray(data[k])) save(k, data[k]);
       });
       if (data.meta) save('meta', data.meta);
@@ -500,6 +533,207 @@
       console.warn('[BP] import failed', e);
       return false;
     }
+  }
+
+  // ────────────────────────────────────────────────────────
+  // AGENDA — recurrence-expansie + kleur-mapping
+  // Een "raw" agenda-item heeft één vaste datum + optionele recurrence.
+  // De view-laag krijgt via expandAgendaEvents() een platte lijst van
+  // "voorkomens" (occurrences) voor een opgegeven periode, zodat de
+  // kalender-grid alleen maar hoeft te tekenen wat er in beeld is.
+  // ────────────────────────────────────────────────────────
+
+  /**
+   * @typedef {Object} AgendaEvent
+   * @property {string} id           - Origineel item-id
+   * @property {string} occurrenceId - Unieke id voor dit voorkomen (id + datum)
+   * @property {string} title
+   * @property {string} date         - YYYY-MM-DD van dit voorkomen
+   * @property {string|null} time
+   * @property {string|null} endtime
+   * @property {string} type         - 'afspraak' | 'persoonlijk' | 'notitie'
+   * @property {string} location
+   * @property {string} customerId
+   * @property {string} customerName
+   * @property {string} note
+   * @property {string} recurrence   - 'none' | 'weekly' | 'monthly' | 'yearly'
+   * @property {boolean} reminder
+   * @property {boolean} completed
+   * @property {boolean} isOccurrence - true als dit een herhalings-exemplaar is
+   */
+
+  /** Map type → CSS-kleur-token (wordt door de view-laag opgepikt). */
+  const AGENDA_TYPE_META = {
+    afspraak:   { color: 'primary',   icon: 'fa-handshake',     label: 'Afspraak'   },
+    persoonlijk:{ color: 'lavender',  icon: 'fa-user',          label: 'Persoonlijk'},
+    notitie:    { color: 'warn',      icon: 'fa-note-sticky',   label: 'Notitie'    }
+  };
+
+  /** Toegestane recurrence-soorten — centraal gedefinieerd i.v.m. codekwaliteit. */
+  const AGENDA_RECURRENCE_TYPES = ['none', 'weekly', 'monthly', 'yearly'];
+
+  /** Lees agenda-items als array (altijd array, zelfs als Firebase nog leeg is). */
+  function listAgenda() {
+    const v = list('agenda');
+    return Array.isArray(v) ? v : [];
+  }
+
+  /** Parse een YYYY-MM-DD string als lokale Date (middernacht). */
+  function parseDate(s) {
+    if (!s || typeof s !== 'string') return null;
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) { const d = new Date(s); return isNaN(d) ? null : d; }
+    return new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+  }
+
+  /** Format een Date naar YYYY-MM-DD (lokaal, geen UTC-shift). */
+  function fmtDate(d) {
+    if (!(d instanceof Date) || isNaN(d)) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  /**
+   * Expandeer een enkel raw agenda-item tot een lijst voorkomens binnen [start, end].
+   * Een eenmalig item (recurrence === 'none') levert maximaal 1 voorkomen op.
+   * Herhalende items worden uitgerold tot aan recurrenceEndDate of de einddatum
+   * van de opgevraagde periode (wat het eerst komt).
+   * @param {Object} item
+   * @param {Date} start
+   * @param {Date} end
+   * @returns {AgendaEvent[]}
+   */
+  function expandAgendaItem(item, start, end) {
+    if (!item || !item.date) return [];
+    const baseDate = parseDate(item.date);
+    if (!baseDate) return [];
+
+    const recurrence = item.recurrence || 'none';
+    const recurrenceEnd = item.recurrenceEndDate ? parseDate(item.recurrenceEndDate) : null;
+
+    const occurrences = [];
+    const cap = 500; // veiligheids-limit tegen oneindige loops bij fouten
+    let cur = new Date(baseDate);
+    let n = 0;
+
+    while (cur <= end && n < cap) {
+      n++;
+      // Stoppen als dit voorkomen voor de opgevraagde periode ligt → ga door naar volgende
+      if (cur >= start) {
+        occurrences.push({
+          id: item.id,
+          occurrenceId: item.id + '_' + fmtDate(cur),
+          title: item.title || '(zonder titel)',
+          date: fmtDate(cur),
+          time: item.time || null,
+          endtime: item.endtime || null,
+          type: item.type || 'afspraak',
+          location: item.location || '',
+          customerId: item.customerId || '',
+          customerName: item.customerName || '',
+          note: item.note || '',
+          recurrence: recurrence,
+          reminder: !!item.reminder,
+          completed: !!item.completed,
+          isOccurrence: cur.getTime() !== baseDate.getTime()
+        });
+      }
+
+      if (recurrence === 'none') break;
+      if (recurrenceEnd && cur > recurrenceEnd) break;
+
+      if (recurrence === 'weekly') {
+        cur.setDate(cur.getDate() + 7);
+      } else if (recurrence === 'monthly') {
+        // Behoud dag-van-de-maand waar mogelijk (accepteer 28+ → einde maand)
+        const day = baseDate.getDate();
+        const nextMonth = cur.getMonth() + 1;
+        const nextMonthDate = new Date(cur.getFullYear(), nextMonth, day);
+        if (isNaN(nextMonthDate) || nextMonthDate.getMonth() !== (nextMonth % 12)) {
+          // Dag bestaat niet in volgende maand → val terug op laatste dag
+          cur = new Date(cur.getFullYear(), nextMonth + 1, 0);
+        } else {
+          cur = nextMonthDate;
+        }
+      } else if (recurrence === 'yearly') {
+        cur.setFullYear(cur.getFullYear() + 1);
+      } else {
+        break;
+      }
+    }
+    return occurrences;
+  }
+
+  /**
+   * Geef alle agenda-voorkomens binnen een periode, gesorteerd op datum+tijd.
+   * @param {Date} start
+   * @param {Date} end
+   * @returns {AgendaEvent[]}
+   */
+  function expandAgendaEvents(start, end) {
+    if (!(start instanceof Date) || !(end instanceof Date)) return [];
+    const all = [];
+    listAgenda().forEach(function (item) {
+      Array.prototype.push.apply(all, expandAgendaItem(item, start, end));
+    });
+    all.sort(function (a, b) {
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      const at = a.time || 'zz';
+      const bt = b.time || 'zz';
+      return at < bt ? -1 : (at > bt ? 1 : 0);
+    });
+    return all;
+  }
+
+  /**
+   * Voorkomens voor één specifieke datum (YYYY-MM-DD).
+   * @param {string} yyyy_mm_dd
+   * @returns {AgendaEvent[]}
+   */
+  function agendaEventsOnDay(yyyy_mm_dd) {
+    const d = parseDate(yyyy_mm_dd);
+    if (!d) return [];
+    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+    return expandAgendaEvents(start, end);
+  }
+
+  /**
+   * Agendastatistieken voor het dashboard-widget "komende afspraken":
+   * telt items waarvan de datum+tijd binnen `daysAhead` dagen valt,
+   * 'reminder' aan staat, en 'completed' uit staat.
+   * @param {number} daysAhead
+   * @returns {{ total: number, items: AgendaEvent[] }}
+   */
+  function upcomingAgenda(daysAhead) {
+    const days = Math.max(0, Math.min(60, Number(daysAhead) || 7));
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const end = new Date(start.getTime() + days * 24 * 60 * 60 * 1000);
+    const items = expandAgendaEvents(start, end).filter(function (e) {
+      if (e.completed) return false;
+      if (!e.reminder) return false;
+      // Verberg notities zonder tijd NIET — ze mogen wel in de herinnering
+      // verschijnen, maar alleen op de huidige/direct toekomstige datum.
+      return true;
+    });
+    return { total: items.length, items: items };
+  }
+
+  /**
+   * Toggle het 'completed' veld van een raw agenda-item.
+   * Werkt op het originele item (niet op een voorkomen) — bij herhalende items
+   * wordt het hele item gemarkeerd. Dit is een bewuste keuze voor eenvoud;
+   * een "uitzondering op één voorkomen" toevoegen kan in een latere iteratie.
+   * @param {string} id
+   * @returns {Object|null}
+   */
+  function toggleAgendaCompleted(id) {
+    const item = get('agenda', id);
+    if (!item) return null;
+    return update('agenda', id, { completed: !item.completed });
   }
 
   // ────────────────────────────────────────────────────────
@@ -534,6 +768,15 @@
     buildCatalogus: buildCatalogus,
     exportAll: exportAll,
     importAll: importAll,
+    // ── Agenda API ──
+    parseDate: parseDate,
+    fmtDate: fmtDate,
+    expandAgendaEvents: expandAgendaEvents,
+    agendaEventsOnDay: agendaEventsOnDay,
+    upcomingAgenda: upcomingAgenda,
+    toggleAgendaCompleted: toggleAgendaCompleted,
+    AGENDA_TYPE_META: AGENDA_TYPE_META,
+    AGENDA_RECURRENCE_TYPES: AGENDA_RECURRENCE_TYPES,
     SEED: SEED
   };
 
