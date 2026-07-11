@@ -200,6 +200,7 @@
   const VIEW_META = {
     dashboard:        { title: 'Dashboard',         sub: 'Overzicht van je handelsadministratie' },
     agenda:           { title: 'Agenda',            sub: 'Afspraken, notities en herinneringen — maand-, week- en dagweergave' },
+    notitieblok:      { title: 'Notitieblok',       sub: 'Persoonlijke notities met titel, beschrijving en categorie — permanent opgeslagen' },
     websiteproducten: { title: 'Website Producten', sub: 'Beheer alle producten die op de website staan (naam, prijs, beschrijving, conditiegrade) — real-time sync via Firebase' },
     producten:        { title: 'Producten',          sub: 'Beheer je productcatalogus en prijzen' },
     voorraad:         { title: 'Voorraad',           sub: 'Voorraadniveaus en magazijnbeheer' },
@@ -1480,6 +1481,312 @@
     $('#bpInstallApp')?.remove();
     deferredInstallPrompt = null;
     toast('Geïnstalleerd', 'Lagenco Admin is nu als app geïnstalleerd', 'success');
+  });
+
+  // ═══════════════════════════════════════════════════════
+  // VIEW: NOTITIEBLOK  (Planning → Notitieblok)
+  // Volledige CRUD voor persoonlijke notities. Elke notitie heeft:
+  //   titel, beschrijving (vrije tekst), categorie (vrij te kiezen/aanmaken)
+  // Alle notities worden permanent in Firebase (bp/notities) opgeslagen
+  // en real-time gesynchroniseerd via de onBpChange callback in boot().
+  // ═══════════════════════════════════════════════════════
+
+  /** Notitieblok state — zoek + categorie-filter blijven bewaard tijdens sessie. */
+  const notitieState = {
+    search: '',
+    categoryFilter: 'all'  // 'all' of een categorie-naam
+  };
+
+  /** Standaard categorieën die altijd beschikbaar zijn (naast de door de gebruiker aangemaakte). */
+  const NOTITIE_DEFAULT_CATEGORIES = ['Algemeen', 'Ideeën', 'Te doen', 'Belangrijk'];
+
+  /** Verzamel alle categorieën: default + alle categorieën die in notities voorkomen. */
+  function notitieAllCategories() {
+    const set = new Set(NOTITIE_DEFAULT_CATEGORIES);
+    (D.list('notities') || []).forEach(function (n) {
+      if (n.category && String(n.category).trim()) set.add(String(n.category).trim());
+    });
+    return Array.from(set);
+  }
+
+  /** Open het add/edit-modal voor een notitie. */
+  function editNotitie(notitie) {
+    const isEdit = !!notitie;
+    const initial = notitie || {};
+    const existingCats = notitieAllCategories();
+
+    const fields = [
+      { key: 'title', label: 'Titel', required: true, full: true, placeholder: 'Bijv. "Inkooplijst juli" of "Idee voor nieuwe categorie"' },
+      { key: 'category', label: 'Categorie', required: true, full: true, placeholder: 'Kies of typ een nieuwe categorie',
+        type: 'text', suggestions: existingCats },
+      { key: 'content', label: 'Beschrijving / notitie', type: 'textarea', full: true,
+        placeholder: 'Schrijf je notitie hier… (vrije tekst, meerdere regels toegestaan)' }
+    ];
+
+    // Bouw body handmatig omdat formModal geen suggestions/combobox ondersteunt.
+    let body = '<div class="bp-form-grid">';
+    fields.forEach(function (f) {
+      const val = initial ? (initial[f.key] != null ? initial[f.key] : '') : (f.default || '');
+      const full = f.full ? ' full' : '';
+      const req = f.required ? ' <span class="req">*</span>' : '';
+      body += '<div class="bp-field' + full + '">';
+      body += '<label class="bp-label">' + esc(f.label) + req + '</label>';
+      if (f.type === 'textarea') {
+        body += '<textarea class="bp-textarea" name="' + f.key + '" rows="6" placeholder="' + esc(f.placeholder || '') + '">' + esc(val) + '</textarea>';
+      } else {
+        // Gebruik een <input list="..."> combobox zodat gebruiker kan kiezen OF typen
+        const listId = f.suggestions && f.suggestions.length ? 'dl-' + f.key : '';
+        body += '<input type="' + (f.type || 'text') + '" class="bp-input" name="' + f.key + '" placeholder="' + esc(f.placeholder || '') + '" value="' + esc(val) + '"' + (listId ? ' list="' + listId + '"' : '') + ' autocomplete="off">';
+        if (listId) {
+          body += '<datalist id="' + listId + '">';
+          f.suggestions.forEach(function (s) {
+            body += '<option value="' + esc(s) + '">';
+          });
+          body += '</datalist>';
+        }
+      }
+      body += '</div>';
+    });
+    body += '</div>';
+
+    openModal({
+      title: isEdit ? 'Notitie bewerken' : 'Nieuwe notitie',
+      icon: 'fa-note-sticky',
+      large: true,
+      body: body,
+      footer:
+        '<button class="bp-btn bp-btn-ghost" data-action="cancel">Annuleren</button>' +
+        '<button class="bp-btn bp-btn-primary" data-action="save"><i class="fas fa-check"></i> Opslaan</button>',
+      onMount: function (m, close) {
+        m.querySelector('[data-action="cancel"]').addEventListener('click', close);
+        m.querySelector('[data-action="save"]').addEventListener('click', function () {
+          const titleEl = m.querySelector('[name="title"]');
+          const catEl = m.querySelector('[name="category"]');
+          const contentEl = m.querySelector('[name="content"]');
+          const title = titleEl ? titleEl.value.trim() : '';
+          const category = catEl ? catEl.value.trim() : '';
+          const content = contentEl ? contentEl.value : '';
+          if (!title) {
+            toast('Fout', 'Titel is verplicht', 'error');
+            titleEl?.focus();
+            return;
+          }
+          if (!category) {
+            toast('Fout', 'Categorie is verplicht — typ een bestaande of nieuwe categorie', 'error');
+            catEl?.focus();
+            return;
+          }
+          const clean = {
+            title: title,
+            category: category,
+            content: content
+          };
+          if (isEdit) {
+            D.update('notities', notitie.id, clean);
+            toast('Opgeslagen', 'Notitie is bijgewerkt', 'success');
+          } else {
+            D.add('notities', clean);
+            toast('Toegevoegd', 'Notitie is opgeslagen in de database', 'success');
+          }
+          close();
+          navigate('notitieblok');
+        });
+      }
+    });
+  }
+
+  /** Verwijder een notitie met bevestiging. */
+  function deleteNotitie(notitie) {
+    confirmModal('Notitie verwijderen',
+      'Weet je zeker dat je "' + notitie.title + '" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.',
+      function () {
+        D.remove('notities', notitie.id);
+        toast('Verwijderd', 'Notitie is verwijderd uit de database', 'success');
+        // Korte vertraging zodat closeModal afrondt vóór de re-render.
+        // Zonder dit kan de oude kaart kort zichtbaar blijven in de nieuwe view.
+        setTimeout(function () { navigate('notitieblok'); }, 50);
+      });
+  }
+
+  /** Format datum-tijd voor weergave. */
+  function notitieFmtDate(iso) {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      if (isNaN(d)) return iso;
+      return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) +
+        ' · ' + d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) { return iso; }
+  }
+
+  /** Hoofd-view voor 'notitieblok'. */
+  view('notitieblok', function (root) {
+    let allNotities = D.list('notities') || [];
+    // Sorteer: nieuwste eerst (op createdAt, fallback op updatedAt)
+    allNotities.sort(function (a, b) {
+      const aT = a.updatedAt || a.createdAt || '';
+      const bT = b.updatedAt || b.createdAt || '';
+      return aT < bT ? 1 : (aT > bT ? -1 : 0);
+    });
+
+    // Filter: zoek
+    let filtered = allNotities;
+    if (notitieState.search) {
+      const q = notitieState.search.toLowerCase();
+      filtered = filtered.filter(function (n) {
+        return (n.title || '').toLowerCase().indexOf(q) !== -1 ||
+               (n.content || '').toLowerCase().indexOf(q) !== -1 ||
+               (n.category || '').toLowerCase().indexOf(q) !== -1;
+      });
+    }
+    // Filter: categorie
+    if (notitieState.categoryFilter !== 'all') {
+      filtered = filtered.filter(function (n) { return n.category === notitieState.categoryFilter; });
+    }
+
+    // Toolbar
+    let html = '<div class="bp-agenda-toolbar">';
+    html += '<div class="bp-agenda-nav">';
+    html += '<button class="bp-btn bp-btn-primary bp-btn-sm" id="bpNotitieAdd"><i class="fas fa-plus"></i> Nieuwe notitie</button>';
+    html += '</div>';
+    html += '<div class="bp-agenda-search"><i class="fas fa-search"></i>';
+    html += '<input type="text" id="bpNotitieSearch" placeholder="Zoek in titel, inhoud of categorie…" value="' + esc(notitieState.search) + '">';
+    html += '</div>';
+    // Categorie-filter
+    const cats = notitieAllCategories();
+    html += '<select class="bp-agenda-filter" id="bpNotitieCatFilter">';
+    html += '<option value="all"' + (notitieState.categoryFilter === 'all' ? ' selected' : '') + '>Alle categorieën</option>';
+    cats.forEach(function (c) {
+      html += '<option value="' + esc(c) + '"' + (notitieState.categoryFilter === c ? ' selected' : '') + '>' + esc(c) + '</option>';
+    });
+    html += '</select>';
+    html += '</div>'; // /toolbar
+
+    // Stats bar
+    const total = allNotities.length;
+    const catCounts = {};
+    allNotities.forEach(function (n) {
+      const c = n.category || '(geen)';
+      catCounts[c] = (catCounts[c] || 0) + 1;
+    });
+    const topCats = Object.keys(catCounts).sort(function (a, b) { return catCounts[b] - catCounts[a]; }).slice(0, 4);
+
+    html += '<div class="bp-grid-2" style="margin-bottom:1.25rem">';
+    html += '<div class="bp-card"><div class="bp-card-body" style="display:flex;align-items:center;gap:1rem">';
+    html += '<div class="bp-weekly-row-icon" style="background:var(--bp-primary-soft);color:var(--bp-primary)"><i class="fas fa-note-sticky"></i></div>';
+    html += '<div><div style="font-family:Poppins;font-weight:700;font-size:1.5rem;color:var(--bp-text);line-height:1">' + total + '</div>';
+    html += '<div style="font-size:0.78rem;color:var(--bp-text-muted);margin-top:0.2rem">notities totaal</div></div>';
+    html += '</div></div>';
+    html += '<div class="bp-card"><div class="bp-card-body">';
+    html += '<div class="bp-section-heading" style="margin-top:0">Categorieën</div>';
+    if (topCats.length === 0) {
+      html += '<div style="font-size:0.82rem;color:var(--bp-text-muted)">Nog geen categorieën — maak je eerste notitie aan.</div>';
+    } else {
+      html += '<div style="display:flex;flex-wrap:wrap;gap:0.5rem">';
+      topCats.forEach(function (c) {
+        html += '<span class="bp-badge bp-badge-primary" style="cursor:pointer" data-cat-filter="' + esc(c) + '">' + esc(c) + ' · ' + catCounts[c] + '</span>';
+      });
+      html += '</div>';
+    }
+    html += '</div></div>';
+    html += '</div>';
+
+    // Notities grid
+    if (filtered.length === 0) {
+      html += '<div class="bp-card"><div class="bp-card-body">';
+      html += '<div class="bp-empty"><div class="bp-empty-icon"><i class="fas fa-note-sticky"></i></div>';
+      if (total === 0) {
+        html += '<div class="bp-empty-title">Nog geen notities</div>';
+        html += '<div class="bp-empty-sub">Klik op "Nieuwe notitie" om je eerste notitie aan te maken. Alle notities worden permanent opgeslagen.</div>';
+      } else {
+        html += '<div class="bp-empty-title">Geen notities gevonden</div>';
+        html += '<div class="bp-empty-sub">Pas je zoekterm of categorie-filter aan, of maak een nieuwe notitie.</div>';
+      }
+      html += '</div></div></div>';
+    } else {
+      html += '<div class="bp-notitie-grid">';
+      filtered.forEach(function (n) {
+        const preview = (n.content || '').length > 180 ? (n.content).slice(0, 177) + '…' : (n.content || '');
+        const updated = notitieFmtDate(n.updatedAt || n.createdAt);
+        html += '<div class="bp-card bp-notitie-card" data-notitie-id="' + esc(n.id) + '">';
+        html += '<div class="bp-card-head">';
+        html += '<div class="bp-card-title"><i class="fas fa-note-sticky" style="color:var(--bp-warn)"></i> ' + esc(n.title) + '</div>';
+        html += '<div class="bp-notitie-actions">';
+        html += '<button class="bp-row-action edit" data-act="edit" title="Bewerken"><i class="fas fa-pen"></i></button>';
+        html += '<button class="bp-row-action delete" data-act="delete" title="Verwijderen"><i class="fas fa-trash"></i></button>';
+        html += '</div>';
+        html += '</div>';
+        html += '<div class="bp-card-body">';
+        if (preview) {
+          html += '<div class="bp-notitie-content">' + esc(preview).replace(/\n/g, '<br>') + '</div>';
+        } else {
+          html += '<div class="bp-notitie-content bp-muted" style="font-style:italic">Geen beschrijving</div>';
+        }
+        html += '<div class="bp-notitie-meta">';
+        html += '<span class="bp-badge bp-badge-primary">' + esc(n.category || 'Algemeen') + '</span>';
+        if (updated) html += '<span class="bp-notitie-date"><i class="far fa-clock"></i> ' + esc(updated) + '</span>';
+        html += '</div>';
+        html += '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    root.innerHTML = html;
+
+    // Wire: nieuwe notitie knop
+    $('#bpNotitieAdd', root)?.addEventListener('click', function () {
+      editNotitie(null);
+    });
+
+    // Wire: zoek (debounced)
+    const searchInput = $('#bpNotitieSearch', root);
+    if (searchInput) {
+      let t;
+      searchInput.addEventListener('input', function () {
+        clearTimeout(t);
+        t = setTimeout(function () {
+          notitieState.search = searchInput.value;
+          navigate('notitieblok');
+        }, 220);
+      });
+    }
+
+    // Wire: categorie-filter
+    $('#bpNotitieCatFilter', root)?.addEventListener('change', function () {
+      notitieState.categoryFilter = this.value;
+      navigate('notitieblok');
+    });
+
+    // Wire: categorie-badge clicks (in stats bar)
+    $$('[data-cat-filter]', root).forEach(function (badge) {
+      badge.addEventListener('click', function () {
+        notitieState.categoryFilter = badge.dataset.catFilter;
+        navigate('notitieblok');
+      });
+    });
+
+    // Wire: notitie kaarten (edit + delete)
+    $$('.bp-notitie-card', root).forEach(function (card) {
+      const notitieId = card.dataset.notitieId;
+      const notitie = (allNotities).find(function (n) { return n.id === notitieId; });
+      if (!notitie) return;
+      // Klik op kaart (behalve op actie-knoppen) → open edit
+      card.addEventListener('click', function (e) {
+        if (e.target.closest('[data-act]')) return;
+        editNotitie(notitie);
+      });
+      // Edit knop
+      card.querySelector('[data-act="edit"]')?.addEventListener('click', function (e) {
+        e.stopPropagation();
+        editNotitie(notitie);
+      });
+      // Delete knop
+      card.querySelector('[data-act="delete"]')?.addEventListener('click', function (e) {
+        e.stopPropagation();
+        deleteNotitie(notitie);
+      });
+    });
   });
 
   // ═══════════════════════════════════════════════════════
@@ -4501,6 +4808,7 @@
               research: ['research'],
               werknemers: ['werknemers'],
               agenda: ['agenda'],
+              notitieblok: ['notities'],
               dashboard: ['agenda', 'verkoop', 'voorraad']
             };
             const deps = relevantViews[currentView] || [];

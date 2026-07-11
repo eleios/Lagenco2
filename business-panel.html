@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Lagenco Business Panel — Handelsadministratie</title>
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#0F3D2E">
@@ -18,8 +18,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- Business panel styles (only loaded on this page — does not affect main website) -->
-  <!-- v=23 cache-busting query zorgt dat browsers altijd de nieuwste CSS ophalen -->
-  <link rel="stylesheet" href="business-panel.css?v=23">
+  <!-- v=24 cache-busting query zorgt dat browsers altijd de nieuwste CSS ophalen -->
+  <link rel="stylesheet" href="business-panel.css?v=24">
 
   <!-- PWA: manifest + theme-color voor installatie -->
   <link rel="manifest" href="manifest.json">
@@ -215,6 +215,9 @@
           <a href="#agenda" class="bp-nav-item" data-view="agenda">
             <i class="fas fa-calendar-days"></i><span>Agenda</span>
           </a>
+          <a href="#notitieblok" class="bp-nav-item" data-view="notitieblok">
+            <i class="fas fa-note-sticky"></i><span>Notitieblok</span>
+          </a>
         </div>
 
         <div class="bp-nav-section">
@@ -354,7 +357,7 @@
 
   <!-- ═══ Scripts — loaded in order, no impact on main website ═══ -->
   <!-- Cache-busting: version query forces browsers to fetch fresh copies -->
-  <script src="business-panel-data.js?v=23" defer></script>
+  <script src="business-panel-data.js?v=24" defer></script>
   <!-- Chart.js loaded async — only used by dashboard/reports -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <!-- jsPDF — voor het wekelijkse PDF-rapport -->
@@ -363,8 +366,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="github-db.js?v=10" defer></script>
-  <script src="business-panel.js?v=23" defer></script>
-  <script src="bp-report.js?v=23" defer></script>
+  <script src="business-panel.js?v=24" defer></script>
+  <script src="bp-report.js?v=24" defer></script>
   <!-- Service worker registratie (PWA) -->
   <script>
     if ('serviceWorker' in navigator) {

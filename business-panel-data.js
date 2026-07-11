@@ -151,28 +151,10 @@
     //   note, recurrence ('none'|'weekly'|'monthly'),
     //   recurrenceEndDate (YYYY-MM-DD|null), reminder (bool), completed (bool),
     //   createdAt, updatedAt
-    agenda: [
-      { id: 'a_1', title: 'Voorraad check Magazijn A', date: '2026-07-14', time: '09:00', endtime: '09:30',
-        type: 'afspraak', location: 'Magazijn A', customerId: '', customerName: '',
-        note: 'Wekelijkse controle van microfoon-voorraad.', recurrence: 'weekly', recurrenceEndDate: '',
-        reminder: true, completed: false },
-      { id: 'a_2', title: 'Bel terug — Geert Klijnstra', date: '2026-07-15', time: '14:00', endtime: '14:15',
-        type: 'afspraak', location: '', customerId: 'k_1', customerName: 'Geert Klijnstra',
-        note: 'Vragen of hij nog interesse heeft in een tweede Sennheiser E604.', recurrence: 'none', recurrenceEndDate: '',
-        reminder: true, completed: false },
-      { id: 'a_3', title: 'Marktplaats advertenties vernieuwen', date: '2026-07-16', time: null, endtime: null,
-        type: 'notitie', location: '', customerId: '', customerName: '',
-        note: 'Alle "Verkocht" advertenties verwijderen, nieuwe listings online zetten.', recurrence: 'none', recurrenceEndDate: '',
-        reminder: false, completed: false },
-      { id: 'a_4', title: 'Verjaardag Bart', date: '2026-07-18', time: null, endtime: null,
-        type: 'persoonlijk', location: '', customerId: '', customerName: '',
-        note: 'Cadeau regelen.', recurrence: 'yearly', recurrenceEndDate: '',
-        reminder: true, completed: false },
-      { id: 'a_5', title: 'Belasting aangifte BTW Q2', date: '2026-07-31', time: null, endtime: null,
-        type: 'afspraak', location: '', customerId: '', customerName: '',
-        note: 'Indienen voor 31 juli.', recurrence: 'none', recurrenceEndDate: '',
-        reminder: true, completed: false }
-    ],
+    //
+    // Standaard leeg — alle afspraken worden door de gebruiker aangemaakt en
+    // direct in Firebase (bp/agenda) opgeslagen. Geen voorbeeldgegevens.
+    agenda: [],
 
     // ═══ Handmatige statistiek-correcties ═══
     // Deze waarden worden door de gebruiker in Instellingen → Statistieken
@@ -194,6 +176,12 @@
     adminUsers: [
       { uid: 'admin_1', email: 'admin@lagenco.nl', name: 'Bart van Lagen', passwordHash: '', role: 'owner' }
     ],
+
+    // ═══ Notitieblok (Planning) ═══
+    // Start leeg — alle notities worden door de gebruiker aangemaakt en in
+    // Firebase opgeslagen (bp/notities). Velden:
+    //   id, title, content, category, color (optioneel), createdAt, updatedAt
+    notities: [],
 
     catalogus: [] // computed dynamically from producten + voorraad + verkoop
   };
@@ -257,6 +245,33 @@
       }
     } catch (e) {
       console.warn('[BP] Seed failed', e);
+    }
+
+    // ── Eenmalige cleanup-migratie: verwijder oude agenda-testitems ──
+    // De SEED.agenda bevatte eerder 5 testitems (IDs a_1 t/m a_5). Sinds de
+    // SEED leeg is, willen we die oude testitems ook uit Firebase verwijderen
+    // zodat de gebruiker met een schone agenda start. Deze migratie wordt
+    // slechts één keer uitgevoerd (bijgehouden via bp/migrations/agendaCleanup).
+    try {
+      const migrations = window.LagencoDB.bpList('migrations');
+      const migrationDone = Array.isArray(migrations) && migrations.some(function (m) {
+        return m && m.id === 'agendaCleanup_v1' && m.done === true;
+      });
+      if (!migrationDone) {
+        const agendaItems = window.LagencoDB.bpList('agenda') || [];
+        const testIds = ['a_1', 'a_2', 'a_3', 'a_4', 'a_5'];
+        const cleaned = agendaItems.filter(function (item) {
+          return testIds.indexOf(item && item.id) === -1;
+        });
+        if (cleaned.length !== agendaItems.length) {
+          console.log('[BP] Cleanup: verwijder ' + (agendaItems.length - cleaned.length) + ' oude agenda-testitems');
+          await window.LagencoDB.bpSave('agenda', cleaned);
+        }
+        // Markeer migratie als voltooid
+        await window.LagencoDB.bpSave('migrations', [{ id: 'agendaCleanup_v1', done: true, at: nowISO() }]);
+      }
+    } catch (e) {
+      console.warn('[BP] Agenda cleanup-migratie mislukt:', e.message);
     }
 
     initialized = true;
@@ -542,7 +557,7 @@
   // ────────────────────────────────────────────────────────
   function exportAll() {
     const data = { meta: list('meta'), version: VERSION, exportedAt: nowISO() };
-    ['producten', 'voorraad', 'inkoop', 'verkoop', 'klanten', 'tracking', 'marktplaats', 'research', 'werknemers', 'agenda'].forEach(function (k) {
+    ['producten', 'voorraad', 'inkoop', 'verkoop', 'klanten', 'tracking', 'marktplaats', 'research', 'werknemers', 'agenda', 'notities'].forEach(function (k) {
       data[k] = list(k);
     });
     return data;
@@ -550,7 +565,7 @@
   function importAll(data) {
     if (!data || typeof data !== 'object') return false;
     try {
-      ['producten', 'voorraad', 'inkoop', 'verkoop', 'klanten', 'tracking', 'marktplaats', 'research', 'werknemers', 'agenda'].forEach(function (k) {
+      ['producten', 'voorraad', 'inkoop', 'verkoop', 'klanten', 'tracking', 'marktplaats', 'research', 'werknemers', 'agenda', 'notities'].forEach(function (k) {
         if (Array.isArray(data[k])) save(k, data[k]);
       });
       if (data.meta) save('meta', data.meta);
