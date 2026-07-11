@@ -18,8 +18,15 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- Business panel styles (only loaded on this page — does not affect main website) -->
-  <!-- v=22 cache-busting query zorgt dat browsers altijd de nieuwste CSS ophalen -->
-  <link rel="stylesheet" href="business-panel.css?v=22">
+  <!-- v=23 cache-busting query zorgt dat browsers altijd de nieuwste CSS ophalen -->
+  <link rel="stylesheet" href="business-panel.css?v=23">
+
+  <!-- PWA: manifest + theme-color voor installatie -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0F3D2E">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Lagenco Admin">
 
   <!-- ═══ INLINE FALLBACK STYLES (v1.1) ═══
        Garandeert dat de nieuwe UI-elementen (periode-tabs + statistiek-
@@ -75,28 +82,84 @@
 
   <!-- ═══════════════════════════════════════════════════════
        INLINE BOOTSTRAP — runs BEFORE any other script.
-       No authentication: the dashboard is open to anyone
-       who reaches this page (typically via the Admin Modus
-       floating button on the main website).
+       Auth-gate: controleert sessionStorage of de gebruiker is ingelogd.
+       Zo niet → direct doorsturen naar login.html (voordat de app überhaupt
+       wordt getoond, zodat er nooit kort een dashboard flitst).
        ═══════════════════════════════════════════════════════ -->
   <script>
     (function () {
       'use strict';
-      // Expose a no-op auth helper so business-panel.js (which still
-      // references window.__bpAuth) keeps working without changes.
+      // Donker thema toepassen vóór renderen (voorkomt flash of light mode)
+      try {
+        if (localStorage.getItem('lagencoBPDarkMode') === 'true') {
+          document.documentElement.classList.add('bp-dark');
+          document.body && document.body.classList.add('bp-dark');
+        }
+      } catch (e) {}
+
+      // ── Auth-gate ──
+      // Auth-state leeft in sessionStorage (tab-scope). We lezen het hier
+      // direct (synchroon) zodat we kunnen redirecten vóórdat de app laadt.
+      var SESSION_KEY = 'lagencoLoggedIn';
+      var isLogged = false;
+      try {
+        var raw = sessionStorage.getItem(SESSION_KEY);
+        if (raw) {
+          var data = JSON.parse(raw);
+          isLogged = !!(data && data.logged === true);
+        }
+      } catch (e) {}
+
+      if (!isLogged) {
+        // Bewaar de oorspronkelijke hash zodat login.js na inloggen terug kan keren
+        try {
+          var target = window.location.pathname.split('/').pop() || 'business-panel.html';
+          if (window.location.hash) target += window.location.hash;
+          sessionStorage.setItem('lagencoLoginRedirect', target);
+        } catch (e) {}
+        window.location.replace('login.html');
+        return;
+      }
+
+      // ── Wel ingelogd: stel window.__bpAuth in voor backward compat ──
+      // (business-panel.js verwacht dit object — we maken het nu echt functioneel
+      //  in plaats van een no-op stub.)
+      var userData = {};
+      try {
+        var parsed = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+        if (parsed && parsed.user) userData = parsed.user;
+      } catch (e) {}
+
       window.__bpAuth = {
-        isLoggedIn: function () { return true; },
-        AUTH: { email: 'admin@lagenco.nl', password: 'lagenco123' },
-        LOGIN_KEY: 'lagencoLoggedIn',
-        doLogin: function (email, pass, callback) { callback(true); },
-        forceRedirect: function () {}
+        isLoggedIn: function () {
+          try {
+            var raw = sessionStorage.getItem(SESSION_KEY);
+            return !!(raw && JSON.parse(raw).logged === true);
+          } catch (e) { return false; }
+        },
+        getUser: function () { return userData; },
+        LOGIN_KEY: SESSION_KEY,
+        logout: function () {
+          try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+          window.location.href = 'login.html';
+        }
       };
+
       // Early show: hide splash, show app shell as soon as DOM is ready
       function earlyShow() {
         var splash = document.getElementById('bpSplash');
         var app = document.getElementById('bpApp');
         if (splash) splash.style.display = 'none';
         if (app) app.hidden = false;
+        // Gebruikersnaam in sidebar invullen
+        var nameEl = document.querySelector('.bp-user-name');
+        var emailEl = document.querySelector('.bp-user-email');
+        var avEl = document.querySelector('.bp-user-avatar');
+        if (userData.name && nameEl) nameEl.textContent = userData.name;
+        else if (userData.email && nameEl) nameEl.textContent = userData.email;
+        if (userData.email && emailEl) emailEl.textContent = userData.email;
+        if (userData.name && avEl) avEl.textContent = userData.name.charAt(0).toUpperCase();
+        else if (userData.email && avEl) avEl.textContent = userData.email.charAt(0).toUpperCase();
       }
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', earlyShow);
@@ -235,7 +298,7 @@
           <i class="fas fa-external-link-alt"></i> Naar website
         </a>
         <button class="bp-logout-btn" id="bpLogoutBtn">
-          <i class="fas fa-arrow-left"></i> Terug naar website
+          <i class="fas fa-arrow-right-from-bracket"></i> Uitloggen
         </button>
       </div>
     </aside>
@@ -261,6 +324,9 @@
             <i class="fas fa-search"></i>
             <input type="text" id="bpGlobalSearch" placeholder="Zoeken…" aria-label="Zoeken">
           </div>
+          <button class="bp-icon-btn" id="bpDarkToggle" title="Donker thema aan/uit" aria-label="Donker thema">
+            <i class="fas fa-moon"></i>
+          </button>
           <button class="bp-icon-btn" id="bpQuickAdd" title="Snel toevoegen">
             <i class="fas fa-plus"></i>
           </button>
@@ -288,13 +354,28 @@
 
   <!-- ═══ Scripts — loaded in order, no impact on main website ═══ -->
   <!-- Cache-busting: version query forces browsers to fetch fresh copies -->
-  <script src="business-panel-data.js?v=22" defer></script>
+  <script src="business-panel-data.js?v=23" defer></script>
   <!-- Chart.js loaded async — only used by dashboard/reports -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-    <!-- ═══ FIREBASE (real-time database) ═══ -->
+  <!-- jsPDF — voor het wekelijkse PDF-rapport -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+  <!-- ═══ FIREBASE (real-time database) ═══ -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="github-db.js?v=10" defer></script>
-  <script src="business-panel.js?v=22" defer></script>
+  <script src="business-panel.js?v=23" defer></script>
+  <script src="bp-report.js?v=23" defer></script>
+  <!-- Service worker registratie (PWA) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').then(function (reg) {
+          console.log('[PWA] Service worker geregistreerd:', reg.scope);
+        }).catch(function (e) {
+          console.warn('[PWA] SW registratie mislukt:', e.message);
+        });
+      });
+    }
+  </script>
 </body>
 </html>

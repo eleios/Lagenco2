@@ -85,7 +85,7 @@
   function buildButton() {
     if (btnEl) return btnEl;
     var a = document.createElement('a');
-    a.href = 'business-panel.html';
+    a.href = 'login.html';
     a.id = 'lagencoAdminFAB';
     a.setAttribute('aria-label', 'Open Admin Modus / Business Panel');
     a.setAttribute('title', 'Admin Modus — Open Business Panel');

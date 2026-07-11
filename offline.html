@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline — Lagenco Business Panel</title>
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#0F3D2E">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230F3D2E'/><text y='72' x='50' font-size='62' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>L</text></svg>">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Poppins:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Nunito', 'Inter', sans-serif;
+      background: linear-gradient(135deg, #FFF8F0 0%, #FFEDD8 100%);
+      color: #2D3A2E;
+      padding: 2rem;
+    }
+    .card {
+      max-width: 28rem;
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #FFE0CC;
+      border-radius: 1.5rem;
+      box-shadow: 0 24px 56px rgba(74, 122, 78, 0.14);
+      padding: 2.5rem 2rem;
+      text-align: center;
+    }
+    .icon {
+      width: 4rem;
+      height: 4rem;
+      margin: 0 auto 1.25rem;
+      border-radius: 1rem;
+      background: linear-gradient(135deg, rgba(212, 162, 78, 0.15), rgba(212, 162, 78, 0.08));
+      color: #D4A24E;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+    }
+    h1 {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.5rem;
+    }
+    p {
+      font-size: 0.92rem;
+      color: #6B7A6C;
+      line-height: 1.6;
+      margin: 0 0 1.5rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 0.85rem;
+      background: linear-gradient(135deg, #6BBF7E, #4A9D5E);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 0.92rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 8px 24px rgba(107, 191, 126, 0.30);
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(107, 191, 126, 0.45);
+    }
+    .features {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #FFE0CC;
+      text-align: left;
+    }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.85rem;
+      color: #6B7A6C;
+      margin: 0.5rem 0;
+    }
+    .feature i {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 0.4rem;
+      background: rgba(107, 191, 126, 0.15);
+      color: #4A9D5E;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      font-family: 'Fraunces', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #2D3A2E;
+    }
+    .brand-logo {
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 0.5rem;
+      background: linear-gradient(135deg, #6BBF7E, #4A9D5E);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <div class="brand-logo"><i class="fas fa-leaf"></i></div>
+      Lagenco
+    </div>
+    <div class="icon"><i class="fas fa-wifi"></i></div>
+    <h1>Je bent offline</h1>
+    <p>De verbinding met het internet is verbroken. Je kunt nog wel eerder bezochte pagina's bekijken — nieuwe acties worden gesynchroniseerd zodra je weer online bent.</p>
+    <button class="btn" onclick="window.location.reload()">
+      <i class="fas fa-rotate-right"></i> Probeer opnieuw
+    </button>
+    <div class="features">
+      <div class="feature"><i class="fas fa-check"></i> Eerdere dashboard-gegevens blijven zichtbaar</div>
+      <div class="feature"><i class="fas fa-check"></i> Wijzigingen worden in de wachtrij geplaatst</div>
+      <div class="feature"><i class="fas fa-check"></i> Automatisch sync bij herverbinding</div>
+    </div>
+  </div>
+  <script>
+    // Auto-reload wanneer verbinding terugkomt
+    window.addEventListener('online', function () {
+      window.location.reload();
+    });
+  </script>
+</body>
+</html>

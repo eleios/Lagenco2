@@ -186,6 +186,15 @@
       klanten:        0    // opgeteld bij klanten-aantal
     },
 
+    // ═══ Admin-gebruikers (login) ═══
+    // Worden door login.js uitgelezen om inloggen te valideren.
+    // passwordHash wordt bij init() berekend via SHA-256 van 'lagenco123'
+    // (asynchroon, vandaar dat het hier nog niet staat — init() vult het in).
+    // In productie: verander het wachtwoord via Instellingen → Beheer.
+    adminUsers: [
+      { uid: 'admin_1', email: 'admin@lagenco.nl', name: 'Bart van Lagen', passwordHash: '', role: 'owner' }
+    ],
+
     catalogus: [] // computed dynamically from producten + voorraad + verkoop
   };
 
@@ -215,7 +224,10 @@
       try { await window.LagencoDB.syncAll(); } catch (e) { console.warn('[BP] syncAll failed', e); }
     }
 
-    // Seed if Firebase bp/ is empty
+    // ── Voor seeding: bereken passwordHash voor adminUsers asynchroon ──
+    // Dit gebeurt alleen bij initiële seeding (als Firebase nog leeg is).
+    // We gebruiken de Web Crypto API (SHA-256). De hash van 'lagenco123' wordt
+    // éénmalig berekend en in de SEED gezet vóór pushen naar Firebase.
     try {
       const fb = window.LagencoDB._cache.bp;
       const hasData = SEED_COLLECTIONS.some(k => {
@@ -223,6 +235,19 @@
         return v && (Array.isArray(v) ? v.length > 0 : Object.keys(v).length > 0);
       });
       if (!hasData) {
+        // Vul passwordHash in vóór seeden (alleen als deze nog leeg is)
+        if (SEED.adminUsers && SEED.adminUsers.length && !SEED.adminUsers[0].passwordHash) {
+          try {
+            const buf = new TextEncoder().encode('lagenco123');
+            const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+            const hash = Array.from(new Uint8Array(hashBuf))
+              .map(function (b) { return b.toString(16).padStart(2, '0'); })
+              .join('');
+            SEED.adminUsers.forEach(function (u) { u.passwordHash = hash; });
+          } catch (e) {
+            console.warn('[BP] Kon passwordHash niet berekenen:', e.message);
+          }
+        }
         console.log('[BP] Seeding Firebase bp/ with initial data...');
         // Push each collection to Firebase
         for (const k of SEED_COLLECTIONS) {
@@ -536,6 +561,119 @@
   }
 
   // ────────────────────────────────────────────────────────
+  // WEEKVERGELIJKING — deze week vs vorige week
+  // Geeft een object met metrics voor beide weken + delta's,
+  // zodat het dashboard en het PDF-rapport dezelfde data gebruiken.
+  // Week = 7 dagen, eindigend op vandaag (dus "deze week" = laatste 7
+  // dagen incl. vandaag, "vorige week" = de 7 dagen daarvoor).
+  // ────────────────────────────────────────────────────────
+
+  /**
+   * Bereken alle week-statistieken voor één 7-daagse periode.
+   * @param {Date} start  - Startdatum (inclusief, middernacht)
+   * @param {Date} end    - Einddatum (exclusief, dus start + 7 dagen)
+   * @returns {Object}    - { revenue, profit, salesCount, newCustomers, lowStockCount, topProducts[] }
+   */
+  function computeWeekStats(start, end) {
+    const verkoop = list('verkoop') || [];
+    const klanten = list('klanten') || [];
+    const voorraad = list('voorraad') || [];
+    const producten = list('producten') || [];
+
+    const startMs = start.getTime();
+    const endMs = end.getTime();
+
+    // Verkopen in deze periode
+    const periodSales = verkoop.filter(function (s) {
+      const d = parseDate(s.date);
+      return d && d.getTime() >= startMs && d.getTime() < endMs;
+    });
+
+    let revenue = 0, profit = 0;
+    periodSales.forEach(function (s) {
+      revenue += parseNum(s.sellPrice);
+      profit += parseNum(s.profit);
+    });
+
+    // Nieuwe klanten in deze periode
+    const newCustomers = klanten.filter(function (k) {
+      const d = parseDate(k.date);
+      return d && d.getTime() >= startMs && d.getTime() < endMs;
+    }).length;
+
+    // Lage-voorraad-meldingen (snapshot op nu — we kunnen niet terugkijken
+    // in de tijd, dus we gebruiken de huidige voorraad-status als proxy)
+    const lowStockCount = voorraad.filter(function (v) {
+      return parseNum(v.stock) <= parseNum(v.minStock);
+    }).length;
+
+    // Top 3 bestverkochte producten in deze periode
+    const productCounts = {};
+    periodSales.forEach(function (s) {
+      const name = s.product || '(onbekend)';
+      if (!productCounts[name]) productCounts[name] = { name: name, count: 0, revenue: 0, profit: 0 };
+      productCounts[name].count += 1;
+      productCounts[name].revenue += parseNum(s.sellPrice);
+      productCounts[name].profit += parseNum(s.profit);
+    });
+    const topProducts = Object.values(productCounts)
+      .sort(function (a, b) { return b.count - a.count; })
+      .slice(0, 3);
+
+    return {
+      revenue: revenue,
+      profit: profit,
+      salesCount: periodSales.length,
+      newCustomers: newCustomers,
+      lowStockCount: lowStockCount,
+      topProducts: topProducts,
+      sales: periodSales  // ruwe verkopen voor eventueel extra analyse
+    };
+  }
+
+  /** Percentage verandering, veilig tegen deling door nul. */
+  function pctChange(curr, prev) {
+    if (prev === 0) return curr === 0 ? 0 : 100; // 0 → X = +100% (of 0 → 0 = 0%)
+    return ((curr - prev) / Math.abs(prev)) * 100;
+  }
+
+  /**
+   * Hoofdfunctie: geef vergelijking deze-week vs vorige-week.
+   * @param {Date} [refDate]  - Referentiedatum (default: vandaag)
+   * @returns {Object} { current: {...}, previous: {...}, deltas: {...}, period: { currentStart, currentEnd, ... } }
+   */
+  function weeklyComparison(refDate) {
+    const now = refDate ? new Date(refDate) : new Date();
+    // "Deze week" = afgelopen 7 dagen (vandaag incl. 6 dagen terug)
+    const currentEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1); // exclusief (middernacht morgen)
+    const currentStart = new Date(currentEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+    // "Vorige week" = 7 dagen daarvoor
+    const previousEnd = currentStart;
+    const previousStart = new Date(previousEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const current = computeWeekStats(currentStart, currentEnd);
+    const previous = computeWeekStats(previousStart, previousEnd);
+
+    return {
+      period: {
+        currentStart: fmtDate(currentStart),
+        currentEnd: fmtDate(new Date(currentEnd.getTime() - 1)),
+        previousStart: fmtDate(previousStart),
+        previousEnd: fmtDate(new Date(previousEnd.getTime() - 1))
+      },
+      current: current,
+      previous: previous,
+      deltas: {
+        revenue: { abs: current.revenue - previous.revenue, pct: pctChange(current.revenue, previous.revenue) },
+        profit:  { abs: current.profit - previous.profit,  pct: pctChange(current.profit, previous.profit) },
+        salesCount: { abs: current.salesCount - previous.salesCount, pct: pctChange(current.salesCount, previous.salesCount) },
+        newCustomers: { abs: current.newCustomers - previous.newCustomers, pct: pctChange(current.newCustomers, previous.newCustomers) },
+        lowStockCount: { abs: current.lowStockCount - previous.lowStockCount, pct: pctChange(current.lowStockCount, previous.lowStockCount) }
+      }
+    };
+  }
+
+  // ────────────────────────────────────────────────────────
   // AGENDA — recurrence-expansie + kleur-mapping
   // Een "raw" agenda-item heeft één vaste datum + optionele recurrence.
   // De view-laag krijgt via expandAgendaEvents() een platte lijst van
@@ -777,6 +915,10 @@
     toggleAgendaCompleted: toggleAgendaCompleted,
     AGENDA_TYPE_META: AGENDA_TYPE_META,
     AGENDA_RECURRENCE_TYPES: AGENDA_RECURRENCE_TYPES,
+    // ── Weekvergelijking API ──
+    weeklyComparison: weeklyComparison,
+    computeWeekStats: computeWeekStats,
+    pctChange: pctChange,
     SEED: SEED
   };
 

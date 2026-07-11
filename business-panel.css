@@ -2393,3 +2393,399 @@
     transition: none !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   v1.3 — DARK MODE
+   Donker thema voor avondshifts en oogrust. Wordt getoggled via
+   de .bp-dark class op <body> (gezet door inline script vóór render).
+   Alle tokens worden overschreven met donkere equivalenten — de
+   bestaande light-mode regels blijven onaangetast eronder.
+   ═══════════════════════════════════════════════════════ */
+
+body.bp-dark {
+  /* Surfaces — diep donkergroen/zwart met groene ondertoon */
+  --bp-bg:           #161a17;
+  --bp-bg-2:         #1f2a20;
+  --bp-card:         #1f2a20;
+  --bp-card-2:       #243026;
+  --bp-sidebar-bg:   #0f1410;
+  --bp-sidebar-bg-2: #080c0a;
+  --bp-sidebar-fg:   #a5b5a7;
+  --bp-sidebar-mute: #6b7a6c;
+
+  /* Text */
+  --bp-text:         #e8efe9;
+  --bp-text-muted:   #a5b5a7;
+  --bp-text-faint:   #6b7a6c;
+  --bp-text-inv:     #ffffff;
+  --bp-text-inv-mut: #a5b5a7;
+
+  /* Brand — iets feller voor contrast op donker */
+  --bp-primary:      #7DCF8E;
+  --bp-primary-2:    #6BBF7E;
+  --bp-primary-soft: rgba(125, 207, 142, 0.18);
+  --bp-violet:       #FFA070;
+  --bp-blue:         #6FB8D6;
+  --bp-cyan:         #9FD8EE;
+
+  /* Status — zachtere achtergronden voor minder verblinding */
+  --bp-success:      #7DCF8E;
+  --bp-success-soft: rgba(125, 207, 142, 0.15);
+  --bp-warn:         #E6B45E;
+  --bp-warn-soft:    rgba(230, 180, 94, 0.15);
+  --bp-danger:       #F08070;
+  --bp-danger-soft:  rgba(240, 128, 112, 0.15);
+  --bp-info:         #6FB8D6;
+  --bp-info-soft:    rgba(111, 184, 214, 0.15);
+
+  /* Extra accenten */
+  --bp-lavender:     #B5A5D6;
+  --bp-lavender-soft:rgba(181, 165, 214, 0.15);
+  --bp-peach:        #FFB088;
+  --bp-peach-soft:   rgba(255, 176, 136, 0.15);
+  --bp-yellow:       #FFD56B;
+  --bp-yellow-soft:  rgba(255, 213, 107, 0.15);
+
+  /* Borders — donker, subtiel */
+  --bp-border:       #2d3a2e;
+  --bp-border-2:     #3d4a3e;
+  --bp-border-dark:  #4A9D5E;
+
+  /* Shadows — zachter op donker (geen grote blur, ietwat lichter) */
+  --bp-shadow-sm:    0 4px 12px rgba(0, 0, 0, 0.30);
+  --bp-shadow:       0 4px 12px rgba(0, 0, 0, 0.35);
+  --bp-shadow-md:    0 12px 32px rgba(0, 0, 0, 0.45);
+  --bp-shadow-lg:    0 24px 56px rgba(0, 0, 0, 0.55);
+  --bp-shadow-glow:  0 8px 24px rgba(125, 207, 142, 0.20);
+
+  /* Body achtergrond — donkere gradient */
+  background: linear-gradient(135deg, #161a17 0%, #1f2a20 100%) !important;
+  color: var(--bp-text) !important;
+}
+
+/* ── Specifieke donkere overrides waar tokens niet voldoen ── */
+
+/* Sidebar: nog donkerder dan light-mode (donker in dark = vrijwel zwart) */
+body.bp-dark .bp-sidebar {
+  background: linear-gradient(180deg, #0f1410 0%, #080c0a 100%) !important;
+  border-right-color: #2d3a2e !important;
+}
+body.bp-dark .bp-nav-item.active {
+  background: linear-gradient(135deg, rgba(125, 207, 142, 0.25), rgba(255, 160, 112, 0.12)) !important;
+  color: #fff !important;
+}
+body.bp-dark .bp-nav-item:hover:not(.active) {
+  background: rgba(125, 207, 142, 0.10) !important;
+  color: #e8efe9 !important;
+}
+
+/* Topbar: semi-transparant donker */
+body.bp-dark .bp-topbar {
+  background: rgba(31, 42, 32, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  border-bottom-color: #2d3a2e !important;
+}
+
+/* Cards: donkere achtergrond met groene glow-border subtiel */
+body.bp-dark .bp-card {
+  background: var(--bp-card) !important;
+  border-color: var(--bp-border) !important;
+}
+body.bp-dark .bp-card-2,
+body.bp-dark .bp-stat-row {
+  background: var(--bp-card-2) !important;
+}
+
+/* KPI cards */
+body.bp-dark .bp-kpi {
+  background: var(--bp-card) !important;
+}
+
+/* Tables */
+body.bp-dark .bp-table thead th {
+  background: var(--bp-bg-2) !important;
+  color: var(--bp-text-muted) !important;
+  border-bottom-color: var(--bp-border) !important;
+}
+body.bp-dark .bp-table tbody tr {
+  border-bottom-color: var(--bp-border) !important;
+}
+body.bp-dark .bp-table tbody tr:hover {
+  background: var(--bp-card-2) !important;
+}
+
+/* Inputs */
+body.bp-dark .bp-input,
+body.bp-dark .bp-select,
+body.bp-dark .bp-textarea {
+  background: var(--bp-card-2) !important;
+  border-color: var(--bp-border-2) !important;
+  color: var(--bp-text) !important;
+}
+body.bp-dark .bp-input::placeholder,
+body.bp-dark .bp-textarea::placeholder {
+  color: var(--bp-text-faint) !important;
+}
+
+/* Modal */
+body.bp-dark .bp-modal {
+  background: var(--bp-card) !important;
+  border: 1px solid var(--bp-border) !important;
+}
+body.bp-dark .bp-modal-head {
+  border-bottom-color: var(--bp-border) !important;
+}
+
+/* Toast */
+body.bp-dark .bp-toast {
+  background: var(--bp-card) !important;
+  border-color: var(--bp-border) !important;
+}
+
+/* Badges */
+body.bp-dark .bp-badge-success { background: rgba(125, 207, 142, 0.18) !important; color: #7DCF8E !important; }
+body.bp-dark .bp-badge-danger  { background: rgba(240, 128, 112, 0.18) !important; color: #F08070 !important; }
+body.bp-dark .bp-badge-warn    { background: rgba(230, 180, 94, 0.18) !important;  color: #E6B45E !important; }
+body.bp-dark .bp-badge-info    { background: rgba(111, 184, 214, 0.18) !important;color: #6FB8D6 !important; }
+body.bp-dark .bp-badge-neutral { background: var(--bp-bg-2) !important;             color: var(--bp-text-muted) !important; }
+
+/* Agenda-specifieke overrides */
+body.bp-dark .bp-cal-day.other-month {
+  background: var(--bp-bg) !important;
+}
+body.bp-dark .bp-cal-day.today {
+  background: linear-gradient(135deg, rgba(125, 207, 142, 0.15), rgba(255, 160, 112, 0.08)) !important;
+}
+body.bp-dark .bp-cal-week-head,
+body.bp-dark .bp-cal-weekdays {
+  background: var(--bp-bg-2) !important;
+}
+body.bp-dark .bp-cal-time-col {
+  background: var(--bp-bg) !important;
+}
+body.bp-dark .bp-cal-hour {
+  border-bottom-color: var(--bp-border) !important;
+}
+
+/* Splash */
+body.bp-dark .bp-splash {
+  background: var(--bp-bg) !important;
+}
+body.bp-dark .bp-splash-card {
+  background: var(--bp-card) !important;
+}
+
+/* Search input */
+body.bp-dark .bp-search input {
+  background: var(--bp-card-2) !important;
+  border-color: var(--bp-border-2) !important;
+  color: var(--bp-text) !important;
+}
+
+/* Quick-adjust panel */
+body.bp-dark .bp-quick-adjust {
+  background: linear-gradient(135deg, var(--bp-card), var(--bp-card-2)) !important;
+}
+
+/* Filter bar */
+body.bp-dark .bp-filter-bar,
+body.bp-dark .bp-period-bar {
+  background: var(--bp-card) !important;
+}
+
+/* Empty state */
+body.bp-dark .bp-empty-icon {
+  background: var(--bp-bg-2) !important;
+  color: var(--bp-text-faint) !important;
+}
+
+/* Dark toggle knop: zon icoon wanneer dark actief */
+body.bp-dark #bpDarkToggle i::before {
+  content: "\\f185"; /* fa-sun */
+}
+
+/* Reduced motion — geen animatie bij dark toggle */
+@media (prefers-reduced-motion: reduce) {
+  body, body.bp-dark { transition: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   v1.4 — WEEKVERGELIJKING widget (dashboard)
+   Toont deze week vs vorige week met delta-badges.
+   ═══════════════════════════════════════════════════════ */
+
+.bp-weekly-card {
+  margin-bottom: 1.25rem !important;
+}
+.bp-weekly-head-right {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  flex-wrap: wrap !important;
+}
+.bp-weekly-period {
+  font-family: 'Nunito', 'Inter', sans-serif !important;
+  font-size: 0.78rem !important;
+  color: var(--bp-text-muted) !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.bp-weekly-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 0.75rem !important;
+}
+.bp-weekly-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.85rem !important;
+  padding: 0.95rem 1rem !important;
+  background: var(--bp-card-2) !important;
+  border: 1px solid var(--bp-border) !important;
+  border-radius: var(--bp-r-md) !important;
+  transition: all var(--bp-fast) var(--bp-ease) !important;
+}
+.bp-weekly-row:hover {
+  border-color: var(--bp-primary) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: var(--bp-shadow-sm) !important;
+}
+.bp-weekly-row-icon {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  border-radius: var(--bp-r) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1rem !important;
+  flex-shrink: 0 !important;
+}
+.bp-weekly-row-body {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+.bp-weekly-row-label {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.78rem !important;
+  color: var(--bp-text-muted) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  margin-bottom: 0.15rem !important;
+}
+.bp-weekly-row-current {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1.25rem !important;
+  color: var(--bp-text) !important;
+  letter-spacing: -0.02em !important;
+  font-variant-numeric: tabular-nums !important;
+  line-height: 1.1 !important;
+}
+.bp-weekly-row-prev {
+  font-size: 0.72rem !important;
+  color: var(--bp-text-faint) !important;
+  margin-top: 0.15rem !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.bp-weekly-row-delta {
+  flex-shrink: 0 !important;
+}
+
+/* Delta-badge (up=green, down=red, neutral=grey) */
+.bp-delta-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.3rem !important;
+  padding: 0.3rem 0.6rem !important;
+  border-radius: var(--bp-r-full) !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.72rem !important;
+  font-variant-numeric: tabular-nums !important;
+  white-space: nowrap !important;
+}
+.bp-delta-badge i { font-size: 0.65rem !important; }
+.bp-delta-badge.up {
+  background: var(--bp-success-soft) !important;
+  color: var(--bp-success) !important;
+}
+.bp-delta-badge.down {
+  background: var(--bp-danger-soft) !important;
+  color: var(--bp-danger) !important;
+}
+.bp-delta-badge.neutral {
+  background: var(--bp-bg-2) !important;
+  color: var(--bp-text-muted) !important;
+}
+
+/* Top-producten lijst */
+.bp-weekly-top {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  margin-top: 0.5rem !important;
+}
+.bp-weekly-top-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  padding: 0.6rem 0.85rem !important;
+  background: var(--bp-card-2) !important;
+  border: 1px solid var(--bp-border) !important;
+  border-radius: var(--bp-r) !important;
+  transition: all var(--bp-fast) var(--bp-ease) !important;
+}
+.bp-weekly-top-item:hover {
+  border-color: var(--bp-primary) !important;
+  transform: translateX(2px) !important;
+}
+.bp-weekly-top-rank {
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  border-radius: var(--bp-r-full) !important;
+  background: linear-gradient(135deg, var(--bp-primary), var(--bp-primary-2)) !important;
+  color: #fff !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 4px 10px rgba(107, 191, 126, 0.3) !important;
+}
+.bp-weekly-top-body { flex: 1 !important; min-width: 0 !important; }
+.bp-weekly-top-name {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.88rem !important;
+  color: var(--bp-text) !important;
+  letter-spacing: -0.005em !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.bp-weekly-top-meta {
+  font-size: 0.72rem !important;
+  color: var(--bp-text-muted) !important;
+  margin-top: 0.1rem !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.bp-weekly-empty {
+  padding: 1rem !important;
+  text-align: center !important;
+  font-size: 0.82rem !important;
+  color: var(--bp-text-muted) !important;
+  background: var(--bp-card-2) !important;
+  border: 1px dashed var(--bp-border) !important;
+  border-radius: var(--bp-r) !important;
+  margin-top: 0.5rem !important;
+}
+
+/* Mobile: weekly-grid stackt */
+@media (max-width: 640px) {
+  .bp-weekly-grid { grid-template-columns: 1fr !important; }
+  .bp-weekly-row-current { font-size: 1.1rem !important; }
+  .bp-weekly-head-right { width: 100% !important; justify-content: space-between !important; }
+}

@@ -294,6 +294,27 @@
   // Periode-state voor de winst-weergave (blijft bewaard tijdens de sessie)
   let dashboardPeriod = 'always'; // 'today' | '7weeks' | '1month' | 'always'
 
+  /** Format een delta als HTML-badge met pijl en kleur (up=green, down=red). */
+  function deltaBadge(delta, opts) {
+    opts = opts || {};
+    const isMoney = opts.money === true;
+    const isInverted = opts.inverted === true; // voor metrics waar "up" slecht is (bv. lowStock)
+    const up = delta.abs > 0;
+    const down = delta.abs < 0;
+    // Bij inverted: meer = slechter, dus rood
+    const positive = isInverted ? down : up;
+    const negative = isInverted ? up : down;
+    let cls = 'neutral';
+    if (positive && delta.abs !== 0) cls = 'up';
+    else if (negative && delta.abs !== 0) cls = 'down';
+    const icon = up ? 'fa-arrow-up' : (down ? 'fa-arrow-down' : 'fa-minus');
+    const absStr = isMoney
+      ? (delta.abs >= 0 ? '+' : '') + D.fmtEuro(Math.abs(delta.abs)).replace('€ ', '€ ')
+      : (delta.abs >= 0 ? '+' : '') + Math.abs(delta.abs);
+    const pctStr = (delta.pct >= 0 ? '+' : '') + delta.pct.toFixed(1) + '%';
+    return '<span class="bp-delta-badge ' + cls + '"><i class="fas ' + icon + '"></i> ' + absStr + ' · ' + pctStr + '</span>';
+  }
+
   view('dashboard', function (root) {
     const s = D.dashboardStats();
 
@@ -335,6 +356,82 @@
     html += kpiCard('Klanten', D.fmtNum(s.customersCount), 'fa-users', 'success');
     html += kpiCard('Lage Voorraad', D.fmtNum(s.lowStockCount), 'fa-triangle-exclamation', s.lowStockCount > 0 ? 'danger' : 'success');
     html += '</div>';
+
+    // ── Weekvergelijking widget (deze week vs vorige week) ──
+    const week = D.weeklyComparison();
+    html += '<div class="bp-card bp-weekly-card">';
+    html += '<div class="bp-card-head">';
+    html += '<div class="bp-card-title"><i class="fas fa-arrows-left-right"></i> Weekvergelijking</div>';
+    html += '<div class="bp-weekly-head-right">';
+    html += '<span class="bp-weekly-period">' + esc(week.period.currentStart) + ' — ' + esc(week.period.currentEnd) + '</span>';
+    html += '<button class="bp-btn bp-btn-primary bp-btn-sm" id="bpGenReport"><i class="fas fa-file-pdf"></i> PDF-rapport</button>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div class="bp-card-body">';
+
+    // 4 vergelijking-rijen: Winst, Omzet, Nieuwe klanten, Lage voorraad
+    html += '<div class="bp-weekly-grid">';
+    // Winst
+    html += '<div class="bp-weekly-row">';
+    html += '<div class="bp-weekly-row-icon" style="background:var(--bp-success-soft);color:var(--bp-success)"><i class="fas fa-arrow-trend-up"></i></div>';
+    html += '<div class="bp-weekly-row-body">';
+    html += '<div class="bp-weekly-row-label">Winst</div>';
+    html += '<div class="bp-weekly-row-current">' + D.fmtEuro(week.current.profit) + '</div>';
+    html += '<div class="bp-weekly-row-prev">Vorige week: ' + D.fmtEuro(week.previous.profit) + '</div>';
+    html += '</div>';
+    html += '<div class="bp-weekly-row-delta">' + deltaBadge(week.deltas.profit, { money: true }) + '</div>';
+    html += '</div>';
+    // Omzet
+    html += '<div class="bp-weekly-row">';
+    html += '<div class="bp-weekly-row-icon" style="background:var(--bp-info-soft);color:var(--bp-info)"><i class="fas fa-euro-sign"></i></div>';
+    html += '<div class="bp-weekly-row-body">';
+    html += '<div class="bp-weekly-row-label">Omzet</div>';
+    html += '<div class="bp-weekly-row-current">' + D.fmtEuro(week.current.revenue) + '</div>';
+    html += '<div class="bp-weekly-row-prev">Vorige week: ' + D.fmtEuro(week.previous.revenue) + '</div>';
+    html += '</div>';
+    html += '<div class="bp-weekly-row-delta">' + deltaBadge(week.deltas.revenue, { money: true }) + '</div>';
+    html += '</div>';
+    // Nieuwe klanten
+    html += '<div class="bp-weekly-row">';
+    html += '<div class="bp-weekly-row-icon" style="background:var(--bp-lavender-soft);color:var(--bp-lavender)"><i class="fas fa-user-plus"></i></div>';
+    html += '<div class="bp-weekly-row-body">';
+    html += '<div class="bp-weekly-row-label">Nieuwe klanten</div>';
+    html += '<div class="bp-weekly-row-current">' + D.fmtNum(week.current.newCustomers) + '</div>';
+    html += '<div class="bp-weekly-row-prev">Vorige week: ' + D.fmtNum(week.previous.newCustomers) + '</div>';
+    html += '</div>';
+    html += '<div class="bp-weekly-row-delta">' + deltaBadge(week.deltas.newCustomers) + '</div>';
+    html += '</div>';
+    // Lage voorraad (inverted: meer = slechter)
+    html += '<div class="bp-weekly-row">';
+    html += '<div class="bp-weekly-row-icon" style="background:var(--bp-danger-soft);color:var(--bp-danger)"><i class="fas fa-triangle-exclamation"></i></div>';
+    html += '<div class="bp-weekly-row-body">';
+    html += '<div class="bp-weekly-row-label">Lage voorraad (nu)</div>';
+    html += '<div class="bp-weekly-row-current">' + D.fmtNum(week.current.lowStockCount) + '</div>';
+    html += '<div class="bp-weekly-row-prev">Vorige week: ' + D.fmtNum(week.previous.lowStockCount) + '</div>';
+    html += '</div>';
+    html += '<div class="bp-weekly-row-delta">' + deltaBadge(week.deltas.lowStockCount, { inverted: true }) + '</div>';
+    html += '</div>';
+    html += '</div>'; // /bp-weekly-grid
+
+    // Top producten deze week (compact)
+    if (week.current.topProducts.length > 0) {
+      html += '<div class="bp-section-heading">Top producten deze week</div>';
+      html += '<div class="bp-weekly-top">';
+      week.current.topProducts.forEach(function (p, i) {
+        html += '<div class="bp-weekly-top-item">';
+        html += '<div class="bp-weekly-top-rank">' + (i + 1) + '</div>';
+        html += '<div class="bp-weekly-top-body">';
+        html += '<div class="bp-weekly-top-name">' + esc(p.name) + '</div>';
+        html += '<div class="bp-weekly-top-meta">' + p.count + ' verkocht · ' + D.fmtEuro(p.revenue) + ' omzet · ' + D.fmtEuro(p.profit) + ' winst</div>';
+        html += '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div class="bp-weekly-empty">Nog geen verkopen deze week — verkoop je eerste product om hier top-producten te zien.</div>';
+    }
+    html += '</div>'; // /bp-card-body
+    html += '</div>'; // /bp-weekly-card
 
     html += '<div class="bp-grid-dashboard">';
     html += '<div class="bp-card"><div class="bp-card-head"><div class="bp-card-title"><i class="fas fa-chart-line"></i> Omzet & Winst</div>' +
@@ -453,6 +550,20 @@
         navigate('dashboard');
       });
     });
+
+    // Wire PDF-rapport knop (weekvergelijking)
+    $('#bpGenReport', root)?.addEventListener('click', () => {
+      if (window.LagencoReport && typeof window.LagencoReport.generateWeeklyReport === 'function') {
+        window.LagencoReport.generateWeeklyReport();
+      } else {
+        // LagencoReport nog niet geladen — wacht even en probeer opnieuw
+        toast('PDF laden…', 'De PDF-bibliotheek wordt geladen, even geduld…', 'info');
+        setTimeout(function () {
+          if (window.LagencoReport) window.LagencoReport.generateWeeklyReport();
+          else toast('Fout', 'Kon PDF-bibliotheek niet laden. Vernieuw de pagina.', 'error');
+        }, 800);
+      }
+    });
   });
 
   function renderDashboardCharts() {
@@ -528,15 +639,35 @@
 
   function chartOpts(opts) {
     opts = opts || {};
+    const dark = document.body.classList.contains('bp-dark');
     return {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: opts.legend ? { display: true, position: 'top', align: 'end', labels: { padding: 14, font: { size: 11 }, usePointStyle: true, pointStyle: 'circle' } } : { display: false },
-        tooltip: { backgroundColor: '#0f172a', padding: 12, cornerRadius: 8, titleFont: { size: 12 }, bodyFont: { size: 12 } }
+        legend: opts.legend ? {
+          display: true, position: 'top', align: 'end',
+          labels: {
+            padding: 14, font: { size: 11 },
+            color: dark ? '#a5b5a7' : '#6B7A6C',
+            usePointStyle: true, pointStyle: 'circle'
+          }
+        } : { display: false },
+        tooltip: {
+          backgroundColor: dark ? '#0f1410' : '#0f172a',
+          titleColor: dark ? '#e8efe9' : '#fff',
+          bodyColor: dark ? '#a5b5a7' : '#cbd5e1',
+          padding: 12, cornerRadius: 8,
+          titleFont: { size: 12 }, bodyFont: { size: 12 }
+        }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-        y: { grid: { color: '#e2e8f0', drawBorder: false }, ticks: { font: { size: 11 }, callback: v => '€ ' + v } }
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 11 }, color: dark ? '#a5b5a7' : '#6B7A6C' }
+        },
+        y: {
+          grid: { color: dark ? '#2d3a2e' : '#e2e8f0', drawBorder: false },
+          ticks: { font: { size: 11 }, color: dark ? '#a5b5a7' : '#6B7A6C', callback: v => '€ ' + v }
+        }
       }
     };
   }
@@ -1185,6 +1316,80 @@
         editAgendaEvent(null, preset);
       });
     }
+  });
+
+  // ═══════════════════════════════════════════════════════
+  // DARK MODE — toggle + persistence in localStorage
+  // ═══════════════════════════════════════════════════════
+  const DARK_KEY = 'lagencoBPDarkMode';
+  function isDarkMode() {
+    try { return localStorage.getItem(DARK_KEY) === 'true'; } catch (e) { return false; }
+  }
+  function applyDarkMode(dark) {
+    if (dark) {
+      document.body.classList.add('bp-dark');
+      document.documentElement.classList.add('bp-dark');
+    } else {
+      document.body.classList.remove('bp-dark');
+      document.documentElement.classList.remove('bp-dark');
+    }
+    try { localStorage.setItem(DARK_KEY, dark ? 'true' : 'false'); } catch (e) {}
+    // Update icoon op de toggle-knop
+    const icon = $('#bpDarkToggle i');
+    if (icon) {
+      icon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+    }
+    // Update theme-color meta (voor mobile browser UI)
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', dark ? '#0f1410' : '#0F3D2E');
+    // Re-render de huidige view zodat charts (die hardcoded kleuren hebben)
+    // opnieuw worden getekend met de nieuwe achtergrond.
+    if (currentView && VIEWS[currentView]) {
+      // setTimeout om te zorgen dat de CSS-transition eerst afrondt
+      setTimeout(function () { navigate(currentView); }, 50);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // PWA — Install prompt handling
+  // ═══════════════════════════════════════════════════════
+  let deferredInstallPrompt = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    // Voorkom de standaard mini-infobar
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    // Toon een subtiele knop in de topbar (alleen als install mogelijk is)
+    const topbar = $('.bp-topbar-right');
+    if (topbar && !$('#bpInstallApp')) {
+      const btn = document.createElement('button');
+      btn.className = 'bp-icon-btn bp-install-btn';
+      btn.id = 'bpInstallApp';
+      btn.title = 'Installeer als app';
+      btn.setAttribute('aria-label', 'Installeer als app');
+      btn.innerHTML = '<i class="fas fa-download"></i>';
+      btn.style.background = 'linear-gradient(135deg, var(--bp-primary), var(--bp-primary-2))';
+      btn.style.color = '#fff';
+      btn.style.boxShadow = '0 4px 12px rgba(107, 191, 126, 0.30)';
+      btn.addEventListener('click', function () {
+        if (!deferredInstallPrompt) return;
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.then(function (choice) {
+          if (choice.outcome === 'accepted') {
+            toast('App geïnstalleerd', 'Lagenco Admin staat nu op je thuisscherm', 'success');
+          }
+          deferredInstallPrompt = null;
+          btn.remove();
+        });
+      });
+      // Plaats helemaal links van de topbar-right
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+  });
+  // Verberg de knop zodra de app is geïnstalleerd
+  window.addEventListener('appinstalled', function () {
+    $('#bpInstallApp')?.remove();
+    deferredInstallPrompt = null;
+    toast('Geïnstalleerd', 'Lagenco Admin is nu als app geïnstalleerd', 'success');
   });
 
   // ═══════════════════════════════════════════════════════
@@ -3835,7 +4040,18 @@
   view('rapporten', function (root) {
     const s = D.dashboardStats();
     const cats = D.categoryBreakdown();
-    let html = '<div class="bp-grid-2" style="margin-bottom:1rem">';
+
+    // ── Weekrapport download-knop bovenaan ──
+    let html = '<div class="bp-card" style="margin-bottom:1rem;background:linear-gradient(135deg,var(--bp-card),var(--bp-card-2))">' +
+      '<div class="bp-card-body" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">' +
+      '<div style="flex:1;min-width:200px">' +
+      '<div style="font-family:Poppins,sans-serif;font-weight:700;font-size:1.05rem;color:var(--bp-text)"><i class="fas fa-file-pdf" style="color:var(--bp-danger);margin-right:0.4rem"></i> Wekelijks PDF-rapport</div>' +
+      '<div style="font-size:0.82rem;color:var(--bp-text-muted);margin-top:0.2rem">Genereer een PDF met weekvergelijking, top-producten en herinneringen — ideaal om te archiveren of te delen.</div>' +
+      '</div>' +
+      '<button class="bp-btn bp-btn-primary" id="repPdfBtn"><i class="fas fa-download"></i> Download weekrapport (PDF)</button>' +
+      '</div></div>';
+
+    html += '<div class="bp-grid-2" style="margin-bottom:1rem">';
     html += '<div class="bp-card"><div class="bp-card-head"><div class="bp-card-title"><i class="fas fa-chart-bar"></i> Winst per categorie</div></div><div class="bp-chart-wrap"><canvas id="repChart1"></canvas></div></div>';
     html += '<div class="bp-card"><div class="bp-card-head"><div class="bp-card-title"><i class="fas fa-chart-column"></i> Voorraadwaarde per categorie</div></div><div class="bp-chart-wrap"><canvas id="repChart2"></canvas></div></div>';
     html += '</div>';
@@ -3859,6 +4075,17 @@
 
     root.innerHTML = html;
     $('#repExport', root).addEventListener('click', () => exportJson());
+    $('#repPdfBtn', root)?.addEventListener('click', () => {
+      if (window.LagencoReport && typeof window.LagencoReport.generateWeeklyReport === 'function') {
+        window.LagencoReport.generateWeeklyReport();
+      } else {
+        toast('PDF laden…', 'De PDF-bibliotheek wordt geladen, even geduld…', 'info');
+        setTimeout(function () {
+          if (window.LagencoReport) window.LagencoReport.generateWeeklyReport();
+          else toast('Fout', 'Kon PDF-bibliotheek niet laden. Vernieuw de pagina.', 'error');
+        }, 800);
+      }
+    });
     setTimeout(() => renderRapportCharts(cats), 100);
   });
 
@@ -4072,13 +4299,30 @@
       $('#bpSidebarOverlay').classList.remove('show');
     });
     $('#bpLogoutBtn')?.addEventListener('click', () => {
-      // No auth — just go back to the main website
-      toast('Terug naar website', 'Je wordt doorgestuurd…', 'info');
-      setTimeout(() => { window.location.href = 'index.html'; }, 600);
+      // Echt uitloggen: clear sessionStorage + redirect naar login
+      if (window.__bpAuth && typeof window.__bpAuth.logout === 'function') {
+        toast('Uitloggen', 'Je wordt doorgestuurd naar de login-pagina…', 'info');
+        setTimeout(() => window.__bpAuth.logout(), 600);
+      } else {
+        // Fallback voor oudere code
+        try { sessionStorage.removeItem('lagencoLoggedIn'); } catch (e) {}
+        toast('Uitloggen', 'Je wordt doorgestuurd…', 'info');
+        setTimeout(() => { window.location.href = 'login.html'; }, 600);
+      }
     });
     $('#bpRefresh')?.addEventListener('click', () => {
       navigate(currentView);
       toast('Vernieuwd', '', 'success');
+    });
+    // ── Dark mode toggle ──
+    // Pas toe op init en wire de knop.
+    applyDarkMode(isDarkMode());
+    $('#bpDarkToggle')?.addEventListener('click', () => {
+      const next = !isDarkMode();
+      applyDarkMode(next);
+      toast(next ? 'Donker thema aan' : 'Licht thema aan',
+            next ? 'Oogrustig voor avondshifts' : 'Standaard weergave',
+            'info');
     });
     $('#bpExport')?.addEventListener('click', exportJson);
     $('#bpQuickAdd')?.addEventListener('click', () => {

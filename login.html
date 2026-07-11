@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inloggen — Lagenco Business Panel</title>
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#0F3D2E">
+  <!-- Brand favicon — identiek aan hoofdwebsite -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230F3D2E'/><text y='72' x='50' font-size='62' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>L</text></svg>">
+
+  <!-- Fonts: Poppins (koppen), Nunito (body), Fraunces (editoriaal accent) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Poppins:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+
+  <!-- Font Awesome (icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Business panel styles (zelfde als dashboard) -->
+  <link rel="stylesheet" href="business-panel.css?v=23">
+
+  <!-- PWA: manifest + theme-color -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0F3D2E">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Lagenco Admin">
+
+  <!-- Inline login-page styles — krijgen hun eigen .lp- prefix om botsingen
+       met .bp- classes te voorkomen. Alleen geladen op deze pagina. -->
+  <style>
+    /* ── Login page layout ── */
+    .lp-body {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: linear-gradient(135deg, #FFF8F0 0%, #FFEDD8 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    /* Decoratieve blob achtergrond */
+    .lp-body::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      right: -10%;
+      width: 60%;
+      height: 80%;
+      background: radial-gradient(circle, rgba(107, 191, 126, 0.18) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .lp-body::after {
+      content: '';
+      position: absolute;
+      bottom: -20%;
+      left: -10%;
+      width: 50%;
+      height: 60%;
+      background: radial-gradient(circle, rgba(255, 139, 92, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Linkerpaneel: hero/branding ── */
+    .lp-hero {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 3rem 3.5rem;
+      background: linear-gradient(135deg, #2D3A2E 0%, #1F2A20 100%);
+      color: #C9D4CC;
+      overflow: hidden;
+    }
+    .lp-hero::before {
+      content: '';
+      position: absolute;
+      top: 30%;
+      right: -20%;
+      width: 80%;
+      height: 80%;
+      background: radial-gradient(circle, rgba(107, 191, 126, 0.20) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .lp-hero-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      position: relative;
+      z-index: 1;
+    }
+    .lp-hero-logo {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 0.85rem;
+      background: linear-gradient(135deg, #6BBF7E, #4A9D5E);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(107, 191, 126, 0.35);
+      color: #fff;
+      font-size: 1.3rem;
+    }
+    .lp-hero-brand-name {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 1.7rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+    .lp-hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 32rem;
+    }
+    .lp-hero-title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 2.75rem;
+      font-weight: 600;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      color: #fff;
+      margin-bottom: 1.25rem;
+    }
+    .lp-hero-title em {
+      font-style: italic;
+      background: linear-gradient(135deg, #6BBF7E, #8DD3A0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .lp-hero-sub {
+      font-size: 1rem;
+      line-height: 1.65;
+      color: #A5B5A7;
+      max-width: 26rem;
+    }
+    .lp-hero-features {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-top: 2rem;
+    }
+    .lp-hero-feature {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #C9D4CC;
+    }
+    .lp-hero-feature i {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.5rem;
+      background: rgba(107, 191, 126, 0.18);
+      color: #6BBF7E;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .lp-hero-foot {
+      position: relative;
+      z-index: 1;
+      font-size: 0.78rem;
+      color: #7A8C82;
+    }
+    .lp-hero-foot a { color: #6BBF7E; }
+
+    /* ── Rechterpaneel: inlogformulier ── */
+    .lp-form-wrap {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 3rem;
+    }
+    .lp-card {
+      width: 100%;
+      max-width: 24rem;
+      background: #ffffff;
+      border: 1px solid #FFE0CC;
+      border-radius: 1.5rem;
+      box-shadow: 0 24px 56px rgba(74, 122, 78, 0.14);
+      padding: 2.5rem 2.25rem;
+    }
+    .lp-card-head {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .lp-card-icon {
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: 1rem;
+      background: linear-gradient(135deg, rgba(107, 191, 126, 0.15), rgba(74, 157, 94, 0.10));
+      color: #4A9D5E;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      margin-bottom: 1rem;
+    }
+    .lp-card-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #2D3A2E;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.4rem;
+    }
+    .lp-card-sub {
+      font-size: 0.875rem;
+      color: #6B7A6C;
+    }
+
+    .lp-field {
+      margin-bottom: 1.1rem;
+    }
+    .lp-label {
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #2D3A2E;
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.005em;
+    }
+    .lp-input-wrap {
+      position: relative;
+    }
+    .lp-input-wrap i {
+      position: absolute;
+      left: 0.95rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #A5B5A7;
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+    .lp-input {
+      width: 100%;
+      padding: 0.85rem 2.75rem 0.85rem 2.6rem;
+      border: 1.5px solid #FFE0CC;
+      border-radius: 0.85rem;
+      background: #ffffff;
+      font-family: 'Nunito', 'Inter', sans-serif;
+      font-size: 0.95rem;
+      color: #2D3A2E;
+      outline: none;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .lp-input:focus {
+      border-color: #6BBF7E;
+      box-shadow: 0 0 0 4px rgba(107, 191, 126, 0.15);
+    }
+    .lp-input.error {
+      border-color: #E06055;
+      box-shadow: 0 0 0 4px rgba(224, 96, 85, 0.12);
+    }
+    .lp-pw-toggle {
+      position: absolute;
+      right: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: #A5B5A7;
+      cursor: pointer;
+      padding: 0.35rem;
+      border-radius: 0.4rem;
+      transition: all 0.18s;
+    }
+    .lp-pw-toggle:hover { color: #4A9D5E; background: rgba(107, 191, 126, 0.10); }
+
+    .lp-options {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0.5rem 0 1.5rem;
+      font-size: 0.82rem;
+    }
+    .lp-remember {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      color: #6B7A6C;
+      font-family: 'Nunito', sans-serif;
+    }
+    .lp-remember input { accent-color: #4A9D5E; }
+
+    .lp-btn {
+      width: 100%;
+      padding: 0.95rem 1rem;
+      border: none;
+      border-radius: 0.85rem;
+      background: linear-gradient(135deg, #6BBF7E, #4A9D5E);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 8px 24px rgba(107, 191, 126, 0.30);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .lp-btn:hover:not(:disabled) {
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 12px 32px rgba(107, 191, 126, 0.45);
+    }
+    .lp-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+    .lp-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+    .lp-btn-spinner {
+      display: none;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: lpSpin 0.8s linear infinite;
+    }
+    .lp-btn.loading .lp-btn-spinner { display: inline-block; }
+    .lp-btn.loading .lp-btn-text { opacity: 0.7; }
+    @keyframes lpSpin { to { transform: rotate(360deg); } }
+
+    .lp-error {
+      display: none;
+      background: #FFE0DC;
+      border: 1px solid rgba(224, 96, 85, 0.3);
+      color: #E06055;
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      font-size: 0.82rem;
+      font-family: 'Nunito', sans-serif;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .lp-error.show { display: flex; }
+    .lp-error i { font-size: 0.95rem; flex-shrink: 0; }
+
+    .lp-foot {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 0.82rem;
+      color: #6B7A6C;
+    }
+    .lp-foot a {
+      color: #4A9D5E;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .lp-foot a:hover { text-decoration: underline; }
+
+    .lp-back {
+      position: absolute;
+      top: 1.5rem;
+      left: 1.5rem;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 0.95rem;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid #FFE0CC;
+      border-radius: 9999px;
+      color: #2D3A2E;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.18s;
+    }
+    .lp-back:hover { background: #fff; transform: translateX(-2px); box-shadow: 0 4px 12px rgba(74, 122, 78, 0.10); }
+
+    /* ── Mobile: stackt verticaal ── */
+    @media (max-width: 900px) {
+      .lp-body { grid-template-columns: 1fr; }
+      .lp-hero { padding: 2rem 1.75rem; }
+      .lp-hero-title { font-size: 2rem; }
+      .lp-hero-features { display: none; } /* mobiel: minder clutter */
+      .lp-form-wrap { padding: 1.5rem; }
+      .lp-card { padding: 2rem 1.5rem; }
+    }
+    @media (max-width: 480px) {
+      .lp-hero { padding: 1.5rem 1.25rem; }
+      .lp-hero-title { font-size: 1.6rem; }
+      .lp-hero-sub { font-size: 0.85rem; }
+      .lp-card { padding: 1.75rem 1.25rem; }
+    }
+
+    /* ── Dark mode ondersteuning (dezelfde toggle als dashboard) ── */
+    body.bp-dark .lp-body { background: linear-gradient(135deg, #1a1f1c 0%, #161a17 100%); }
+    body.bp-dark .lp-body::before { background: radial-gradient(circle, rgba(107, 191, 126, 0.12) 0%, transparent 70%); }
+    body.bp-dark .lp-card { background: #1f2a20; border-color: #2d3a2e; box-shadow: 0 24px 56px rgba(0, 0, 0, 0.4); }
+    body.bp-dark .lp-card-title { color: #e8efe9; }
+    body.bp-dark .lp-label { color: #e8efe9; }
+    body.bp-dark .lp-input { background: #2d3a2e; border-color: #3d4a3e; color: #e8efe9; }
+    body.bp-dark .lp-input::placeholder { color: #7a8c82; }
+    body.bp-dark .lp-remember,
+    body.bp-dark .lp-card-sub { color: #a5b5a7; }
+    body.bp-dark .lp-back { background: rgba(45, 58, 46, 0.85); border-color: #3d4a3e; color: #e8efe9; }
+    body.bp-dark .lp-error { background: rgba(224, 96, 85, 0.15); border-color: rgba(224, 96, 85, 0.3); }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .lp-btn, .lp-input, .lp-back, .lp-pw-toggle { transition: none !important; }
+    }
+  </style>
+</head>
+<body class="bp-body">
+
+  <!-- Terug-naar-website knop (top-left) -->
+  <a href="index.html" class="lp-back">
+    <i class="fas fa-arrow-left"></i> Naar website
+  </a>
+
+  <div class="lp-body">
+
+    <!-- ═══ Linkerpaneel: Hero / Branding ═══ -->
+    <aside class="lp-hero">
+      <div class="lp-hero-brand">
+        <div class="lp-hero-logo"><i class="fas fa-leaf"></i></div>
+        <div class="lp-hero-brand-name">Lagenco</div>
+      </div>
+
+      <div class="lp-hero-content">
+        <h1 class="lp-hero-title">Welkom terug in je <em>Business Panel</em></h1>
+        <p class="lp-hero-sub">Beheer je handelsadministratie, voorraad, verkopen en afspraken — overal en altijd, veilig ingelogd met je admin-account.</p>
+
+        <div class="lp-hero-features">
+          <div class="lp-hero-feature"><i class="fas fa-chart-line"></i> Real-time dashboard met KPI's en weekvergelijking</div>
+          <div class="lp-hero-feature"><i class="fas fa-calendar-days"></i> Volledige agenda met afspraken en herinneringen</div>
+          <div class="lp-hero-feature"><i class="fas fa-file-pdf"></i> Wekelijks PDF-rapport met prestaties</div>
+          <div class="lp-hero-feature"><i class="fas fa-shield-halved"></i> Beveiligd via Firebase — alleen admin-toegang</div>
+        </div>
+      </div>
+
+      <div class="lp-hero-foot">
+        © 2024 Lagenco · Slim inkopen. Duurzaam doorverkopen. · <a href="privacybeleid.html">Privacybeleid</a>
+      </div>
+    </aside>
+
+    <!-- ═══ Rechterpaneel: Inlogformulier ═══ -->
+    <main class="lp-form-wrap">
+      <form class="lp-card" id="lpForm" autocomplete="on" novalidate>
+        <div class="lp-card-head">
+          <div class="lp-card-icon"><i class="fas fa-lock"></i></div>
+          <div class="lp-card-title">Inloggen</div>
+          <div class="lp-card-sub">Voer je admin-gegevens in om door te gaan</div>
+        </div>
+
+        <!-- Foutmelding (verborgen tot nodig) -->
+        <div class="lp-error" id="lpError" role="alert">
+          <i class="fas fa-circle-exclamation"></i>
+          <span id="lpErrorMsg">Onjuist e-mailadres of wachtwoord.</span>
+        </div>
+
+        <!-- E-mail -->
+        <div class="lp-field">
+          <label class="lp-label" for="lpEmail">E-mailadres</label>
+          <div class="lp-input-wrap">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="lpEmail" name="email" class="lp-input" placeholder="admin@lagenco.nl"
+                   autocomplete="username" required autofocus>
+          </div>
+        </div>
+
+        <!-- Wachtwoord -->
+        <div class="lp-field">
+          <label class="lp-label" for="lpPassword">Wachtwoord</label>
+          <div class="lp-input-wrap">
+            <i class="fas fa-key"></i>
+            <input type="password" id="lpPassword" name="password" class="lp-input" placeholder="••••••••"
+                   autocomplete="current-password" required>
+            <button type="button" class="lp-pw-toggle" id="lpPwToggle" aria-label="Toon/verberg wachtwoord">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Opties -->
+        <div class="lp-options">
+          <label class="lp-remember">
+            <input type="checkbox" id="lpRemember"> Onthoud e-mailadres
+          </label>
+        </div>
+
+        <!-- Submit-knop -->
+        <button type="submit" class="lp-btn" id="lpSubmit">
+          <span class="lp-btn-spinner"></span>
+          <i class="fas fa-arrow-right-to-bracket"></i>
+          <span class="lp-btn-text">Inloggen</span>
+        </button>
+
+        <div class="lp-foot">
+          Wachtwoord vergeten? <a href="mailto:admin@lagenco.nl">Neem contact op</a>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <!-- ═══ Scripts ═══ -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="github-db.js?v=10" defer></script>
+  <script src="login.js?v=23" defer></script>
+</body>
+</html>
