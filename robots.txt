@@ -1,14 +1,30 @@
 # Lagenco — Robots.txt
-# Laat zoekmachines alle pagina's crawlen
+# Laat zoekmachines alle publieke pagina's crawlen
+# Blokkeer admin/login/PWA-gerelateerde pagina's en scripts
 
 User-agent: *
 Allow: /
+
+# Admin / login pages (niet indexeren)
 Disallow: /business-panel.html
+Disallow: /login.html
+Disallow: /404.html
+Disallow: /onderhoud.html
+Disallow: /offline.html
+
+# Admin / dashboard scripts (niet indexeren)
 Disallow: /admin-button.js
 Disallow: /business-panel.js
 Disallow: /business-panel-data.js
 Disallow: /business-panel.css
+Disallow: /bp-report.js
+Disallow: /login.js
+Disallow: /github-db.js
 Disallow: /mobile-menu.js
+Disallow: /sw.js
+
+# PWA manifest (niet indexeren)
+Disallow: /manifest.json
 
 # Sitemap locatie
 Sitemap: https://lagenco.eu/sitemap.xml

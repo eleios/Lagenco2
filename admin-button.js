@@ -16,6 +16,8 @@
   'use strict';
 
   var LOGIN_KEY = 'lagencoLoggedIn';
+  // Auth-state leeft in sessionStorage (tab-scope) sinds de login-flow via login.html gaat.
+  // localStorage werd vroeger gebruikt, maar github-db.js migreert dit naar sessionStorage.
 
   // Avoid duplicate injection
   if (window.__lagencoAdminButtonMounted) return;
@@ -55,10 +57,16 @@
 
   function checkLocalStorage() {
     try {
-      var raw = localStorage.getItem(LOGIN_KEY);
+      // Sinds login.html flow: auth leeft in sessionStorage (tab-scope).
+      // We checken ook localStorage als legacy fallback (voor oude tabs).
+      var raw = sessionStorage.getItem(LOGIN_KEY);
+      if (raw === null || raw === undefined) {
+        raw = localStorage.getItem(LOGIN_KEY);
+      }
       if (raw === null || raw === undefined) return false;
       try {
         var parsed = JSON.parse(raw);
+        if (parsed && parsed.logged === true) return true;
         if (parsed === true || parsed === 1) return true;
         if (parsed === false || parsed === 0 || parsed === null) return false;
       } catch (e) {}
@@ -174,32 +182,43 @@
     if (e.key === LOGIN_KEY) update();
   });
 
-  // 3. MutationObserver — detects DOM changes (login/logout button toggles)
+  // 3. MutationObserver — detecteert class/style wijzigingen op login/logout buttons.
+  // We observeren alleen de specifieke elementen i.p.v. de hele body subtree,
+  // om performance overhead te beperken (de body subtree observable triggert bij
+  // elke class/style change op élk element in de DOM).
   function setupObserver() {
     if (typeof MutationObserver === 'undefined') return;
     var observer = new MutationObserver(function (mutations) {
-      // Check if login/logout buttons changed
-      for (var i = 0; i < mutations.length; i++) {
-        var m = mutations[i];
-        if (m.type === 'attributes' && (m.attributeName === 'class' || m.attributeName === 'style')) {
-          var el = m.target;
-          if (el && (el.id === 'loginBtn' || el.id === 'logoutBtn' || el.id === 'loginStatus')) {
-            update();
-            return;
-          }
-        }
+      update();
+    });
+    // Observeer alleen de relevante auth-elementen (als ze bestaan)
+    ['loginBtn', 'logoutBtn', 'loginStatus'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) {
+        observer.observe(el, {
+          attributes: true,
+          attributeFilter: ['class', 'style'],
+          childList: false,
+          subtree: false
+        });
       }
     });
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ['class', 'style'],
-      subtree: true,
-      childList: false
-    });
+    // Ook body class changes (voor 'hidden' op login/logout wrappers)
+    if (document.body) {
+      observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class'],
+        childList: false,
+        subtree: false
+      });
+    }
   }
 
-  // 4. Polling fallback — every 1 second (covers all edge cases)
-  setInterval(update, 1000);
+  // 4. Polling fallback — vervangen door minder frequente check (5s i.p.v. 1s).
+  // MutationObserver (regel 178-206) en visibilitychange dekken al 99% van de gevallen.
+  // De polling is alleen een laatste redmiddo voor edge cases (bv. wanneer een andere
+  // tab de auth-state verandert zonder een storage-event te sturen).
+  setInterval(update, 5000);
 
   // 5. Visibility change (covers back/forward cache)
   document.addEventListener('visibilitychange', function () {

@@ -34,7 +34,6 @@ const STATIC_ASSETS = [
   'index.html',
   'style.css',
   'script.js',
-  'mobile-menu.js',
   // Juridische pagina's
   'privacybeleid.html',
   'cookiebeleid.html',

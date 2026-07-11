@@ -1619,7 +1619,7 @@ const openEditModal = (id) => {
   if (!product) return;
 
   document.getElementById('editProductId').value      = product.id;
-  document.getElementById('editTitle').value          = product.title;
+  document.getElementById('editName').value           = product.title;
   document.getElementById('editDescription').value    = product.description;
   document.getElementById('editPrice').value          = product.price;
   document.getElementById('editOldPrice').value       = product.oldPrice || '';
@@ -1637,7 +1637,7 @@ const initEditProduct = () => {
   form.addEventListener('submit', e => {
     e.preventDefault();
     const id    = document.getElementById('editProductId').value;
-    const title = document.getElementById('editTitle')?.value.trim();
+    const title = document.getElementById('editName')?.value.trim();
     const desc  = document.getElementById('editDescription')?.value.trim();
     const price = Number(document.getElementById('editPrice')?.value);
     const oldPr = Number(document.getElementById('editOldPrice')?.value) || null;

@@ -76,13 +76,20 @@
   }
 
   // ────────────────────────────────────────────────────────
-  // Modal
+  // Modal — met ESC-to-close en basis focus trap
   // ────────────────────────────────────────────────────────
+  // Bewaar het element dat focus had vóór de modal opende, zodat we het kunnen herstellen.
+  let _lastFocusBeforeModal = null;
+  // Actieve modal keydown handler (zodat we maar één listener tegelijk hebben)
+  let _activeModalEscHandler = null;
+
   function openModal(opts) {
     closeModal();
     const root = $('#bpModalRoot');
     const back = document.createElement('div');
     back.className = 'bp-modal-backdrop';
+    back.setAttribute('role', 'dialog');
+    back.setAttribute('aria-modal', 'true');
     const modal = document.createElement('div');
     modal.className = 'bp-modal' + (opts.large ? ' lg' : '');
     modal.innerHTML =
@@ -94,15 +101,79 @@
       (opts.footer ? '<div class="bp-modal-foot">' + opts.footer + '</div>' : '');
     back.appendChild(modal);
     root.appendChild(back);
+
+    // Bewaar huidige focus om te herstellen bij sluiten
+    _lastFocusBeforeModal = document.activeElement;
+
     const close = () => closeModal();
+
+    // ESC-to-close + focus trap
+    const keyHandler = function (e) {
+      if (e.key === 'Escape' || e.keyCode === 27) {
+        e.preventDefault();
+        close();
+        return;
+      }
+      // Focus trap: Tab en Shift+Tab blijven binnen de modal
+      if (e.key === 'Tab' || e.keyCode === 9) {
+        const focusables = modal.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first || !modal.contains(document.activeElement)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last || !modal.contains(document.activeElement)) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+    _activeModalEscHandler = keyHandler;
+    document.addEventListener('keydown', keyHandler);
+
     back.addEventListener('click', e => { if (e.target === back) close(); });
     modal.querySelector('.bp-modal-close').addEventListener('click', close);
+
+    // Verplaats focus naar de modal (of het eerste focusable element) voor screen readers
+    setTimeout(function () {
+      const focusables = modal.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length > 0) {
+        // Vermijd de close-button als eerste focus (liever het eerste input-veld)
+        const firstInput = Array.prototype.find.call(focusables, function (el) {
+          return el.tagName !== 'BUTTON' || !el.classList.contains('bp-modal-close');
+        });
+        (firstInput || focusables[0]).focus();
+      } else {
+        modal.setAttribute('tabindex', '-1');
+        modal.focus();
+      }
+    }, 50);
+
     if (opts.onMount) opts.onMount(modal, close);
     return { modal, close };
   }
   function closeModal() {
     const root = $('#bpModalRoot');
     if (root) root.innerHTML = '';
+    // Verwijder ESC keydown handler
+    if (_activeModalEscHandler) {
+      document.removeEventListener('keydown', _activeModalEscHandler);
+      _activeModalEscHandler = null;
+    }
+    // Herstel focus naar het element dat focus had vóór de modal opende
+    if (_lastFocusBeforeModal && typeof _lastFocusBeforeModal.focus === 'function') {
+      try { _lastFocusBeforeModal.focus(); } catch (e) {}
+      _lastFocusBeforeModal = null;
+    }
   }
   function confirmModal(title, msg, onConfirm) {
     openModal({
@@ -292,9 +363,10 @@
   // VIEW: DASHBOARD
   // ═══════════════════════════════════════════════════════
   // Periode-state voor de winst-weergave (blijft bewaard tijdens de sessie)
-  let dashboardPeriod = 'always'; // 'today' | '7weeks' | '1month' | 'always'
+  let dashboardPeriod = 'always'; // 'today' | '7days' | '1month' | 'always'
 
-  /** Format een delta als HTML-badge met pijl en kleur (up=green, down=red). */
+  /** Format een delta als HTML-badge met pijl en kleur (up=green, down=red).
+   *  Het +/- teken staat als klein superscript achteraan de badge (rechtsonder). */
   function deltaBadge(delta, opts) {
     opts = opts || {};
     const isMoney = opts.money === true;
@@ -308,63 +380,31 @@
     if (positive && delta.abs !== 0) cls = 'up';
     else if (negative && delta.abs !== 0) cls = 'down';
     const icon = up ? 'fa-arrow-up' : (down ? 'fa-arrow-down' : 'fa-minus');
+    // Bedrag/zonder +/- teken vooraan — teken komt achteraan als superscript
     const absStr = isMoney
-      ? (delta.abs >= 0 ? '+' : '') + D.fmtEuro(Math.abs(delta.abs)).replace('€ ', '€ ')
-      : (delta.abs >= 0 ? '+' : '') + Math.abs(delta.abs);
+      ? D.fmtEuro(Math.abs(delta.abs)).replace('€ ', '€ ')
+      : String(Math.abs(delta.abs));
     const pctStr = (delta.pct >= 0 ? '+' : '') + delta.pct.toFixed(1) + '%';
-    return '<span class="bp-delta-badge ' + cls + '"><i class="fas ' + icon + '"></i> ' + absStr + ' · ' + pctStr + '</span>';
+    const sign = delta.abs >= 0 ? '+' : '−';
+    return '<span class="bp-delta-badge ' + cls + '">' +
+      '<i class="fas ' + icon + '"></i> ' + absStr + ' · ' + pctStr +
+      '<span class="bp-delta-sign">' + sign + '</span>' +
+      '</span>';
   }
 
-  view('dashboard', function (root) {
-    const s = D.dashboardStats();
-
-    // ── Periode-filterbalk (Vandaag / 7 dagen / 1 maand / Altijd) ──
-    const periods = [
-      { key: 'today',   label: 'Vandaag',        icon: 'fa-calendar-day' },
-      { key: '7days',  label: 'Afgelopen 7 dagen', icon: 'fa-calendar-week' },
-      { key: '1month',  label: '1 maand',        icon: 'fa-calendar' },
-      { key: 'always',  label: 'Altijd',         icon: 'fa-infinity' }
-    ];
-    let periodHtml = '<div class="bp-period-bar">';
-    periodHtml += '<div class="bp-period-label"><i class="fas fa-filter"></i> Winst periode:</div>';
-    periodHtml += '<div class="bp-period-tabs">';
-    periods.forEach(p => {
-      periodHtml += '<button class="bp-period-tab' + (dashboardPeriod === p.key ? ' active' : '') + '" data-period="' + p.key + '">' +
-        '<i class="fas ' + p.icon + '"></i> ' + esc(p.label) +
-        '</button>';
-    });
-    periodHtml += '</div></div>';
-
-    // ── Winst+omzet voor de geselecteerde periode berekenen ──
-    const periodData = D.profitInPeriod(dashboardPeriod);
-    // Handmatige winst-correctie wordt BIJ de periode-winst opgeteld
-    const ms = D.getManualStats();
-    const periodProfit = periodData.profit + ms.winst;
-    const periodRevenue = periodData.revenue + ms.omzet;
-
-    let html = periodHtml;
-    html += '<div class="bp-kpi-grid">';
-    html += kpiCard('Winst · ' + periods.find(p => p.key === dashboardPeriod).label,
-                    D.fmtEuro(periodProfit),
-                    'fa-arrow-trend-up', 'success',
-                    { up: true, text: periodData.count + ' verkopen' });
-    html += kpiCard('Omzet', D.fmtEuro(s.totalRevenue), 'fa-euro-sign', 'info');
-    html += kpiCard('Geïnvesteerd', D.fmtEuro(s.totalInvested), 'fa-piggy-bank', 'warn');
-    html += kpiCard('Voorraadwaarde', D.fmtEuro(s.totalStockValue), 'fa-warehouse', 'violet', { up: true, text: s.totalUnits + ' eenheden' });
-    html += kpiCard('Producten', D.fmtNum(s.totalProducts), 'fa-box', 'primary');
-    html += kpiCard('Gem. Marge', D.fmtPct(s.avgMargin), 'fa-percent', 'info');
-    html += kpiCard('Klanten', D.fmtNum(s.customersCount), 'fa-users', 'success');
-    html += kpiCard('Lage Voorraad', D.fmtNum(s.lowStockCount), 'fa-triangle-exclamation', s.lowStockCount > 0 ? 'danger' : 'success');
-    html += '</div>';
-
-    // ── Weekvergelijking widget (deze week vs vorige week) ──
+  /** Genereer de weekvergelijking-widget HTML (deze week vs vorige week).
+   *  Wordt zowel op het dashboard als in de rapporten-view hergebruikt. */
+  function renderWeeklyComparisonWidget(opts) {
+    opts = opts || {};
     const week = D.weeklyComparison();
-    html += '<div class="bp-card bp-weekly-card">';
+    let html = '<div class="bp-card bp-weekly-card">';
     html += '<div class="bp-card-head">';
     html += '<div class="bp-card-title"><i class="fas fa-arrows-left-right"></i> Weekvergelijking</div>';
     html += '<div class="bp-weekly-head-right">';
     html += '<span class="bp-weekly-period">' + esc(week.period.currentStart) + ' — ' + esc(week.period.currentEnd) + '</span>';
-    html += '<button class="bp-btn bp-btn-primary bp-btn-sm" id="bpGenReport"><i class="fas fa-file-pdf"></i> PDF-rapport</button>';
+    if (opts.showPdfButton) {
+      html += '<button class="bp-btn bp-btn-primary bp-btn-sm" data-pdf-btn><i class="fas fa-file-pdf"></i> PDF-rapport</button>';
+    }
     html += '</div>';
     html += '</div>';
     html += '<div class="bp-card-body">';
@@ -432,6 +472,67 @@
     }
     html += '</div>'; // /bp-card-body
     html += '</div>'; // /bp-weekly-card
+    return html;
+  }
+
+  /** Wire een PDF-rapport knop (data-pdf-btn attribute) binnen een root element. */
+  function wirePdfButton(root) {
+    $$('[data-pdf-btn]', root).forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (window.LagencoReport && typeof window.LagencoReport.generateWeeklyReport === 'function') {
+          window.LagencoReport.generateWeeklyReport();
+        } else {
+          toast('PDF laden…', 'De PDF-bibliotheek wordt geladen, even geduld…', 'info');
+          setTimeout(function () {
+            if (window.LagencoReport) window.LagencoReport.generateWeeklyReport();
+            else toast('Fout', 'Kon PDF-bibliotheek niet laden. Vernieuw de pagina.', 'error');
+          }, 800);
+        }
+      });
+    });
+  }
+
+  view('dashboard', function (root) {
+    const s = D.dashboardStats();
+
+    // ── Periode-filterbalk (Vandaag / 7 dagen / 1 maand / Altijd) ──
+    const periods = [
+      { key: 'today',   label: 'Vandaag',        icon: 'fa-calendar-day' },
+      { key: '7days',  label: 'Afgelopen 7 dagen', icon: 'fa-calendar-week' },
+      { key: '1month',  label: '1 maand',        icon: 'fa-calendar' },
+      { key: 'always',  label: 'Altijd',         icon: 'fa-infinity' }
+    ];
+    let periodHtml = '<div class="bp-period-bar">';
+    periodHtml += '<div class="bp-period-label"><i class="fas fa-filter"></i> Winst periode:</div>';
+    periodHtml += '<div class="bp-period-tabs">';
+    periods.forEach(p => {
+      periodHtml += '<button class="bp-period-tab' + (dashboardPeriod === p.key ? ' active' : '') + '" data-period="' + p.key + '">' +
+        '<i class="fas ' + p.icon + '"></i> ' + esc(p.label) +
+        '</button>';
+    });
+    periodHtml += '</div></div>';
+
+    // ── Winst+omzet voor de geselecteerde periode berekenen ──
+    const periodData = D.profitInPeriod(dashboardPeriod);
+    // Handmatige winst-correctie wordt BIJ de periode-winst opgeteld
+    const ms = D.getManualStats();
+    const periodProfit = periodData.profit + ms.winst;
+    const periodRevenue = periodData.revenue + ms.omzet;
+
+    let html = periodHtml;
+    html += '<div class="bp-kpi-grid">';
+    html += kpiCard('Winst · ' + periods.find(p => p.key === dashboardPeriod).label,
+                    D.fmtEuro(periodProfit),
+                    'fa-arrow-trend-up', 'success',
+                    { up: true, text: periodData.count + ' verkopen' });
+    html += kpiCard('Omzet', D.fmtEuro(s.totalRevenue), 'fa-euro-sign', 'info');
+    html += kpiCard('Geïnvesteerd', D.fmtEuro(s.totalInvested), 'fa-piggy-bank', 'warn');
+    html += kpiCard('Voorraadwaarde', D.fmtEuro(s.totalStockValue), 'fa-warehouse', 'violet', { up: true, text: s.totalUnits + ' eenheden' });
+    html += kpiCard('Producten', D.fmtNum(s.totalProducts), 'fa-box', 'primary');
+    html += kpiCard('Gem. Marge', D.fmtPct(s.avgMargin), 'fa-percent', 'info');
+    html += kpiCard('Klanten', D.fmtNum(s.customersCount), 'fa-users', 'success');
+    html += kpiCard('Lage Voorraad', D.fmtNum(s.lowStockCount), 'fa-triangle-exclamation', s.lowStockCount > 0 ? 'danger' : 'success');
+    html += '</div>';
 
     html += '<div class="bp-grid-dashboard">';
     html += '<div class="bp-card"><div class="bp-card-head"><div class="bp-card-title"><i class="fas fa-chart-line"></i> Omzet & Winst</div>' +
@@ -551,19 +652,8 @@
       });
     });
 
-    // Wire PDF-rapport knop (weekvergelijking)
-    $('#bpGenReport', root)?.addEventListener('click', () => {
-      if (window.LagencoReport && typeof window.LagencoReport.generateWeeklyReport === 'function') {
-        window.LagencoReport.generateWeeklyReport();
-      } else {
-        // LagencoReport nog niet geladen — wacht even en probeer opnieuw
-        toast('PDF laden…', 'De PDF-bibliotheek wordt geladen, even geduld…', 'info');
-        setTimeout(function () {
-          if (window.LagencoReport) window.LagencoReport.generateWeeklyReport();
-          else toast('Fout', 'Kon PDF-bibliotheek niet laden. Vernieuw de pagina.', 'error');
-        }, 800);
-      }
-    });
+    // PDF-rapport knop zit alleen in de rapporten-view (volgens user request).
+    // Dashboard heeft geen weekvergelijking-widget meer.
   });
 
   function renderDashboardCharts() {
@@ -585,8 +675,8 @@
         since = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         // vandaag kan meerdere maanden overlappen → behoud huidige maand
         since = new Date(now.getFullYear(), now.getMonth(), 1);
-      } else if (dashboardPeriod === '7weeks') {
-        since = new Date(now.getTime() - 49 * 24 * 60 * 60 * 1000);
+      } else if (dashboardPeriod === '7days' || dashboardPeriod === '7weeks') {
+        since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       } else if (dashboardPeriod === '1month') {
         since = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
       }
@@ -4048,8 +4138,11 @@
       '<div style="font-family:Poppins,sans-serif;font-weight:700;font-size:1.05rem;color:var(--bp-text)"><i class="fas fa-file-pdf" style="color:var(--bp-danger);margin-right:0.4rem"></i> Wekelijks PDF-rapport</div>' +
       '<div style="font-size:0.82rem;color:var(--bp-text-muted);margin-top:0.2rem">Genereer een PDF met weekvergelijking, top-producten en herinneringen — ideaal om te archiveren of te delen.</div>' +
       '</div>' +
-      '<button class="bp-btn bp-btn-primary" id="repPdfBtn"><i class="fas fa-download"></i> Download weekrapport (PDF)</button>' +
+      '<button class="bp-btn bp-btn-primary" data-pdf-btn><i class="fas fa-download"></i> Download weekrapport (PDF)</button>' +
       '</div></div>';
+
+    // ── Weekvergelijking widget (enkel zichtbaar in Rapporten, niet op dashboard) ──
+    html += renderWeeklyComparisonWidget({ showPdfButton: false });
 
     html += '<div class="bp-grid-2" style="margin-bottom:1rem">';
     html += '<div class="bp-card"><div class="bp-card-head"><div class="bp-card-title"><i class="fas fa-chart-bar"></i> Winst per categorie</div></div><div class="bp-chart-wrap"><canvas id="repChart1"></canvas></div></div>';
@@ -4075,17 +4168,8 @@
 
     root.innerHTML = html;
     $('#repExport', root).addEventListener('click', () => exportJson());
-    $('#repPdfBtn', root)?.addEventListener('click', () => {
-      if (window.LagencoReport && typeof window.LagencoReport.generateWeeklyReport === 'function') {
-        window.LagencoReport.generateWeeklyReport();
-      } else {
-        toast('PDF laden…', 'De PDF-bibliotheek wordt geladen, even geduld…', 'info');
-        setTimeout(function () {
-          if (window.LagencoReport) window.LagencoReport.generateWeeklyReport();
-          else toast('Fout', 'Kon PDF-bibliotheek niet laden. Vernieuw de pagina.', 'error');
-        }, 800);
-      }
-    });
+    // Wire alle PDF-knoppen (zowel de bovenste als eventueel in de widget)
+    wirePdfButton(root);
     setTimeout(() => renderRapportCharts(cats), 100);
   });
 

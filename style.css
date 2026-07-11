@@ -141,6 +141,28 @@ img { max-width: 100%; height: auto; display: block; }
   box-shadow: 0 0 0 5px var(--green-glow);
 }
 
+/* Versterk focus op form-elementen waar outline:none is gebruikt —
+   zorgt dat keyboard-gebruikers altijd een zichtbare focus-ring zien. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--green-glow);
+}
+/* Voor inputs die zelf een border-color focus-state hebben — behoud die,
+   maar voeg toch een subtiele ring toe voor keyboard-gebruikers. */
+input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 0;
+  box-shadow: 0 0 0 3px var(--green-glow);
+}
+
 /* Premium scrollbar (alleen desktop) */
 @media (pointer: fine) {
   ::-webkit-scrollbar { width: 12px; height: 12px; }

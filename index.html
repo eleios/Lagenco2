@@ -4,6 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lagenco — Kwaliteit verdient een tweede kans</title>
+  <link rel="canonical" href="https://lagenco.eu/index.html">
+  <meta property="og:site_name" content="Lagenco">
+  <meta property="og:locale" content="nl_NL">
+  <meta property="og:url" content="https://lagenco.eu/index.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Lagenco — Kwaliteit verdent een tweede kans">
+  <meta property="og:description" content="Lagenco geeft kwaliteitsproducten een tweede leven. Restpartijen, retourproducten en tweedehands artikelen — betaalbaar voor jou, beter voor de planeet.">
+  <meta property="og:image" content="https://lagenco.eu/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Lagenco — Kwaliteit verdent een tweede kans">
+  <meta name="twitter:description" content="Lagenco geeft kwaliteitsproducten een tweede leven. Restpartijen, retourproducten en tweedehands artikelen — betaalbaar voor jou, beter voor de planeet.">
+  <meta name="twitter:image" content="https://lagenco.eu/og-image.png">
+  <link rel="alternate" hreflang="nl" href="https://lagenco.eu/index.html">
+  <link rel="alternate" hreflang="x-default" href="https://lagenco.eu/index.html">
   <meta name="description" content="Lagenco geeft kwaliteitsproducten een tweede leven. Restpartijen, retourproducten en tweedehands artikelen — betaalbaar én duurzaam.">
   <meta name="keywords" content="restpartijen, overstock, retourproducten, tweedehands, outlet, duurzaam, Lagenco">
   <meta property="og:title" content="Lagenco — Kwaliteit verdient een tweede kans">
@@ -38,10 +54,25 @@
 
   <!-- ═══ Main script (defer — fetches in parallel, runs after DOM parse) ═══ -->
     <!-- ═══ FIREBASE (real-time database) ═══ -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
   <script src="github-db.js?v=10" defer></script>
   <script src="script.js?v=10" defer></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Lagenco",
+  "url": "https://lagenco.eu",
+  "logo": "https://lagenco.eu/icon-512.png",
+  "description": "Slim inkopen. Duurzaam doorverkopen. Wij geven kwalitatieve producten een tweede kans.",
+  "sameAs": [
+    "https://www.linkedin.com/company/lagenco",
+    "https://www.instagram.com/lagenco"
+  ]
+}
+</script>
 
 </head>
 <body data-page="index" class="page-enter">
@@ -50,7 +81,7 @@
   <a href="#main" class="skip-link">Direct naar inhoud</a>
 
   <!-- Reading progress bar -->
-  <div id="readingProgress" class="progress-bar" style="width:0"></div>
+  <div id="readingProgress" class="progress-bar" style="width:0" role="progressbar" aria-label="Leesvoortgang" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
 
   <!-- Toast container -->
   <div id="toast-container" aria-live="polite"></div>
@@ -164,7 +195,8 @@
       </div>
       <form id="editProductForm" style="display:flex;flex-direction:column;gap:1rem">
         <input type="hidden" id="editProductId">
-        <input id="editTitle" type="text" class="login-input" placeholder="Productnaam" required>
+        <label for="editName" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Productnaam</label>
+        <input id="editName" type="text" class="login-input" placeholder="Productnaam" required autocomplete="off">
         <textarea id="editDescription" class="login-input" rows="3" placeholder="Beschrijving" style="resize:vertical"></textarea>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
           <input id="editPrice" type="number" class="login-input" placeholder="Prijs (€)" required min="0">
@@ -475,15 +507,15 @@
           <div class="bid-form-grid">
             <div class="bid-field full">
               <label for="bidName">Volledige naam <span class="req">*</span></label>
-              <input type="text" id="bidName" name="bidName" placeholder="Bijv. Jan Jansen" required>
+              <input type="text" id="bidName" name="bidName" placeholder="Bijv. Jan Jansen" required autocomplete="name">
             </div>
             <div class="bid-field">
               <label for="bidEmail">E-mailadres <span class="req">*</span></label>
-              <input type="email" id="bidEmail" name="bidEmail" placeholder="naam@voorbeeld.nl" required>
+              <input type="email" id="bidEmail" name="bidEmail" placeholder="naam@voorbeeld.nl" required autocomplete="email">
             </div>
             <div class="bid-field">
               <label for="bidPhone">Telefoonnummer</label>
-              <input type="tel" id="bidPhone" name="bidPhone" placeholder="06 12 34 56 78">
+              <input type="tel" id="bidPhone" name="bidPhone" placeholder="06 12 34 56 78" autocomplete="tel">
             </div>
           </div>
         </fieldset>
@@ -542,23 +574,23 @@
           <div class="bid-form-grid">
             <div class="bid-field" style="grid-column:span 2">
               <label for="bidStreet">Straatnaam <span class="req">*</span></label>
-              <input type="text" id="bidStreet" name="bidStreet" placeholder="Bijv. Kalverstraat">
+              <input type="text" id="bidStreet" name="bidStreet" placeholder="Bijv. Kalverstraat" autocomplete="address-line1">
             </div>
             <div class="bid-field">
               <label for="bidHouseNumber">Huisnummer <span class="req">*</span></label>
-              <input type="text" id="bidHouseNumber" name="bidHouseNumber" placeholder="Bijv. 42">
+              <input type="text" id="bidHouseNumber" name="bidHouseNumber" placeholder="Bijv. 42" autocomplete="address-line2">
             </div>
             <div class="bid-field">
               <label for="bidHouseNumberAdd">Toevoeging</label>
-              <input type="text" id="bidHouseNumberAdd" name="bidHouseNumberAdd" placeholder="Bijv. A">
+              <input type="text" id="bidHouseNumberAdd" name="bidHouseNumberAdd" placeholder="Bijv. A" autocomplete="address-line3">
             </div>
             <div class="bid-field">
               <label for="bidPostalCode">Postcode <span class="req">*</span></label>
-              <input type="text" id="bidPostalCode" name="bidPostalCode" placeholder="1012 AB">
+              <input type="text" id="bidPostalCode" name="bidPostalCode" placeholder="1012 AB" autocomplete="postal-code">
             </div>
             <div class="bid-field">
               <label for="bidCity">Woonplaats <span class="req">*</span></label>
-              <input type="text" id="bidCity" name="bidCity" placeholder="Bijv. Amsterdam">
+              <input type="text" id="bidCity" name="bidCity" placeholder="Bijv. Amsterdam" autocomplete="address-level2">
             </div>
             <div class="bid-field full">
               <label for="bidCountry">Land</label>
@@ -654,7 +686,7 @@
       <div style="background:white;border:1.5px solid var(--border);border-radius:1.25rem;padding:.75rem;box-shadow:var(--shadow-md);transform:rotate(-4deg)">
         <span style="position:absolute;top:-.5rem;left:-.5rem;padding:.25rem .6rem;border-radius:100px;font-size:.6rem;font-weight:700;color:white;background:var(--lavender-deep);box-shadow:0 4px 8px rgba(0,0,0,0.10)">Tweedehands</span>
         <div style="height:7rem;border-radius:.75rem;overflow:hidden;margin-bottom:.5rem;background:var(--bg-2)">
-          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1619334084350-b093f0a9b40e?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="" style="width:100%;height:100%;object-fit:cover">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1619334084350-b093f0a9b40e?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Voorbeeldproduct: duurzame microfoon met tweede leven" style="width:100%;height:100%;object-fit:cover">
         </div>
         <p style="font-family:'Poppins',sans-serif;font-weight:700;font-size:.8rem;color:var(--text);margin:0 0 .15rem">Logithec G305</p>
         <p style="font-family:'Poppins',sans-serif;font-weight:800;font-size:.9rem;color:var(--green-mid);margin:0">€ 15</p>
@@ -665,7 +697,7 @@
       <div style="background:white;border:1.5px solid var(--border);border-radius:1.25rem;padding:.75rem;box-shadow:var(--shadow-md);transform:rotate(3deg)">
         <span style="position:absolute;top:-.5rem;left:-.5rem;padding:.25rem .6rem;border-radius:100px;font-size:.6rem;font-weight:700;color:white;background:var(--peach-deep);box-shadow:0 4px 8px rgba(0,0,0,0.10)">Retour</span>
         <div style="height:7rem;border-radius:.75rem;overflow:hidden;margin-bottom:.5rem;background:var(--bg-2)">
-          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1754142654796-cafbcb9f633b?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="" style="width:100%;height:100%;object-fit:cover">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1754142654796-cafbcb9f633b?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Voorbeeldproduct: Momentum 4 koptelefoon als retourproduct" style="width:100%;height:100%;object-fit:cover">
         </div>
         <p style="font-family:'Poppins',sans-serif;font-weight:700;font-size:.8rem;color:var(--text);margin:0 0 .15rem">Momentum 4</p>
         <p style="font-family:'Poppins',sans-serif;font-weight:800;font-size:.9rem;color:var(--green-mid);margin:0"><span style="color:var(--text-faint);text-decoration:line-through;font-weight:500;font-size:.72rem;margin-right:.3rem">€180</span>€ 40</p>
@@ -943,10 +975,14 @@
       <!-- Add product tab -->
       <div id="tab-add">
         <form id="addProductForm" style="display:grid;gap:1rem;grid-template-columns:1fr 1fr">
-          <input id="productTitle" type="text" class="login-input" placeholder="Productnaam *" required>
-          <input id="productDescription" type="text" class="login-input" placeholder="Beschrijving *" required>
-          <input id="productPrice" type="number" class="login-input" placeholder="Prijs (€) *" required min="0" step="0.01">
-          <input id="productOldPrice" type="number" class="login-input" placeholder="Oude prijs (€) — optioneel" min="0" step="0.01">
+          <label for="productTitle" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Productnaam</label>
+          <input id="productTitle" type="text" class="login-input" placeholder="Productnaam *" required autocomplete="off">
+          <label for="productDescription" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Beschrijving</label>
+          <input id="productDescription" type="text" class="login-input" placeholder="Beschrijving *" required autocomplete="off">
+          <label for="productPrice" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Prijs in euro</label>
+          <input id="productPrice" type="number" class="login-input" placeholder="Prijs (€) *" required min="0" step="0.01" autocomplete="off">
+          <label for="productOldPrice" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Oude prijs in euro</label>
+          <input id="productOldPrice" type="number" class="login-input" placeholder="Oude prijs (€) — optioneel" min="0" step="0.01" autocomplete="off">
           <label style="display:flex;flex-direction:column;gap:.4rem;grid-column:1/-1">
             <span style="font-size:.78rem;font-weight:700;color:var(--text);font-family:'Sora',sans-serif;letter-spacing:.04em;text-transform:uppercase">Product Condition Grade *</span>
             <select id="productConditionGrade" class="login-input">
@@ -956,9 +992,11 @@
               <option value="beschadigd">⭐⭐ Beschadigd — Cosmetische schade</option>
             </select>
           </label>
-          <input id="productBadge" type="text" class="login-input" placeholder="Badge (bijv. Retourproduct, Nieuw, Tweedehands)" style="grid-column:1/-1">
+          <label for="productBadge" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Badge</label>
+          <input id="productBadge" type="text" class="login-input" placeholder="Badge (bijv. Retourproduct, Nieuw, Tweedehands)" style="grid-column:1/-1" autocomplete="off">
           <div style="grid-column:1/-1;display:flex;gap:.5rem;flex-wrap:wrap">
-            <input id="productImageURL" type="url" class="login-input" placeholder="Afbeeldings-URL toevoegen (optioneel)" style="flex:1;min-width:200px">
+            <label for="productImageURL" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Afbeeldings-URL</label>
+            <input id="productImageURL" type="url" class="login-input" placeholder="Afbeeldings-URL toevoegen (optioneel)" style="flex:1;min-width:200px" autocomplete="off">
             <button type="button" id="addImageUrlBtn" class="btn btn-ghost" style="padding:.75rem 1rem"><i class="fas fa-plus"></i> Voeg toe</button>
           </div>
           <div style="grid-column:1/-1">

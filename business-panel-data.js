@@ -398,7 +398,7 @@
 
   // ────────────────────────────────────────────────────────
   // Periode-filter voor de dashboard-winst
-  // Ondersteunde perioden: 'today' | '7weeks' | '1month' | 'always'
+  // Ondersteunde perioden: 'today' | '7days' | '1month' | 'always'
   // ────────────────────────────────────────────────────────
   function profitInPeriod(period) {
     const verkoop = list('verkoop');
@@ -408,9 +408,10 @@
     if (period === 'today') {
       // Begin van vandaag (00:00 uur, locale NL)
       since = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    } else if (period === '7weeks') {
-      // 7 weken = 49 dagen geleden
-      since = new Date(now.getTime() - 49 * 24 * 60 * 60 * 1000);
+    } else if (period === '7days' || period === '7weeks') {
+      // '7days' = afgelopen 7 dagen (UI key). '7weeks' is legacy alias (49 dagen)
+      // maar sinds UI "Afgelopen 7 dagen" toont, gebruiken we 7 dagen.
+      since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     } else if (period === '1month') {
       // 1 kalendermaand geleden
       since = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());

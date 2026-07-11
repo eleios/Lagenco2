@@ -2692,12 +2692,14 @@ body.bp-dark #bpDarkToggle i::before {
   flex-shrink: 0 !important;
 }
 
-/* Delta-badge (up=green, down=red, neutral=grey) */
+/* Delta-badge (up=green, down=red, neutral=grey)
+   Het +/- teken staat als klein superscript rechtsonder (bp-delta-sign). */
 .bp-delta-badge {
+  position: relative !important;
   display: inline-flex !important;
   align-items: center !important;
   gap: 0.3rem !important;
-  padding: 0.3rem 0.6rem !important;
+  padding: 0.3rem 1.1rem 0.3rem 0.6rem !important;
   border-radius: var(--bp-r-full) !important;
   font-family: 'Poppins', sans-serif !important;
   font-weight: 600 !important;
@@ -2717,6 +2719,17 @@ body.bp-dark #bpDarkToggle i::before {
 .bp-delta-badge.neutral {
   background: var(--bp-bg-2) !important;
   color: var(--bp-text-muted) !important;
+}
+/* +/- teken als subscript rechtsonder */
+.bp-delta-sign {
+  position: absolute !important;
+  right: 0.35rem !important;
+  bottom: 0.1rem !important;
+  font-size: 0.62rem !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  opacity: 0.75 !important;
+  pointer-events: none !important;
 }
 
 /* Top-producten lijst */

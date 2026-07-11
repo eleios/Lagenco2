@@ -300,10 +300,10 @@
       padding: 0.95rem 1rem;
       border: none;
       border-radius: 0.85rem;
-      background: linear-gradient(135deg, #6BBF7E, #4A9D5E);
-      color: #fff;
+      background: linear-gradient(135deg, #6BBF7E, #4A9D5E) !important;
+      color: #ffffff !important;
       font-family: 'Poppins', sans-serif;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 0.95rem;
       cursor: pointer;
       transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
@@ -312,6 +312,7 @@
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
     }
     .lp-btn:hover:not(:disabled) {
       transform: translateY(-2px) scale(1.01);
@@ -319,6 +320,8 @@
     }
     .lp-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
     .lp-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+    /* Zorg dat icoon en tekst altijd wit blijven op de groene knop */
+    .lp-btn i, .lp-btn-text { color: #ffffff !important; }
     .lp-btn-spinner {
       display: none;
       width: 1rem;
@@ -342,7 +345,6 @@
       font-size: 0.82rem;
       font-family: 'Nunito', sans-serif;
       margin-bottom: 1.25rem;
-      display: flex;
       align-items: center;
       gap: 0.6rem;
     }
@@ -363,26 +365,26 @@
     .lp-foot a:hover { text-decoration: underline; }
 
     .lp-back {
-      position: absolute;
-      top: 1.5rem;
-      left: 1.5rem;
-      z-index: 2;
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.55rem 0.95rem;
-      background: rgba(255, 255, 255, 0.85);
+      padding: 0.5rem 0.95rem;
+      background: rgba(255, 255, 255, 0.10);
       backdrop-filter: blur(8px);
-      border: 1px solid #FFE0CC;
+      border: 1px solid rgba(255, 255, 255, 0.18);
       border-radius: 9999px;
-      color: #2D3A2E;
+      color: #C9D4CC;
       font-family: 'Poppins', sans-serif;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 600;
       text-decoration: none;
       transition: all 0.18s;
+      margin-top: 1rem;
+      align-self: flex-start;
+      position: relative;
+      z-index: 1;
     }
-    .lp-back:hover { background: #fff; transform: translateX(-2px); box-shadow: 0 4px 12px rgba(74, 122, 78, 0.10); }
+    .lp-back:hover { background: rgba(255, 255, 255, 0.18); color: #ffffff; transform: translateX(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
 
     /* ── Mobile: stackt verticaal ── */
     @media (max-width: 900px) {
@@ -410,7 +412,8 @@
     body.bp-dark .lp-input::placeholder { color: #7a8c82; }
     body.bp-dark .lp-remember,
     body.bp-dark .lp-card-sub { color: #a5b5a7; }
-    body.bp-dark .lp-back { background: rgba(45, 58, 46, 0.85); border-color: #3d4a3e; color: #e8efe9; }
+    body.bp-dark .lp-back { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.15); color: #a5b5a7; }
+    body.bp-dark .lp-back:hover { background: rgba(255, 255, 255, 0.15); color: #ffffff; }
     body.bp-dark .lp-error { background: rgba(224, 96, 85, 0.15); border-color: rgba(224, 96, 85, 0.3); }
 
     /* Reduced motion */
@@ -421,11 +424,6 @@
 </head>
 <body class="bp-body">
 
-  <!-- Terug-naar-website knop (top-left) -->
-  <a href="index.html" class="lp-back">
-    <i class="fas fa-arrow-left"></i> Naar website
-  </a>
-
   <div class="lp-body">
 
     <!-- ═══ Linkerpaneel: Hero / Branding ═══ -->
@@ -434,6 +432,11 @@
         <div class="lp-hero-logo"><i class="fas fa-leaf"></i></div>
         <div class="lp-hero-brand-name">Lagenco</div>
       </div>
+
+      <!-- Terug-naar-website knop — netjes onder het logo -->
+      <a href="index.html" class="lp-back">
+        <i class="fas fa-arrow-left"></i> Naar website
+      </a>
 
       <div class="lp-hero-content">
         <h1 class="lp-hero-title">Welkom terug in je <em>Business Panel</em></h1>

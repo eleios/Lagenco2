@@ -452,7 +452,7 @@
     saveCoupon: async function (coupon) {
       if (!db) return;
       try {
-        var key = coupon.code || ('noprize_' + Date.now());
+        const key = coupon.code || ('noprize_' + Date.now());
         await db.ref('coupons/' + key).set(coupon);
       } catch (e) { console.warn('🔥 SaveCoupon error:', e.message); }
     },
